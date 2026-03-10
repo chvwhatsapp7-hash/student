@@ -7,7 +7,8 @@ class SchoolCoursesScreen extends StatefulWidget {
   State<SchoolCoursesScreen> createState() => _SchoolCoursesScreenState();
 }
 
-class _SchoolCoursesScreenState extends State<SchoolCoursesScreen> {
+class _SchoolCoursesScreenState extends State<SchoolCoursesScreen>
+    with SingleTickerProviderStateMixin {
 
   String ageFilter = "All";
   List<int> enrolled = [];
@@ -18,7 +19,7 @@ class _SchoolCoursesScreenState extends State<SchoolCoursesScreen> {
       "id":1,
       "emoji":"🐍",
       "title":"Python for Kids",
-      "desc":"Learn to code with fun projects!",
+      "desc":"Learn coding with fun projects!",
       "duration":"8 weeks",
       "rating":"4.9",
       "students":"340",
@@ -79,313 +80,277 @@ class _SchoolCoursesScreenState extends State<SchoolCoursesScreen> {
 
     return Scaffold(
 
-      backgroundColor: const Color(0xfff5f7ff),
+      backgroundColor: const Color(0xfff6f7fb),
 
       body: SafeArea(
+        child: Column(
+          children: [
 
-        child: SingleChildScrollView(
+            /// HEADER
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: const [
 
-          padding: const EdgeInsets.all(16),
-
-          child: Column(
-
-            crossAxisAlignment: CrossAxisAlignment.start,
-
-            children: [
-
-              /// Title
-              const Text(
-                "🎓 Our Courses",
-                style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold
-                ),
-              ),
-
-              const SizedBox(height:4),
-
-              const Text(
-                "Fun tech learning for school students!",
-                style: TextStyle(color: Colors.grey),
-              ),
-
-              const SizedBox(height:20),
-
-              /// Banner
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                        colors: [Color(0xff667eea),Color(0xff764ba2)]
+                  Text(
+                    "🎓 Our Courses",
+                    style: TextStyle(
+                        fontSize: 26,
+                        fontWeight: FontWeight.bold
                     ),
-                    borderRadius: BorderRadius.circular(24)
-                ),
+                  ),
 
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+                  SizedBox(height:4),
 
-                    const Text(
-                      "Summer Learning 2025 🌟",
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold
-                      ),
-                    ),
+                  Text(
+                    "Fun tech learning for school students!",
+                    style: TextStyle(color: Colors.grey),
+                  ),
 
-                    const SizedBox(height:6),
-
-                    const Text(
-                      "Register now — limited seats available!",
-                      style: TextStyle(color: Colors.white70),
-                    ),
-
-                    const SizedBox(height:16),
-
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: const [
-
-                        _BannerStat("6","Courses"),
-                        _BannerStat("2K+","Students"),
-                        _BannerStat("100%","Fun!"),
-
-                      ],
-                    )
-                  ],
-                ),
+                ],
               ),
+            ),
 
-              const SizedBox(height:24),
+            /// FILTER
+            SizedBox(
+              height: 50,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal:16),
+                itemCount: filters.length,
+                itemBuilder: (context,i){
 
-              /// Age Filter
-              const Text(
-                "🎂 Filter by Age Group",
-                style: TextStyle(
-                    fontWeight: FontWeight.bold
-                ),
-              ),
-
-              const SizedBox(height:10),
-
-              Wrap(
-                spacing:8,
-                children: filters.map((f){
-
+                  final f = filters[i];
                   final selected = f==ageFilter;
 
                   return GestureDetector(
 
                     onTap:(){
                       setState(() {
-                        ageFilter=f;
+                        ageFilter = f;
                       });
                     },
 
-                    child: Container(
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds:300),
+                      margin: const EdgeInsets.only(right:10),
+
                       padding: const EdgeInsets.symmetric(
-                          horizontal:14,vertical:8
+                          horizontal:16,
+                          vertical:10
                       ),
 
                       decoration: BoxDecoration(
-                          color: selected ? Colors.purple.shade100 : Colors.white,
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                              color: selected
-                                  ? Colors.purple
-                                  : Colors.grey.shade300
-                          )
+                          color: selected
+                              ? Colors.deepPurple
+                              : Colors.white,
+                          borderRadius: BorderRadius.circular(30),
+                          boxShadow: const [
+                            BoxShadow(
+                                color: Colors.black12,
+                                blurRadius: 6
+                            )
+                          ]
                       ),
 
-                      child: Text(
-                        f=="All" ? "👶 All Ages" : "Ages $f",
-                        style: TextStyle(
-                            color: selected
-                                ? Colors.purple
-                                : Colors.grey
+                      child: Center(
+                        child: Text(
+                          f=="All" ? "All Ages" : "Ages $f",
+                          style: TextStyle(
+                              color: selected
+                                  ? Colors.white
+                                  : Colors.black
+                          ),
                         ),
                       ),
                     ),
                   );
-
-                }).toList(),
+                },
               ),
+            ),
 
-              const SizedBox(height:20),
+            const SizedBox(height:10),
 
-              /// Course List
-              GridView.builder(
+            /// COURSE LIST
+            Expanded(
+              child: ListView.builder(
 
                 itemCount: filtered.length,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-
-                gridDelegate:
-                const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    mainAxisExtent: 260,
-                    crossAxisSpacing: 12,
-                    mainAxisSpacing: 12
-                ),
+                padding: const EdgeInsets.all(16),
 
                 itemBuilder:(context,i){
 
                   final c = filtered[i];
                   final isEnrolled = enrolled.contains(c["id"]);
 
-                  return Container(
+                  return TweenAnimationBuilder(
+                    duration: Duration(milliseconds: 500 + (i*100)),
+                    tween: Tween<double>(begin: 0, end: 1),
 
-                    decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(24),
-                        boxShadow: [
-                          BoxShadow(
-                              color: Colors.black12,
-                              blurRadius: 8
-                          )
-                        ]
-                    ),
+                    builder:(context,double val,child){
 
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
+                      return Transform.translate(
+                        offset: Offset(0,50*(1-val)),
+                        child: Opacity(
+                          opacity: val,
+                          child: child,
+                        ),
+                      );
+                    },
 
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                    child: Container(
 
-                        children: [
+                      margin: const EdgeInsets.only(bottom:16),
 
-                          Text(
-                            c["emoji"],
-                            style: const TextStyle(fontSize:40),
-                          ),
+                      decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: const [
+                            BoxShadow(
+                                color: Colors.black12,
+                                blurRadius: 10
+                            )
+                          ]
+                      ),
 
-                          const SizedBox(height:6),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
 
-                          Text(
-                            c["title"],
-                            style: const TextStyle(
-                                fontWeight: FontWeight.bold
+                        child: Row(
+                          children: [
+
+                            /// EMOJI
+                            Container(
+                              width:60,
+                              height:60,
+                              decoration: BoxDecoration(
+                                  color: Colors.deepPurple.shade50,
+                                  borderRadius: BorderRadius.circular(16)
+                              ),
+                              child: Center(
+                                child: Text(
+                                  c["emoji"],
+                                  style: const TextStyle(fontSize:30),
+                                ),
+                              ),
                             ),
-                          ),
 
-                          const SizedBox(height:4),
+                            const SizedBox(width:14),
 
-                          Text(
-                            c["desc"],
-                            maxLines: 2,
-                            style: const TextStyle(
-                                fontSize:12,
-                                color: Colors.grey
-                            ),
-                          ),
+                            /// DETAILS
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
 
-                          const Spacer(),
+                                  Text(
+                                    c["title"],
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize:16
+                                    ),
+                                  ),
 
-                          Text(
-                            c["price"],
-                            style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize:18
-                            ),
-                          ),
+                                  const SizedBox(height:4),
 
-                          const SizedBox(height:6),
+                                  Text(
+                                    c["desc"],
+                                    style: const TextStyle(
+                                        color: Colors.grey,
+                                        fontSize:12
+                                    ),
+                                  ),
 
-                          SizedBox(
-                            width: double.infinity,
+                                  const SizedBox(height:8),
 
-                            child: ElevatedButton(
+                                  Row(
+                                    children: [
 
-                              style: ElevatedButton.styleFrom(
-                                  backgroundColor: isEnrolled
-                                      ? Colors.green.shade100
-                                      : Colors.purple,
-                                  shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(20)
+                                      const Icon(Icons.star,
+                                          size:16,
+                                          color: Colors.orange),
+
+                                      Text(" ${c["rating"]}"),
+
+                                      const SizedBox(width:10),
+
+                                      Text(
+                                        "${c["students"]} students",
+                                        style: const TextStyle(
+                                            fontSize:12,
+                                            color: Colors.grey
+                                        ),
+                                      )
+                                    ],
                                   )
-                              ),
-
-                              onPressed:(){
-
-                                setState(() {
-                                  if(!enrolled.contains(c["id"])){
-                                    enrolled.add(c["id"]);
-                                  }
-                                });
-
-                                Navigator.pushNamed(
-                                  context,
-                                  "/school/booking",
-                                );
-
-                              },
-
-                              child: Text(
-                                  isEnrolled
-                                      ? "Enrolled! 🎉"
-                                      : "Register Now 🚀"
+                                ],
                               ),
                             ),
-                          )
 
-                        ],
+                            /// PRICE + BUTTON
+                            Column(
+                              children: [
+
+                                Text(
+                                  c["price"],
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize:16
+                                  ),
+                                ),
+
+                                const SizedBox(height:8),
+
+                                ElevatedButton(
+
+                                  style: ElevatedButton.styleFrom(
+                                      backgroundColor: isEnrolled
+                                          ? Colors.green
+                                          : Colors.deepPurple,
+                                      shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                          BorderRadius.circular(20)
+                                      )
+                                  ),
+
+                                  onPressed:(){
+
+                                    setState(() {
+                                      if(!enrolled.contains(c["id"])){
+                                        enrolled.add(c["id"]);
+                                      }
+                                    });
+
+                                    Navigator.pushNamed(
+                                      context,
+                                      "/school/booking",
+                                    );
+
+                                  },
+
+                                  child: Text(
+                                      isEnrolled
+                                          ? "Enrolled"
+                                          : "Join"
+                                  ),
+                                )
+                              ],
+                            )
+
+                          ],
+                        ),
                       ),
                     ),
                   );
                 },
-              )
+              ),
+            )
 
-            ],
-          ),
+          ],
         ),
       ),
     );
   }
 }
 
-class _BannerStat extends StatelessWidget {
-
-  final String value;
-  final String label;
-
-  const _BannerStat(this.value,this.label);
-
-  @override
-  Widget build(BuildContext context) {
-
-    return Container(
-      padding: const EdgeInsets.symmetric(
-          horizontal:16,
-          vertical:10
-      ),
-
-      decoration: BoxDecoration(
-          color: Colors.white24,
-          borderRadius: BorderRadius.circular(16)
-      ),
-
-      child: Column(
-        children: [
-
-          Text(
-            value,
-            style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold
-            ),
-          ),
-
-          Text(
-            label,
-            style: const TextStyle(
-                color: Colors.white70,
-                fontSize:12
-            ),
-          )
-
-        ],
-      ),
-    );
-  }
-}

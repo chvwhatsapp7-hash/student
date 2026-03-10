@@ -167,20 +167,15 @@ class _InternshipsScreenState extends State<InternshipsScreen> {
 
             /// INTERNSHIP LIST
             Expanded(
-              child: GridView.builder(
+              child: ListView.builder(
                 itemCount: filtered.length,
-                gridDelegate:
-                const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  mainAxisSpacing: 12,
-                  crossAxisSpacing: 12,
-                  childAspectRatio: .95,
-                ),
+                physics: const BouncingScrollPhysics(),
                 itemBuilder: (context, index) {
                   final intern = filtered[index];
                   final id = intern["id"] as int;
 
                   return Container(
+                    margin: const EdgeInsets.only(bottom: 12),
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
                       color: Colors.white,
@@ -195,9 +190,10 @@ class _InternshipsScreenState extends State<InternshipsScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(intern["logo"].toString(),
-                                style:
-                                const TextStyle(fontSize: 24)),
+                            Text(
+                              intern["logo"].toString(),
+                              style: const TextStyle(fontSize: 24),
+                            ),
                             IconButton(
                               icon: Icon(
                                 saved.contains(id)
@@ -216,12 +212,14 @@ class _InternshipsScreenState extends State<InternshipsScreen> {
 
                         const SizedBox(height: 6),
 
+                        /// TITLE
                         Text(
                           intern["title"].toString(),
                           style: const TextStyle(
                               fontWeight: FontWeight.bold),
                         ),
 
+                        /// COMPANY
                         Text(
                           intern["company"].toString(),
                           style: const TextStyle(
@@ -230,15 +228,16 @@ class _InternshipsScreenState extends State<InternshipsScreen> {
 
                         const SizedBox(height: 6),
 
+                        /// LOCATION & DURATION
                         Text(
                           "${intern["location"]} • ${intern["duration"]}",
                           style: const TextStyle(
                               color: Colors.grey, fontSize: 12),
                         ),
 
-                        const Spacer(),
+                        const SizedBox(height: 10),
 
-                        /// STIPEND
+                        /// STIPEND TAG
                         Container(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 8, vertical: 4),
@@ -266,8 +265,7 @@ class _InternshipsScreenState extends State<InternshipsScreen> {
                         ElevatedButton(
                           onPressed: () {},
                           style: ElevatedButton.styleFrom(
-                            minimumSize:
-                            const Size(double.infinity, 36),
+                            minimumSize: const Size(double.infinity, 36),
                           ),
                           child: const Text("Apply"),
                         )

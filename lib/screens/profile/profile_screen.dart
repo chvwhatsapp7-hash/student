@@ -9,7 +9,6 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen>
     with TickerProviderStateMixin {
-
   late TabController tabController;
 
   final List<Map<String, dynamic>> skills = [
@@ -62,270 +61,300 @@ class _ProfileScreenState extends State<ProfileScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[100],
-
-      body: Column(
-        children: [
-
-          /// PROFILE HEADER
-          Stack(
-            children: [
-
-              Container(
-                height: 160,
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Colors.blue, Colors.indigo],
-                  ),
+      body: SafeArea(
+        child: Column(
+          children: [
+            /// PROFILE HEADER
+            Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.blueAccent, Colors.indigo],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
+                boxShadow: [
+                  BoxShadow(
+                      color: Colors.black26,
+                      offset: Offset(0, 3),
+                      blurRadius: 5)
+                ],
               ),
-
-              Positioned(
-                top: 110,
-                left: 20,
-                child: CircleAvatar(
-                  radius: 45,
-                  backgroundColor: Colors.white,
-                  child: const CircleAvatar(
-                    radius: 40,
-                    backgroundColor: Colors.blue,
-                    child: Text(
-                      "A",
-                      style: TextStyle(
-                          fontSize: 32,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white),
+              padding: const EdgeInsets.only(top: 20, bottom: 60),
+              child: Stack(
+                children: [
+                  Positioned(
+                    top: 20,
+                    right: 15,
+                    child: IconButton(
+                      icon: const Icon(Icons.edit, color: Colors.white),
+                      onPressed: () {},
                     ),
                   ),
-                ),
-              ),
-
-              Positioned(
-                top: 40,
-                right: 15,
-                child: IconButton(
-                  icon: const Icon(Icons.edit, color: Colors.white),
-                  onPressed: () {},
-                ),
-              )
-            ],
-          ),
-
-          const SizedBox(height: 50),
-
-          /// NAME
-          const Text(
-            "Arjun Patel",
-            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-          ),
-
-          const Text(
-            "B.Tech Computer Science • 3rd Year",
-            style: TextStyle(color: Colors.blue),
-          ),
-
-          const Text(
-            "SRM Institute of Technology",
-            style: TextStyle(color: Colors.grey),
-          ),
-
-          const SizedBox(height: 15),
-
-          /// PROFILE STRENGTH
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Column(
-              children: [
-
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: const [
-                    Text("Profile Strength"),
-                    Text(
-                      "72%",
-                      style: TextStyle(
-                          color: Colors.blue, fontWeight: FontWeight.bold),
-                    )
-                  ],
-                ),
-
-                const SizedBox(height: 6),
-
-                LinearProgressIndicator(
-                  value: 0.72,
-                  backgroundColor: Colors.blue[100],
-                  color: Colors.blue,
-                )
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 10),
-
-          /// TABS
-          TabBar(
-            controller: tabController,
-            isScrollable: true,
-            labelColor: Colors.blue,
-            unselectedLabelColor: Colors.grey,
-            tabs: const [
-              Tab(text: "Overview"),
-              Tab(text: "Skills"),
-              Tab(text: "Certifications"),
-              Tab(text: "Projects"),
-              Tab(text: "Applications"),
-            ],
-          ),
-
-          Expanded(
-            child: TabBarView(
-              controller: tabController,
-              children: [
-
-                /// OVERVIEW
-                ListView(
-                  padding: const EdgeInsets.all(16),
-                  children: const [
-                    Text(
-                      "About Me",
-                      style:
-                      TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                    SizedBox(height: 8),
-                    Text(
-                        "Passionate full-stack developer with interest in AI/ML. "
-                            "Looking for internships to build scalable systems.")
-                  ],
-                ),
-
-                /// SKILLS
-                ListView(
-                  padding: const EdgeInsets.all(16),
-                  children: skills.map((skill) {
-
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-
-                          Row(
-                            mainAxisAlignment:
-                            MainAxisAlignment.spaceBetween,
+                  Center(
+                    child: Column(
+                      children: [
+                        CircleAvatar(
+                          radius: 45,
+                          backgroundColor: Colors.white,
+                          child: const CircleAvatar(
+                            radius: 40,
+                            backgroundColor: Colors.blue,
+                            child: Text(
+                              "A",
+                              style: TextStyle(
+                                  fontSize: 32,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        const Text(
+                          "Arjun Patel",
+                          style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white),
+                        ),
+                        const SizedBox(height: 4),
+                        const Text(
+                          "B.Tech Computer Science • 3rd Year",
+                          style: TextStyle(color: Colors.white70),
+                        ),
+                        const SizedBox(height: 2),
+                        const Text(
+                          "SRM Institute of Technology",
+                          style: TextStyle(color: Colors.white70),
+                        ),
+                        const SizedBox(height: 16),
+                        /// PROFILE STRENGTH
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 40),
+                          child: Column(
                             children: [
-                              Text(skill["name"]),
-                              Text("${(skill["level"] * 100).toInt()}%")
+                              Row(
+                                mainAxisAlignment:
+                                MainAxisAlignment.spaceBetween,
+                                children: const [
+                                  Text(
+                                    "Profile Strength",
+                                    style: TextStyle(color: Colors.white70),
+                                  ),
+                                  Text(
+                                    "72%",
+                                    style: TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold),
+                                  )
+                                ],
+                              ),
+                              const SizedBox(height: 6),
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(10),
+                                child: LinearProgressIndicator(
+                                  value: 0.72,
+                                  backgroundColor: Colors.white24,
+                                  color: Colors.white,
+                                  minHeight: 8,
+                                ),
+                              )
                             ],
                           ),
+                        )
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
 
-                          const SizedBox(height: 4),
-
-                          LinearProgressIndicator(
-                            value: skill["level"],
-                            color: Colors.blue,
-                            backgroundColor: Colors.grey[300],
-                          )
-                        ],
-                      ),
-                    );
-                  }).toList(),
-                ),
-
-                /// CERTIFICATIONS
-                ListView(
-                  padding: const EdgeInsets.all(16),
-                  children: certifications.map((cert) {
-
-                    return Card(
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15)),
-                      child: ListTile(
-                        leading: const Icon(Icons.workspace_premium,
-                            color: Colors.orange),
-                        title: Text(cert["name"]!),
-                        subtitle: Text(
-                            "${cert["issuer"]} • ${cert["date"]}"),
-                      ),
-                    );
-                  }).toList(),
-                ),
-
-                /// PROJECTS
-                ListView(
-                  padding: const EdgeInsets.all(16),
-                  children: projects.map((project) {
-
-                    return Card(
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15)),
-                      child: Padding(
-                        padding: const EdgeInsets.all(12),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-
-                            Text(
-                              project["title"],
-                              style: const TextStyle(
-                                  fontWeight: FontWeight.bold),
-                            ),
-
-                            const SizedBox(height: 6),
-
-                            Text(project["desc"]),
-
-                            const SizedBox(height: 6),
-
-                            Wrap(
-                              spacing: 6,
-                              children: project["tech"]
-                                  .map<Widget>((tech) => Chip(
-                                label: Text(tech),
-                              ))
-                                  .toList(),
-                            )
-                          ],
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                ),
-
-                /// APPLICATIONS
-                ListView(
-                  padding: const EdgeInsets.all(16),
-                  children: applications.map((app) {
-
-                    Color statusColor;
-
-                    switch (app["status"]) {
-                      case "Shortlisted":
-                        statusColor = Colors.green;
-                        break;
-                      case "Viewed":
-                        statusColor = Colors.orange;
-                        break;
-                      default:
-                        statusColor = Colors.blue;
-                    }
-
-                    return Card(
-                      child: ListTile(
-                        leading: const Icon(Icons.work),
-                        title: Text(app["role"]!),
-                        subtitle: Text(app["company"]!),
-                        trailing: Chip(
-                          label: Text(app["status"]!),
-                          backgroundColor: statusColor.withOpacity(0.15),
-                          labelStyle: TextStyle(color: statusColor),
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                ),
+            /// TABS
+            TabBar(
+              controller: tabController,
+              isScrollable: true,
+              labelColor: Colors.blue,
+              unselectedLabelColor: Colors.grey[600],
+              indicatorColor: Colors.blue,
+              tabs: const [
+                Tab(text: "Overview"),
+                Tab(text: "Skills"),
+                Tab(text: "Certifications"),
+                Tab(text: "Projects"),
+                Tab(text: "Applications"),
               ],
             ),
-          )
-        ],
+
+            /// TAB CONTENT
+            Expanded(
+              child: TabBarView(
+                controller: tabController,
+                children: [
+
+                  /// OVERVIEW
+                  SingleChildScrollView(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: const [
+                        Text(
+                          "About Me",
+                          style: TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
+                        SizedBox(height: 8),
+                        Text(
+                          "Passionate full-stack developer with interest in AI/ML. "
+                              "Looking for internships to build scalable systems.",
+                          style: TextStyle(fontSize: 14, height: 1.5),
+                        )
+                      ],
+                    ),
+                  ),
+
+                  /// SKILLS
+                  SingleChildScrollView(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      children: skills.map((skill) {
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment:
+                                MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(skill["name"],
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.bold)),
+                                  Text("${(skill["level"] * 100).toInt()}%",
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.bold))
+                                ],
+                              ),
+                              const SizedBox(height: 6),
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: LinearProgressIndicator(
+                                  value: skill["level"],
+                                  minHeight: 10,
+                                  backgroundColor: Colors.grey[300],
+                                  color: Colors.blueAccent,
+                                ),
+                              )
+                            ],
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+
+                  /// CERTIFICATIONS
+                  SingleChildScrollView(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      children: certifications.map((cert) {
+                        return Card(
+                          color: Colors.blue[50],
+                          margin: const EdgeInsets.only(bottom: 12),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12)),
+                          child: ListTile(
+                            leading: const Icon(Icons.workspace_premium,
+                                color: Colors.orange),
+                            title: Text(cert["name"]!),
+                            subtitle:
+                            Text("${cert["issuer"]} • ${cert["date"]}"),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+
+                  /// PROJECTS
+                  SingleChildScrollView(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      children: projects.map((project) {
+                        return Card(
+                          color: Colors.green[50],
+                          margin: const EdgeInsets.only(bottom: 16),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12)),
+                          child: Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  project["title"],
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold),
+                                ),
+                                const SizedBox(height: 6),
+                                Text(project["desc"]),
+                                const SizedBox(height: 8),
+                                Wrap(
+                                  spacing: 6,
+                                  children: project["tech"]
+                                      .map<Widget>((tech) => Chip(
+                                    label: Text(tech),
+                                    backgroundColor:
+                                    Colors.green[100],
+                                  ))
+                                      .toList(),
+                                )
+                              ],
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+
+                  /// APPLICATIONS
+                  SingleChildScrollView(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      children: applications.map((app) {
+                        Color statusColor;
+
+                        switch (app["status"]) {
+                          case "Shortlisted":
+                            statusColor = Colors.green;
+                            break;
+                          case "Viewed":
+                            statusColor = Colors.orange;
+                            break;
+                          default:
+                            statusColor = Colors.blue;
+                        }
+
+                        return Card(
+                          color: Colors.grey[50],
+                          margin: const EdgeInsets.only(bottom: 12),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12)),
+                          child: ListTile(
+                            leading: const Icon(Icons.work),
+                            title: Text(app["role"]!),
+                            subtitle: Text(app["company"]!),
+                            trailing: Chip(
+                              label: Text(app["status"]!),
+                              backgroundColor: statusColor.withOpacity(0.2),
+                              labelStyle: TextStyle(color: statusColor),
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                ],
+              ),
+            )
+          ],
+        ),
       ),
     );
   }

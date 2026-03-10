@@ -120,296 +120,190 @@ class _HackathonsScreenState extends State<HackathonsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[100],
-
       appBar: AppBar(
         title: const Text("Hackathons"),
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
         elevation: 0,
       ),
-
-      body: SingleChildScrollView(
+      body: ListView(
         padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-
-            /// HEADER
-            Row(
-              children: [
-                const Text(
-                  "Hackathons",
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+        children: [
+          /// HEADER
+          Row(
+            children: [
+              const Text(
+                "Hackathons",
+                style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(width: 10),
+              Container(
+                padding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.orange[100],
+                  borderRadius: BorderRadius.circular(20),
                 ),
-                const SizedBox(width: 10),
-                Container(
-                  padding:
-                  const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.orange[100],
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: const Text(
-                    "COMING SOON",
-                    style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.orange),
-                  ),
-                )
+                child: const Text(
+                  "COMING SOON",
+                  style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.orange),
+                ),
+              )
+            ],
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            "Compete, collaborate, and win with India's top hackathons",
+            style: TextStyle(color: Colors.grey),
+          ),
+          const SizedBox(height: 20),
+
+          /// HERO BANNER
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                  colors: [Colors.indigo, Colors.purple, Colors.blue]),
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                    color: Colors.black12, blurRadius: 6, offset: Offset(0, 4))
               ],
             ),
-
-            const SizedBox(height: 8),
-
-            const Text(
-              "Compete, collaborate, and win with India's top hackathons",
-              style: TextStyle(color: Colors.grey),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: const [
+                Text("🏆", style: TextStyle(fontSize: 32)),
+                SizedBox(height: 8),
+                Text(
+                  "Hackathon Season 2025-26",
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 6),
+                Text(
+                  "India's biggest coding competitions are coming.",
+                  style: TextStyle(color: Colors.white70),
+                ),
+              ],
             ),
+          ),
 
-            const SizedBox(height: 20),
+          const SizedBox(height: 20),
 
-            /// HERO BANNER
-            Container(
-              padding: const EdgeInsets.all(20),
+          /// HACKATHON CARDS
+          ...hackathons.map((hack) {
+            final isReminded = reminded.contains(hack.id);
+
+            return Container(
+              margin: const EdgeInsets.only(bottom: 16),
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                    colors: [Colors.indigo, Colors.purple, Colors.blue]),
+                color: Colors.white,
                 borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                      color: Colors.black12,
+                      blurRadius: 6,
+                      offset: Offset(0, 4))
+                ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  Text("🏆", style: TextStyle(fontSize: 30)),
-                  SizedBox(height: 8),
-                  Text(
-                    "Hackathon Season 2025-26",
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold),
+                children: [
+                  /// HEADER
+                  Row(
+                    children: [
+                      Text(hack.logo, style: const TextStyle(fontSize: 28)),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          hack.title,
+                          style: const TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 16),
+                        ),
+                      ),
+                    ],
                   ),
-                  SizedBox(height: 6),
-                  Text(
-                    "India's biggest coding competitions are coming.",
-                    style: TextStyle(color: Colors.white70),
+                  const SizedBox(height: 6),
+                  Text(hack.org,
+                      style:
+                      const TextStyle(fontSize: 12, color: Colors.grey)),
+                  const SizedBox(height: 10),
+
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text("📅 ${hack.date}",
+                          style: const TextStyle(fontSize: 12)),
+                      Text("🏆 ${hack.prize}",
+                          style: const TextStyle(fontSize: 12)),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text("👥 ${hack.participants}",
+                          style: const TextStyle(fontSize: 12)),
+                      Text("📍 ${hack.location}",
+                          style: const TextStyle(fontSize: 12)),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+
+                  /// TAGS
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 4,
+                    children: hack.tags.map((t) {
+                      return Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.indigo[50],
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          t,
+                          style: const TextStyle(
+                              fontSize: 11,
+                              color: Colors.indigo,
+                              fontWeight: FontWeight.bold),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 10),
+
+                  /// REMINDER BUTTON
+                  ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor:
+                      isReminded ? Colors.green[100] : Colors.indigo,
+                      foregroundColor:
+                      isReminded ? Colors.green[800] : Colors.white,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                      minimumSize: const Size(double.infinity, 40),
+                    ),
+                    icon: Icon(isReminded ? Icons.check : Icons.notifications),
+                    onPressed: () {
+                      if (!isReminded) showReminderDialog(hack.id);
+                    },
+                    label: Text(
+                        isReminded ? "Reminder Set!" : "Remind Me Later"),
                   ),
                 ],
               ),
-            ),
-
-            const SizedBox(height: 20),
-
-            /// HACKATHON CARDS
-            ///
-            // GridView.builder(
-            //   shrinkWrap: true,
-            //   physics: const NeverScrollableScrollPhysics(),
-            //   itemCount: hackathons.length,
-            //   gridDelegate:
-            //   const SliverGridDelegateWithFixedCrossAxisCount(
-            //     crossAxisCount: 2,
-            //     mainAxisSpacing: 14,
-            //     crossAxisSpacing: 14,
-            //     childAspectRatio: 0.9,
-            //   ),
-            //   itemBuilder: (context, index) {
-            //     final hack = hackathons[index];
-            //     final isReminded = reminded.contains(hack.id);
-            //
-            //     return Container(
-            //       padding: const EdgeInsets.all(14),
-            //       decoration: BoxDecoration(
-            //         color: Colors.white,
-            //         borderRadius: BorderRadius.circular(20),
-            //         border: Border.all(color: Colors.grey.shade200),
-            //       ),
-            //       child: Column(
-            //         crossAxisAlignment: CrossAxisAlignment.start,
-            //         children: [
-            //
-            //           /// HEADER
-            //           Row(
-            //             children: [
-            //               Text(hack.logo, style: const TextStyle(fontSize: 26)),
-            //               const SizedBox(width: 8),
-            //               Expanded(
-            //                 child: Text(
-            //                   hack.title,
-            //                   style:
-            //                   const TextStyle(fontWeight: FontWeight.bold),
-            //                 ),
-            //               )
-            //             ],
-            //           ),
-            //
-            //           const SizedBox(height: 6),
-            //
-            //           Text(
-            //             hack.org,
-            //             style:
-            //             const TextStyle(fontSize: 12, color: Colors.grey),
-            //           ),
-            //
-            //           const SizedBox(height: 10),
-            //
-            //           Text("📅 ${hack.date}",
-            //               style: const TextStyle(fontSize: 12)),
-            //           Text("🏆 ${hack.prize}",
-            //               style: const TextStyle(fontSize: 12)),
-            //           Text("👥 ${hack.participants}",
-            //               style: const TextStyle(fontSize: 12)),
-            //           Text("📍 ${hack.location}",
-            //               style: const TextStyle(fontSize: 12)),
-            //
-            //           const Spacer(),
-            //
-            //           /// TAGS
-            //           Wrap(
-            //             spacing: 4,
-            //             children: hack.tags
-            //                 .map(
-            //                   (t) => Container(
-            //                 padding: const EdgeInsets.symmetric(
-            //                     horizontal: 6, vertical: 3),
-            //                 decoration: BoxDecoration(
-            //                   color: Colors.indigo[50],
-            //                   borderRadius: BorderRadius.circular(6),
-            //                 ),
-            //                 child: Text(
-            //                   t,
-            //                   style: const TextStyle(
-            //                       fontSize: 10,
-            //                       color: Colors.indigo,
-            //                       fontWeight: FontWeight.bold),
-            //                 ),
-            //               ),
-            //             )
-            //                 .toList(),
-            //           ),
-            //
-            //           const SizedBox(height: 10),
-            //
-            //           /// REMINDER BUTTON
-            //           ElevatedButton(
-            //             style: ElevatedButton.styleFrom(
-            //               backgroundColor:
-            //               isReminded ? Colors.green[100] : Colors.indigo,
-            //               foregroundColor:
-            //               isReminded ? Colors.green[800] : Colors.white,
-            //             ),
-            //             onPressed: () {
-            //               if (!isReminded) {
-            //                 showReminderDialog(hack.id);
-            //               }
-            //             },
-            //             child: Text(isReminded
-            //                 ? "✓ Reminder Set!"
-            //                 : "Remind Me Later"),
-            //           )
-            //         ],
-            //       ),
-            //     );
-            //   },
-            // )
-            ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: hackathons.length,
-              itemBuilder: (context, index) {
-                final hack = hackathons[index];
-                final isReminded = reminded.contains(hack.id);
-
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 14),
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Colors.grey.shade200),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-
-                      /// HEADER
-                      Row(
-                        children: [
-                          Text(hack.logo, style: const TextStyle(fontSize: 26)),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              hack.title,
-                              style: const TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                          )
-                        ],
-                      ),
-
-                      const SizedBox(height: 6),
-
-                      Text(
-                        hack.org,
-                        style: const TextStyle(fontSize: 12, color: Colors.grey),
-                      ),
-
-                      const SizedBox(height: 10),
-
-                      Text("📅 ${hack.date}", style: const TextStyle(fontSize: 12)),
-                      Text("🏆 ${hack.prize}", style: const TextStyle(fontSize: 12)),
-                      Text("👥 ${hack.participants}", style: const TextStyle(fontSize: 12)),
-                      Text("📍 ${hack.location}", style: const TextStyle(fontSize: 12)),
-
-                      const SizedBox(height: 10),
-
-                      /// TAGS
-                      Wrap(
-                        spacing: 4,
-                        children: hack.tags.map(
-                              (t) => Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                            decoration: BoxDecoration(
-                              color: Colors.indigo[50],
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              t,
-                              style: const TextStyle(
-                                fontSize: 10,
-                                color: Colors.indigo,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ).toList(),
-                      ),
-
-                      const SizedBox(height: 10),
-
-                      /// REMINDER BUTTON
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor:
-                          isReminded ? Colors.green[100] : Colors.indigo,
-                          foregroundColor:
-                          isReminded ? Colors.green[800] : Colors.white,
-                        ),
-                        onPressed: () {
-                          if (!isReminded) {
-                            showReminderDialog(hack.id);
-                          }
-                        },
-                        child: Text(
-                          isReminded ? "✓ Reminder Set!" : "Remind Me Later",
-                        ),
-                      )
-                    ],
-                  ),
-                );
-              },
-            )
-          ],
-        ),
+            );
+          }).toList(),
+        ],
       ),
     );
   }

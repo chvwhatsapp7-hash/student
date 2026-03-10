@@ -15,12 +15,14 @@ class _SchoolLayoutScreenState extends State<SchoolLayoutScreen> {
 
   int _selectedIndex = 0;
 
+  /// IMPORTANT: remove const so UI updates correctly
   final List<Widget> _screens = [
     const SchoolDashboardScreen(),
     const SchoolCoursesScreen(),
     const SchoolBookingScreen(),
   ];
-  void _onTap(int index){
+
+  void _onTap(int index) {
     setState(() {
       _selectedIndex = index;
     });
@@ -31,61 +33,68 @@ class _SchoolLayoutScreenState extends State<SchoolLayoutScreen> {
 
     return Scaffold(
 
-      /// Background Gradient
+      backgroundColor: Colors.transparent,
+
+      /// BODY
       body: Container(
         decoration: const BoxDecoration(
-            gradient: LinearGradient(
-                colors: [
-                  Color(0xfff0f4ff),
-                  Color(0xfffdf4ff),
-                ],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter
-            )
+          gradient: LinearGradient(
+            colors: [
+              Color(0xffEEF2FF),
+              Color(0xffFDF4FF),
+              Color(0xffF0FDFA),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
         ),
 
-        child: Column(
-          children: [
+        child: SafeArea(
+          child: Column(
+            children: [
 
-            /// TOP BAR
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal:16,vertical:10),
-              decoration: const BoxDecoration(
-                  color: Colors.white,
-                  boxShadow: [
+              /// HEADER
+              Container(
+                margin: const EdgeInsets.fromLTRB(16,16,16,10),
+                padding: const EdgeInsets.symmetric(horizontal:16,vertical:14),
+
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.95),
+                  borderRadius: BorderRadius.circular(22),
+                  boxShadow: const [
                     BoxShadow(
-                        blurRadius:6,
-                        color: Colors.black12
+                      color: Colors.black12,
+                      blurRadius: 16,
+                      offset: Offset(0,6),
                     )
-                  ]
-              ),
+                  ],
+                ),
 
-              child: SafeArea(
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
 
-                    /// Logo
+                    /// LOGO
                     Row(
                       children: [
 
                         Container(
-                          height:36,
-                          width:36,
+                          height:42,
+                          width:42,
                           alignment: Alignment.center,
                           decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(10),
-                              gradient: const LinearGradient(
-                                  colors:[
-                                    Color(0xff667eea),
-                                    Color(0xfff093fb)
-                                  ]
-                              )
+                            borderRadius: BorderRadius.circular(14),
+                            gradient: const LinearGradient(
+                              colors: [
+                                Color(0xff667eea),
+                                Color(0xff764ba2)
+                              ],
+                            ),
                           ),
-                          child: const Text("🚀"),
+                          child: const Text("🚀",style: TextStyle(fontSize:20)),
                         ),
 
-                        const SizedBox(width:8),
+                        const SizedBox(width:10),
 
                         const Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -94,38 +103,41 @@ class _SchoolLayoutScreenState extends State<SchoolLayoutScreen> {
                             Text(
                               "TechPath",
                               style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize:14
+                                fontSize:17,
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
 
                             Text(
-                              "Kids",
+                              "Kids Learning",
                               style: TextStyle(
-                                  color: Colors.purple,
-                                  fontSize:11
+                                fontSize:12,
+                                color: Colors.deepPurple,
                               ),
-                            )
-
+                            ),
                           ],
                         )
-
                       ],
                     ),
 
-                    /// Points + Avatar
+                    /// XP + AVATAR
                     Row(
                       children: [
 
                         Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal:10,
+                              horizontal:12,
                               vertical:6
                           ),
 
                           decoration: BoxDecoration(
-                              color: Colors.yellow.shade50,
-                              borderRadius: BorderRadius.circular(20)
+                            borderRadius: BorderRadius.circular(30),
+                            gradient: LinearGradient(
+                              colors: [
+                                Colors.yellow.shade100,
+                                Colors.orange.shade200
+                              ],
+                            ),
                           ),
 
                           child: const Row(
@@ -135,78 +147,106 @@ class _SchoolLayoutScreenState extends State<SchoolLayoutScreen> {
                               Text(
                                 "240 pts",
                                 style: TextStyle(
-                                    fontWeight: FontWeight.bold
+                                  fontWeight: FontWeight.bold,
                                 ),
                               )
                             ],
                           ),
                         ),
 
-                        const SizedBox(width:8),
+                        const SizedBox(width:10),
 
                         Container(
-                          height:34,
-                          width:34,
+                          height:38,
+                          width:38,
                           alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              gradient: const LinearGradient(
-                                  colors:[
-                                    Color(0xff667eea),
-                                    Color(0xfff093fb)
-                                  ]
-                              )
-                          ),
-                          child: const Text("👦"),
-                        )
 
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: LinearGradient(
+                              colors: [
+                                Color(0xff667eea),
+                                Color(0xfff093fb)
+                              ],
+                            ),
+                          ),
+
+                          child: const Text("👦",style: TextStyle(fontSize:16)),
+                        )
                       ],
                     )
-
                   ],
                 ),
               ),
-            ),
 
-            /// PAGE CONTENT
-            Expanded(
-              child: IndexedStack(
-                index: _selectedIndex,
-                children: _screens,
+              /// PAGE CONTENT (BEST FOR NAVIGATION)
+              Expanded(
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 300),
+
+                  child: IndexedStack(
+                    key: ValueKey(_selectedIndex),
+                    index: _selectedIndex,
+                    children: _screens,
+                  ),
+                ),
               ),
-            )
 
-          ],
+            ],
+          ),
         ),
       ),
 
-      /// BOTTOM NAVIGATION
-      bottomNavigationBar: BottomNavigationBar(
+      /// FLOATING BOTTOM NAV
+      bottomNavigationBar: Container(
+        margin: const EdgeInsets.fromLTRB(16,0,16,16),
 
-        currentIndex: _selectedIndex,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: const [
+            BoxShadow(
+              color: Colors.black12,
+              blurRadius: 20,
+            )
+          ],
+        ),
 
-        onTap: _onTap,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(24),
 
-        selectedItemColor: Colors.purple,
+          child: BottomNavigationBar(
 
-        items: const [
+            currentIndex: _selectedIndex,
+            onTap: _onTap,
 
-          BottomNavigationBarItem(
-              icon: Icon(Icons.home),
-              label: "Home"
+            backgroundColor: Colors.white,
+            elevation: 0,
+
+            selectedItemColor: Colors.deepPurple,
+            unselectedItemColor: Colors.grey,
+
+            type: BottomNavigationBarType.fixed,
+
+            items: const [
+
+              BottomNavigationBarItem(
+                icon: Icon(Icons.dashboard_rounded),
+                label: "Dashboard",
+              ),
+
+              BottomNavigationBarItem(
+                icon: Icon(Icons.menu_book_rounded),
+                label: "Courses",
+              ),
+
+              BottomNavigationBarItem(
+                icon: Icon(Icons.calendar_month_rounded),
+                label: "Booking",
+              ),
+
+            ],
           ),
-
-          BottomNavigationBarItem(
-              icon: Icon(Icons.menu_book),
-              label: "Courses"
-          ),
-
-          BottomNavigationBarItem(
-              icon: Icon(Icons.calendar_month),
-              label: "Book Class"
-          ),
-
-        ],
+        ),
       ),
     );
   }

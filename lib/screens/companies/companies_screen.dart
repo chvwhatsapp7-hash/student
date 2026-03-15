@@ -1,21 +1,44 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
+// ─────────────────────────────────────────────
+//  DESIGN TOKENS — Engineering Theme
+// ─────────────────────────────────────────────
+
+const kInk         = Color(0xFF0F172A);   // dark navy header
+const kSlate       = Color(0xFF334155);   // secondary text
+const kMuted       = Color(0xFF64748B);   // muted text
+const kHint        = Color(0xFF94A3B8);   // hints / placeholders
+const kBgPage      = Color(0xFFF0F4F8);   // page background
+const kCardBg      = Color(0xFFFFFFFF);   // card surface
+const kBorder      = Color(0xFFE2E8F0);   // default border
+const kPrimary     = Color(0xFF1D4ED8);   // primary blue
+const kAccent      = Color(0xFF38BDF8);   // sky accent
+const kSuccess     = Color(0xFF16A34A);   // green
+const kWarning     = Color(0xFFF59E0B);   // amber
+const kSelectedBg  = Color(0xFFEFF6FF);   // selected fill
+
+// ─────────────────────────────────────────────
+//  MODEL
+// ─────────────────────────────────────────────
 
 class Company {
-  final int id;
+  final int    id;
   final String name;
   final String city;
   final String state;
   final String type;
   final String size;
-  final int openings;
+  final int    openings;
   final String domain;
   final String logo;
   final String desc;
   final String website;
   final double lat;
   final double lng;
+  final List<String> tags;
 
-  Company({
+  const Company({
     required this.id,
     required this.name,
     required this.city,
@@ -29,8 +52,89 @@ class Company {
     required this.website,
     required this.lat,
     required this.lng,
+    required this.tags,
   });
 }
+
+// ─────────────────────────────────────────────
+//  DATA
+// ─────────────────────────────────────────────
+
+final List<Company> kCompanies = [
+  const Company(
+    id: 1, name: 'Infosys', city: 'Bengaluru', state: 'Karnataka',
+    type: 'MNC', size: '300K+ employees', openings: 45,
+    domain: 'IT Services', logo: '🔵',
+    desc: 'Global leader in digital services, consulting, and next-gen IT solutions for enterprises worldwide.',
+    website: 'infosys.com', lat: 12.97, lng: 77.59,
+    tags: ['Java', 'Cloud', 'SAP', 'AI/ML'],
+  ),
+  const Company(
+    id: 2, name: 'Flipkart', city: 'Bengaluru', state: 'Karnataka',
+    type: 'Unicorn', size: '30K+ employees', openings: 28,
+    domain: 'E-Commerce', logo: '🟡',
+    desc: "India's largest e-commerce marketplace, building the future of retail with cutting-edge tech.",
+    website: 'flipkart.com', lat: 12.95, lng: 77.67,
+    tags: ['React', 'Scala', 'Big Data', 'SDE'],
+  ),
+  const Company(
+    id: 3, name: 'Zepto', city: 'Mumbai', state: 'Maharashtra',
+    type: 'Startup', size: '3K+ employees', openings: 12,
+    domain: 'Quick Commerce', logo: '⚡',
+    desc: 'Pioneering 10-minute grocery delivery across India with a tech-first logistics platform.',
+    website: 'zepto.com', lat: 19.07, lng: 72.87,
+    tags: ['Node.js', 'React Native', 'DevOps'],
+  ),
+  const Company(
+    id: 4, name: 'ISRO', city: 'Bengaluru', state: 'Karnataka',
+    type: 'Government', size: '16K+ employees', openings: 8,
+    domain: 'Space & Research', logo: '🚀',
+    desc: "India's national space research organisation, pushing boundaries in aerospace and satellite tech.",
+    website: 'isro.gov.in', lat: 13.02, lng: 77.57,
+    tags: ['C/C++', 'Embedded', 'VLSI', 'Aerospace'],
+  ),
+  const Company(
+    id: 5, name: 'Razorpay', city: 'Bengaluru', state: 'Karnataka',
+    type: 'Unicorn', size: '2.5K+ employees', openings: 18,
+    domain: 'Fintech', logo: '💙',
+    desc: 'Full-stack financial solutions powering payments, banking, and payroll for 8M+ businesses.',
+    website: 'razorpay.com', lat: 12.93, lng: 77.62,
+    tags: ['Go', 'Python', 'Fintech', 'Backend'],
+  ),
+  const Company(
+    id: 6, name: 'Ola Electric', city: 'Bengaluru', state: 'Karnataka',
+    type: 'Startup', size: '4K+ employees', openings: 22,
+    domain: 'EV / Clean Tech', logo: '🟢',
+    desc: 'Building the future of sustainable mobility with electric vehicles and clean energy solutions.',
+    website: 'olaelectric.com', lat: 12.91, lng: 77.64,
+    tags: ['Embedded', 'IoT', 'React', 'Python'],
+  ),
+];
+
+const List<String> kFilters = ['All', 'MNC', 'Startup', 'Unicorn', 'Government'];
+
+// ─────────────────────────────────────────────
+//  TYPE BADGE COLOURS
+// ─────────────────────────────────────────────
+
+Map<String, _TypeStyle> _typeStyles = {
+  'MNC':        _TypeStyle(bg: Color(0xFFEFF6FF), fg: Color(0xFF1D4ED8)),
+  'Startup':    _TypeStyle(bg: Color(0xFFFFF7ED), fg: Color(0xFFC2410C)),
+  'Unicorn':    _TypeStyle(bg: Color(0xFFF5F3FF), fg: Color(0xFF6D28D9)),
+  'Government': _TypeStyle(bg: Color(0xFFF0FDF4), fg: Color(0xFF15803D)),
+};
+
+class _TypeStyle {
+  final Color bg, fg;
+  const _TypeStyle({required this.bg, required this.fg});
+}
+
+_TypeStyle _style(String type) =>
+    _typeStyles[type] ?? const _TypeStyle(bg: Color(0xFFF1F5F9), fg: Color(0xFF475569));
+
+// ─────────────────────────────────────────────
+//  SCREEN
+// ─────────────────────────────────────────────
 
 class CompaniesScreen extends StatefulWidget {
   const CompaniesScreen({super.key});
@@ -39,415 +143,916 @@ class CompaniesScreen extends StatefulWidget {
   State<CompaniesScreen> createState() => _CompaniesScreenState();
 }
 
-class _CompaniesScreenState extends State<CompaniesScreen> {
-  int? selected;
-  String view = "list";
-  String filter = "All";
+class _CompaniesScreenState extends State<CompaniesScreen>
+    with TickerProviderStateMixin {
 
-  final filters = ["All", "MNC", "Startup", "Unicorn", "Government"];
+  int?   _selected;
+  String _view   = 'list';
+  String _filter = 'All';
+  String _search = '';
 
-  final List<Company> companies = [
-    Company(
-      id: 1,
-      name: "Infosys",
-      city: "Bangalore",
-      state: "Karnataka",
-      type: "MNC",
-      size: "300K+ employees",
-      openings: 45,
-      domain: "IT Services",
-      logo: "🔵",
-      desc: "Global leader in digital services and consulting.",
-      website: "infosys.com",
-      lat: 12.97,
-      lng: 77.59,
-    ),
-    Company(
-      id: 2,
-      name: "Flipkart",
-      city: "Bangalore",
-      state: "Karnataka",
-      type: "Startup",
-      size: "30K+ employees",
-      openings: 28,
-      domain: "E-Commerce",
-      logo: "🟡",
-      desc: "India's largest e-commerce marketplace.",
-      website: "flipkart.com",
-      lat: 12.95,
-      lng: 77.67,
-    ),
-    Company(
-      id: 3,
-      name: "Zepto",
-      city: "Mumbai",
-      state: "Maharashtra",
-      type: "Startup",
-      size: "3K+ employees",
-      openings: 12,
-      domain: "Quick Commerce",
-      logo: "⚡",
-      desc: "10-minute grocery delivery startup.",
-      website: "zepto.com",
-      lat: 19.07,
-      lng: 72.87,
-    ),
-    Company(
-      id: 4,
-      name: "ISRO",
-      city: "Bangalore",
-      state: "Karnataka",
-      type: "Government",
-      size: "16K+ employees",
-      openings: 8,
-      domain: "Space & Research",
-      logo: "🚀",
-      desc: "India's national space agency.",
-      website: "isro.gov.in",
-      lat: 13.02,
-      lng: 77.57,
-    ),
-    Company(
-      id: 5,
-      name: "Razorpay",
-      city: "Bangalore",
-      state: "Karnataka",
-      type: "Unicorn",
-      size: "2.5K+ employees",
-      openings: 18,
-      domain: "Fintech",
-      logo: "💙",
-      desc: "Full-stack financial solutions company.",
-      website: "razorpay.com",
-      lat: 12.93,
-      lng: 77.62,
-    ),
-  ];
+  late AnimationController _headerAnim;
+  late AnimationController _detailAnim;
+  late Animation<double>   _detailFade;
+  late Animation<Offset>   _detailSlide;
 
-  Color typeColor(String type) {
-    switch (type) {
-      case "MNC":
-        return Colors.blue;
-      case "Startup":
-        return Colors.orange;
-      case "Government":
-        return Colors.green;
-      case "Unicorn":
-        return Colors.purple;
-      default:
-        return Colors.grey;
+  // Per-card stagger
+  final Map<int, AnimationController> _cardAnims = {};
+
+  List<Company> get _filtered {
+    var list = _filter == 'All'
+        ? kCompanies
+        : kCompanies.where((c) => c.type == _filter).toList();
+    if (_search.isNotEmpty) {
+      list = list
+          .where((c) =>
+      c.name.toLowerCase().contains(_search.toLowerCase()) ||
+          c.domain.toLowerCase().contains(_search.toLowerCase()) ||
+          c.city.toLowerCase().contains(_search.toLowerCase()))
+          .toList();
+    }
+    return list;
+  }
+
+  Company? get _selectedCompany =>
+      _selected == null ? null : kCompanies.firstWhere((c) => c.id == _selected);
+
+  @override
+  void initState() {
+    super.initState();
+
+    _headerAnim = AnimationController(
+      vsync: this, duration: const Duration(milliseconds: 600),
+    )..forward();
+
+    _detailAnim = AnimationController(
+      vsync: this, duration: const Duration(milliseconds: 340),
+    );
+    _detailFade  = CurvedAnimation(parent: _detailAnim, curve: Curves.easeOut);
+    _detailSlide = Tween<Offset>(
+      begin: const Offset(0, 0.08), end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _detailAnim, curve: Curves.easeOut));
+
+    _initCardAnims();
+  }
+
+  void _initCardAnims() {
+    for (int i = 0; i < kCompanies.length; i++) {
+      final c = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 450),
+      );
+      _cardAnims[kCompanies[i].id] = c;
+      Future.delayed(Duration(milliseconds: 80 + i * 80), () {
+        if (mounted) c.forward();
+      });
     }
   }
 
   @override
+  void dispose() {
+    _headerAnim.dispose();
+    _detailAnim.dispose();
+    for (final c in _cardAnims.values) c.dispose();
+    super.dispose();
+  }
+
+  void _selectCompany(int id) {
+    HapticFeedback.selectionClick();
+    setState(() => _selected = id);
+    _detailAnim.reset();
+    _detailAnim.forward();
+    // Show bottom sheet on mobile
+    _showDetailSheet(kCompanies.firstWhere((c) => c.id == id));
+  }
+
+  // ── build ──────────────────────────────────
+
+  @override
   Widget build(BuildContext context) {
-    final filtered = filter == "All"
-        ? companies
-        : companies.where((c) => c.type == filter).toList();
-
-    final company =
-    companies.firstWhere((c) => c.id == selected, orElse: () => Company(
-      id: 0,
-      name: "",
-      city: "",
-      state: "",
-      type: "",
-      size: "",
-      openings: 0,
-      domain: "",
-      logo: "",
-      desc: "",
-      website: "",
-      lat: 0,
-      lng: 0,
-    ));
-
     return Scaffold(
-      backgroundColor: Colors.grey[100],
-      appBar: AppBar(
-        title: const Text("Companies"),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-        elevation: 0,
+      backgroundColor: kBgPage,
+      body: Column(
+        children: [
+          _buildHeader(),
+          _buildSearchBar(),
+          _buildFilterBar(),
+          Expanded(
+            child: _view == 'list' ? _buildList() : _buildMapPlaceholder(),
+          ),
+        ],
       ),
+    );
+  }
 
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
+  // ── HEADER ─────────────────────────────────
 
-            /// VIEW TOGGLE
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
+  Widget _buildHeader() {
+    return AnimatedBuilder(
+      animation: _headerAnim,
+      builder: (_, child) => Opacity(opacity: _headerAnim.value, child: child),
+      child: Container(
+        color: kInk,
+        child: SafeArea(
+          bottom: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 14, 20, 18),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[200],
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Row(
-                    children: ["list", "map"].map((v) {
-                      final active = view == v;
-
-                      return GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            view = v;
-                          });
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 6),
-                          decoration: BoxDecoration(
-                            color:
-                            active ? Colors.white : Colors.transparent,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            v,
-                            style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: active
-                                    ? Colors.blue
-                                    : Colors.grey),
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                )
-              ],
-            ),
-
-            const SizedBox(height: 16),
-
-            /// FILTERS
-            SizedBox(
-              height: 40,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                children: filters.map((f) {
-                  final active = filter == f;
-
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor:
-                        active ? Colors.blue : Colors.white,
-                        foregroundColor:
-                        active ? Colors.white : Colors.black,
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          filter = f;
-                        });
-                      },
-                      child: Text(f),
-                    ),
-                  );
-                }).toList(),
-              ),
-            ),
-
-            const SizedBox(height: 20),
-
-            /// LIST VIEW
-            if (view == "list")
-              Expanded(
-                child: Row(
+                Row(
                   children: [
-
-                    /// COMPANY LIST
-                    Expanded(
-                      flex: 3,
-                      child: ListView.builder(
-                        itemCount: filtered.length,
-                        itemBuilder: (context, i) {
-                          final c = filtered[i];
-
+                    GestureDetector(
+                      onTap: () => Navigator.maybePop(context),
+                      child: Container(
+                        width: 36, height: 36,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.10),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(Icons.arrow_back_ios_new_rounded,
+                            color: Colors.white, size: 16),
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Companies',
+                              style: TextStyle(
+                                fontSize: 20, fontWeight: FontWeight.w800,
+                                color: Colors.white, letterSpacing: -0.4,
+                              )),
+                          Text('Discover where you want to work',
+                              style: TextStyle(
+                                  fontSize: 12, color: Color(0xFF94A3B8))),
+                        ],
+                      ),
+                    ),
+                    // View toggle
+                    Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.10),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        children: ['list', 'map'].map((v) {
+                          final active = _view == v;
                           return GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                selected = c.id;
-                              });
-                            },
-                            child: Container(
-                              margin: const EdgeInsets.only(bottom: 12),
-                              padding: const EdgeInsets.all(14),
+                            onTap: () => setState(() => _view = v),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 220),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 14, vertical: 7),
                               decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(16),
-                                border: Border.all(
-                                  color: selected == c.id
-                                      ? Colors.blue
-                                      : Colors.grey.shade200,
-                                ),
+                                color: active
+                                    ? Colors.white.withOpacity(0.18)
+                                    : Colors.transparent,
+                                borderRadius: BorderRadius.circular(9),
                               ),
                               child: Row(
                                 children: [
-                                  Text(c.logo,
-                                      style:
-                                      const TextStyle(fontSize: 30)),
-                                  const SizedBox(width: 12),
-
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                      CrossAxisAlignment.start,
-                                      children: [
-                                        Row(
-                                          mainAxisAlignment:
-                                          MainAxisAlignment
-                                              .spaceBetween,
-                                          children: [
-                                            Text(c.name,
-                                                style: const TextStyle(
-                                                    fontWeight:
-                                                    FontWeight
-                                                        .bold)),
-                                            Container(
-                                              padding:
-                                              const EdgeInsets
-                                                  .symmetric(
-                                                  horizontal: 8,
-                                                  vertical: 4),
-                                              decoration: BoxDecoration(
-                                                color: typeColor(
-                                                    c.type)
-                                                    .withOpacity(.1),
-                                                borderRadius:
-                                                BorderRadius
-                                                    .circular(6),
-                                              ),
-                                              child: Text(
-                                                c.type,
-                                                style: TextStyle(
-                                                    color: typeColor(
-                                                        c.type),
-                                                    fontSize: 12),
-                                              ),
-                                            )
-                                          ],
-                                        ),
-
-                                        const SizedBox(height: 4),
-
-                                        Text(
-                                          "${c.city}, ${c.state}",
-                                          style: const TextStyle(
-                                              color: Colors.grey,
-                                              fontSize: 12),
-                                        ),
-
-                                        const SizedBox(height: 6),
-
-                                        Row(
-                                          mainAxisAlignment:
-                                          MainAxisAlignment
-                                              .spaceBetween,
-                                          children: [
-                                            Text(c.domain,
-                                                style: const TextStyle(
-                                                    fontSize: 12,
-                                                    color:
-                                                    Colors.grey)),
-                                            Text(
-                                              "${c.openings} openings",
-                                              style: const TextStyle(
-                                                  color: Colors.blue,
-                                                  fontWeight:
-                                                  FontWeight
-                                                      .bold),
-                                            )
-                                          ],
-                                        )
-                                      ],
+                                  Icon(
+                                    v == 'list'
+                                        ? Icons.view_list_rounded
+                                        : Icons.map_rounded,
+                                    size: 16,
+                                    color: active
+                                        ? kAccent
+                                        : const Color(0xFF64748B),
+                                  ),
+                                  const SizedBox(width: 5),
+                                  Text(
+                                    v == 'list' ? 'List' : 'Map',
+                                    style: TextStyle(
+                                      fontSize: 12, fontWeight: FontWeight.w700,
+                                      color: active
+                                          ? Colors.white
+                                          : const Color(0xFF64748B),
                                     ),
-                                  )
+                                  ),
                                 ],
                               ),
                             ),
                           );
-                        },
+                        }).toList(),
                       ),
                     ),
-
-                    const SizedBox(width: 12),
-
-                    /// DETAIL PANEL
-                    // Expanded(
-                    //   flex: 2,
-                    //   child: selected == null
-                    //       ? const Center(
-                    //       child: Text(
-                    //           ""))
-                    //       : Container(
-                    //     padding: const EdgeInsets.all(16),
-                    //     decoration: BoxDecoration(
-                    //       color: Colors.white,
-                    //       borderRadius:
-                    //       BorderRadius.circular(16),
-                    //     ),
-                    //     child: Column(
-                    //       crossAxisAlignment:
-                    //       CrossAxisAlignment.start,
-                    //       children: [
-                    //         Text(company.logo,
-                    //             style:
-                    //             const TextStyle(fontSize: 40)),
-                    //         const SizedBox(height: 10),
-                    //         Text(company.name,
-                    //             style: const TextStyle(
-                    //                 fontWeight: FontWeight.bold,
-                    //                 fontSize: 20)),
-                    //         const SizedBox(height: 8),
-                    //         Text(company.desc,
-                    //             style: const TextStyle(
-                    //                 color: Colors.grey)),
-                    //         const SizedBox(height: 20),
-                    //
-                    //         Text(
-                    //             "Location: ${company.city}, ${company.state}"),
-                    //         Text("Team: ${company.size}"),
-                    //         Text("Domain: ${company.domain}"),
-                    //         Text("Website: ${company.website}"),
-                    //
-                    //         const Spacer(),
-                    //
-                    //         ElevatedButton(
-                    //           onPressed: () {},
-                    //           child: Text(
-                    //               "View Openings (${company.openings})"),
-                    //         )
-                    //       ],
-                    //     ),
-                    //   ),
-                    // )
                   ],
                 ),
-              )
+                const SizedBox(height: 16),
+                // Stats row
+                Row(
+                  children: [
+                    _statPill('${kCompanies.length}', 'Companies'),
+                    const SizedBox(width: 10),
+                    _statPill(
+                      '${kCompanies.fold(0, (s, c) => s + c.openings)}',
+                      'Open Roles',
+                    ),
+                    const SizedBox(width: 10),
+                    _statPill('6', 'Cities'),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 
-            /// MAP VIEW
-            /// else
-              // Expanded(
-              //   child: Container(
-              //     decoration: BoxDecoration(
-              //       color: Colors.blue[50],
-              //       borderRadius: BorderRadius.circular(20),
-              //     ),
-              //     child: const Center(
-              //       child: Text(
-              //         "🗺 Map View\n(Google Maps API can be integrated here)",
-              //         textAlign: TextAlign.center,
-              //       ),
-              //     ),
-              //   ),
-              // )
+  Widget _statPill(String num, String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.10),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        children: [
+          Text(num,
+              style: const TextStyle(
+                  fontSize: 13, fontWeight: FontWeight.w800,
+                  color: kAccent)),
+          const SizedBox(width: 5),
+          Text(label,
+              style: const TextStyle(
+                  fontSize: 12, color: Color(0xFF94A3B8),
+                  fontWeight: FontWeight.w600)),
+        ],
+      ),
+    );
+  }
+
+  // ── SEARCH BAR ─────────────────────────────
+
+  Widget _buildSearchBar() {
+    return Container(
+      color: kCardBg,
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
+      child: TextField(
+        onChanged: (v) => setState(() => _search = v),
+        style: const TextStyle(
+            fontSize: 14, fontWeight: FontWeight.w600, color: kInk),
+        decoration: InputDecoration(
+          hintText: 'Search by company, domain or city…',
+          hintStyle: const TextStyle(fontSize: 13, color: kHint),
+          prefixIcon: const Icon(Icons.search_rounded,
+              color: kMuted, size: 20),
+          filled: true,
+          fillColor: kBgPage,
+          contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16, vertical: 13),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: const BorderSide(color: kBorder, width: 1.5),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: const BorderSide(color: kBorder, width: 1.5),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: const BorderSide(color: kPrimary, width: 2),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ── FILTER BAR ─────────────────────────────
+
+  Widget _buildFilterBar() {
+    return Container(
+      color: kCardBg,
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+      child: SizedBox(
+        height: 34,
+        child: ListView.separated(
+          scrollDirection: Axis.horizontal,
+          itemCount: kFilters.length,
+          separatorBuilder: (_, __) => const SizedBox(width: 8),
+          itemBuilder: (_, i) {
+            final f        = kFilters[i];
+            final selected = f == _filter;
+            return GestureDetector(
+              onTap: () => setState(() => _filter = f),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 240),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 16, vertical: 0),
+                decoration: BoxDecoration(
+                  color: selected ? kPrimary : const Color(0xFFF1F5F9),
+                  borderRadius: BorderRadius.circular(30),
+                  border: Border.all(
+                    color: selected ? kPrimary : kBorder,
+                    width: 1.5,
+                  ),
+                ),
+                child: Center(
+                  child: Text(
+                    f,
+                    style: TextStyle(
+                      fontSize: 12, fontWeight: FontWeight.w700,
+                      color: selected ? Colors.white : kMuted,
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  // ── LIST VIEW ──────────────────────────────
+
+  Widget _buildList() {
+    final list = _filtered;
+    if (list.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('🔍', style: TextStyle(fontSize: 40)),
+            const SizedBox(height: 12),
+            const Text('No companies found',
+                style: TextStyle(
+                    fontSize: 15, fontWeight: FontWeight.w700,
+                    color: kSlate)),
+            const SizedBox(height: 6),
+            GestureDetector(
+              onTap: () => setState(() {
+                _search = '';
+                _filter = 'All';
+              }),
+              child: const Text('Clear filters',
+                  style: TextStyle(
+                      color: kPrimary, fontWeight: FontWeight.w700)),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 24),
+      itemCount: list.length,
+      itemBuilder: (_, i) => _buildCompanyCard(list[i], i),
+    );
+  }
+
+  // ── COMPANY CARD ───────────────────────────
+
+  Widget _buildCompanyCard(Company c, int index) {
+    final isSelected = _selected == c.id;
+    final ctrl       = _cardAnims[c.id];
+    final fade       = ctrl != null
+        ? CurvedAnimation(parent: ctrl, curve: Curves.easeOut)
+        : const AlwaysStoppedAnimation(1.0);
+    final slide = ctrl != null
+        ? Tween<Offset>(
+      begin: const Offset(0, 0.12), end: Offset.zero,
+    ).animate(CurvedAnimation(parent: ctrl, curve: Curves.easeOut))
+        : const AlwaysStoppedAnimation(Offset.zero);
+
+    final ts = _style(c.type);
+
+    return FadeTransition(
+      opacity: fade,
+      child: SlideTransition(
+        position: slide,
+        child: GestureDetector(
+          onTap: () => _selectCompany(c.id),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 250),
+            margin: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: kCardBg,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(
+                color: isSelected ? kPrimary : kBorder,
+                width: isSelected ? 2 : 1.5,
+              ),
+            ),
+            child: Column(
+              children: [
+                // Top row
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Logo tile
+                    Container(
+                      width: 50, height: 50,
+                      decoration: BoxDecoration(
+                        color: kBgPage,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: kBorder),
+                      ),
+                      child: Center(
+                        child: Text(c.logo,
+                            style: const TextStyle(fontSize: 24)),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(c.name,
+                                    style: const TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w800,
+                                      color: kInk,
+                                    )),
+                              ),
+                              // Type badge
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 9, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: ts.bg,
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Text(c.type,
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w700,
+                                      color: ts.fg,
+                                    )),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 3),
+                          Row(
+                            children: [
+                              const Icon(Icons.location_on_rounded,
+                                  size: 12, color: kHint),
+                              const SizedBox(width: 3),
+                              Text('${c.city}, ${c.state}',
+                                  style: const TextStyle(
+                                      fontSize: 12, color: kMuted)),
+                              const SizedBox(width: 8),
+                              const Icon(Icons.domain_rounded,
+                                  size: 12, color: kHint),
+                              const SizedBox(width: 3),
+                              Text(c.domain,
+                                  style: const TextStyle(
+                                      fontSize: 12, color: kMuted)),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                // Divider
+                Container(
+                  margin: const EdgeInsets.symmetric(vertical: 12),
+                  height: 1, color: const Color(0xFFF1F5F9),
+                ),
+                // Bottom row
+                Row(
+                  children: [
+                    // Size chip
+                    _metaChip(Icons.people_alt_rounded, c.size),
+                    const SizedBox(width: 8),
+                    _metaChip(Icons.language_rounded, c.website),
+                    const Spacer(),
+                    // Openings badge
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: kSelectedBg,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.work_outline_rounded,
+                              size: 13, color: kPrimary),
+                          const SizedBox(width: 5),
+                          Text(
+                            '${c.openings} openings',
+                            style: const TextStyle(
+                              fontSize: 12, fontWeight: FontWeight.w800,
+                              color: kPrimary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                // Skill tags
+                const SizedBox(height: 10),
+                Row(
+                  children: c.tags
+                      .map((t) => Container(
+                    margin: const EdgeInsets.only(right: 6),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 9, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF8FAFC),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: kBorder),
+                    ),
+                    child: Text(t,
+                        style: const TextStyle(
+                          fontSize: 11, fontWeight: FontWeight.w700,
+                          color: kSlate,
+                        )),
+                  ))
+                      .toList(),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _metaChip(IconData icon, String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: kBorder),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 11, color: kHint),
+          const SizedBox(width: 4),
+          Text(label,
+              style: const TextStyle(
+                  fontSize: 11, fontWeight: FontWeight.w600,
+                  color: kMuted)),
+        ],
+      ),
+    );
+  }
+
+  // ── MAP PLACEHOLDER ────────────────────────
+
+  Widget _buildMapPlaceholder() {
+    return Container(
+      margin: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: kCardBg,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: kBorder, width: 1.5),
+      ),
+      child: Column(
+        children: [
+          // Fake map grid
+          Expanded(
+            child: ClipRRect(
+              borderRadius:
+              const BorderRadius.vertical(top: Radius.circular(20)),
+              child: Stack(
+                children: [
+                  // Grid lines (simulated map)
+                  CustomPaint(
+                    painter: _MapGridPainter(),
+                    child: Container(),
+                  ),
+                  // Company pins
+                  ..._filtered.map((c) => _buildMapPin(c)),
+                  // "Powered by" note
+                  Positioned(
+                    bottom: 12, left: 12,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: kInk.withOpacity(0.85),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Text(
+                        '🗺  Integrate Google Maps API for live view',
+                        style: TextStyle(
+                          fontSize: 11, color: Colors.white70,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          // Pin legend
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: const BoxDecoration(
+              border:
+              Border(top: BorderSide(color: kBorder, width: 1)),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: _typeStyles.entries.map((e) => Row(
+                children: [
+                  Container(
+                    width: 10, height: 10,
+                    decoration: BoxDecoration(
+                      color: e.value.fg,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 5),
+                  Text(e.key,
+                      style: const TextStyle(
+                          fontSize: 11, fontWeight: FontWeight.w700,
+                          color: kSlate)),
+                ],
+              )).toList(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMapPin(Company c) {
+    final ts = _style(c.type);
+    // Map lat/lng to rough screen position
+    final dx = ((c.lng - 72.5) / 7.0).clamp(0.05, 0.95);
+    final dy = (1.0 - (c.lat - 11.0) / 10.0).clamp(0.05, 0.85);
+
+    return Positioned(
+      left: MediaQuery.of(context).size.width * dx * 0.8,
+      top: 300 * dy,
+      child: GestureDetector(
+        onTap: () => _selectCompany(c.id),
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(
+                  horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: _selected == c.id ? kPrimary : ts.bg,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: _selected == c.id ? kPrimary : ts.fg,
+                ),
+              ),
+              child: Text(
+                c.name,
+                style: TextStyle(
+                  fontSize: 10, fontWeight: FontWeight.w800,
+                  color: _selected == c.id ? Colors.white : ts.fg,
+                ),
+              ),
+            ),
+            Container(
+              width: 2, height: 8,
+              color: _selected == c.id ? kPrimary : ts.fg,
+            ),
+            Container(
+              width: 6, height: 6,
+              decoration: BoxDecoration(
+                color: _selected == c.id ? kPrimary : ts.fg,
+                shape: BoxShape.circle,
+              ),
+            ),
           ],
         ),
       ),
     );
   }
+
+  // ── DETAIL BOTTOM SHEET ────────────────────
+
+  void _showDetailSheet(Company c) {
+    final ts = _style(c.type);
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => DraggableScrollableSheet(
+        initialChildSize: 0.55,
+        minChildSize: 0.35,
+        maxChildSize: 0.85,
+        builder: (_, scrollCtrl) => Container(
+          decoration: const BoxDecoration(
+            color: kCardBg,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+          ),
+          child: ListView(
+            controller: scrollCtrl,
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
+            children: [
+              // Handle
+              Center(
+                child: Container(
+                  margin: const EdgeInsets.symmetric(vertical: 12),
+                  width: 40, height: 4,
+                  decoration: BoxDecoration(
+                    color: kBorder,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+              ),
+              // Logo + name
+              Row(
+                children: [
+                  Container(
+                    width: 58, height: 58,
+                    decoration: BoxDecoration(
+                      color: kBgPage,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: kBorder),
+                    ),
+                    child: Center(
+                      child: Text(c.logo,
+                          style: const TextStyle(fontSize: 28)),
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Text(c.name,
+                                style: const TextStyle(
+                                  fontSize: 18, fontWeight: FontWeight.w800,
+                                  color: kInk,
+                                )),
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 9, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: ts.bg,
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(c.type,
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w700,
+                                    color: ts.fg,
+                                  )),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 3),
+                        Text('${c.city}, ${c.state}  ·  ${c.domain}',
+                            style: const TextStyle(
+                                fontSize: 12, color: kMuted)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              // Description
+              Text(c.desc,
+                  style: const TextStyle(
+                    fontSize: 13, color: kSlate,
+                    height: 1.6, fontWeight: FontWeight.w500,
+                  )),
+              const SizedBox(height: 16),
+              // Info rows
+              _infoRow(Icons.people_alt_rounded,    'Team Size',  c.size),
+              _infoRow(Icons.language_rounded,      'Website',    c.website),
+              _infoRow(Icons.location_city_rounded, 'City',       '${c.city}, ${c.state}'),
+              const SizedBox(height: 16),
+              // Skills
+              const Text('Required Skills',
+                  style: TextStyle(
+                    fontSize: 13, fontWeight: FontWeight.w800,
+                    color: kInk,
+                  )),
+              const SizedBox(height: 10),
+              Wrap(
+                spacing: 8, runSpacing: 8,
+                children: c.tags.map((t) => Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: kSelectedBg,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: kBorder),
+                  ),
+                  child: Text(t,
+                      style: const TextStyle(
+                        fontSize: 12, fontWeight: FontWeight.w700,
+                        color: kPrimary,
+                      )),
+                )).toList(),
+              ),
+              const SizedBox(height: 20),
+              // CTA
+              GestureDetector(
+                onTap: () => Navigator.pop(context),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 15),
+                  decoration: BoxDecoration(
+                    color: kPrimary,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.work_outline_rounded,
+                          color: Colors.white, size: 18),
+                      const SizedBox(width: 8),
+                      Text(
+                        'View ${c.openings} Open Roles',
+                        style: const TextStyle(
+                          fontSize: 15, fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _infoRow(IconData icon, String label, String value) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: kBgPage,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: kBorder),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 16, color: kPrimary),
+          const SizedBox(width: 10),
+          Text(label,
+              style: const TextStyle(
+                  fontSize: 12, fontWeight: FontWeight.w700,
+                  color: kMuted)),
+          const Spacer(),
+          Text(value,
+              style: const TextStyle(
+                  fontSize: 13, fontWeight: FontWeight.w800,
+                  color: kInk)),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────
+//  MAP GRID PAINTER
+// ─────────────────────────────────────────────
+
+class _MapGridPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final bgPaint = Paint()..color = const Color(0xFFEFF6FF);
+    canvas.drawRect(Offset.zero & size, bgPaint);
+
+    final gridPaint = Paint()
+      ..color = const Color(0xFFBFDBFE)
+      ..strokeWidth = 0.8;
+
+    // Horizontal lines
+    for (double y = 0; y < size.height; y += 40) {
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
+    }
+    // Vertical lines
+    for (double x = 0; x < size.width; x += 40) {
+      canvas.drawLine(Offset(x, 0), Offset(x, size.height), gridPaint);
+    }
+
+    // Roads (faint diagonal lines)
+    final roadPaint = Paint()
+      ..color = const Color(0xFFBAE6FD)
+      ..strokeWidth = 2;
+    canvas.drawLine(
+        Offset(0, size.height * 0.3),
+        Offset(size.width, size.height * 0.5),
+        roadPaint);
+    canvas.drawLine(
+        Offset(size.width * 0.2, 0),
+        Offset(size.width * 0.4, size.height),
+        roadPaint);
+  }
+
+  @override
+  bool shouldRepaint(_) => false;
 }

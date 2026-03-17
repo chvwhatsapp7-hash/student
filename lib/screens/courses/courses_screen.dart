@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 // ─────────────────────────────────────────────
-//  DESIGN TOKENS — Engineering Theme
+//  DESIGN TOKENS
 // ─────────────────────────────────────────────
 
 const kInk        = Color(0xFF0F172A);
@@ -39,20 +39,13 @@ class EngCourse {
   final Color        bgColor;
 
   const EngCourse({
-    required this.id,
-    required this.title,
-    required this.category,
-    required this.duration,
-    required this.price,
-    required this.mode,
-    required this.rating,
-    required this.students,
-    required this.level,
-    required this.instructor,
-    required this.badge,
-    required this.tags,
-    required this.desc,
-    required this.bgColor,
+    required this.id,       required this.title,
+    required this.category, required this.duration,
+    required this.price,    required this.mode,
+    required this.rating,   required this.students,
+    required this.level,    required this.instructor,
+    required this.badge,    required this.tags,
+    required this.desc,     required this.bgColor,
   });
 }
 
@@ -122,15 +115,6 @@ const List<String> kCategories = [
   'Data Science', 'Cloud', 'Cybersecurity',
 ];
 
-// ─────────────────────────────────────────────
-//  LEVEL STYLE
-// ─────────────────────────────────────────────
-
-class _LevelStyle {
-  final Color bg, fg;
-  const _LevelStyle({required this.bg, required this.fg});
-}
-
 _LevelStyle _levelStyle(String level) {
   switch (level) {
     case 'Beginner':
@@ -142,6 +126,11 @@ _LevelStyle _levelStyle(String level) {
     default:
       return const _LevelStyle(bg: Color(0xFFF1F5F9), fg: Color(0xFF475569));
   }
+}
+
+class _LevelStyle {
+  final Color bg, fg;
+  const _LevelStyle({required this.bg, required this.fg});
 }
 
 // ─────────────────────────────────────────────
@@ -158,12 +147,11 @@ class CoursesScreen extends StatefulWidget {
 class _CoursesScreenState extends State<CoursesScreen>
     with TickerProviderStateMixin {
 
-  String     _category = 'All';
-  String     _search   = '';
+  String         _category = 'All';
+  String         _search   = '';
   final Set<int> _enrolled = {};
 
   late AnimationController _headerAnim;
-
   final Map<int, AnimationController> _cardAnims = {};
 
   List<EngCourse> get _filtered {
@@ -174,7 +162,8 @@ class _CoursesScreenState extends State<CoursesScreen>
       list = list.where((c) =>
       c.title.toLowerCase().contains(_search.toLowerCase()) ||
           c.category.toLowerCase().contains(_search.toLowerCase()) ||
-          c.instructor.toLowerCase().contains(_search.toLowerCase())).toList();
+          c.instructor.toLowerCase().contains(_search.toLowerCase()))
+          .toList();
     }
     return list;
   }
@@ -185,17 +174,13 @@ class _CoursesScreenState extends State<CoursesScreen>
     _headerAnim = AnimationController(
       vsync: this, duration: const Duration(milliseconds: 600),
     )..forward();
-    _initCardAnims();
-  }
-
-  void _initCardAnims() {
     for (int i = 0; i < kEngCourses.length; i++) {
-      final c = AnimationController(
+      final ctrl = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 460),
       );
-      _cardAnims[kEngCourses[i].id] = c;
+      _cardAnims[kEngCourses[i].id] = ctrl;
       Future.delayed(Duration(milliseconds: 80 + i * 80), () {
-        if (mounted) c.forward();
+        if (mounted) ctrl.forward();
       });
     }
   }
@@ -206,8 +191,6 @@ class _CoursesScreenState extends State<CoursesScreen>
     for (final c in _cardAnims.values) c.dispose();
     super.dispose();
   }
-
-  // ── build ──────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
@@ -236,10 +219,11 @@ class _CoursesScreenState extends State<CoursesScreen>
         child: SafeArea(
           bottom: false,
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 14, 20, 20),
+            padding: const EdgeInsets.fromLTRB(20, 14, 20, 18),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // ── title row ──────────────────
                 Row(
                   children: [
                     GestureDetector(
@@ -256,68 +240,72 @@ class _CoursesScreenState extends State<CoursesScreen>
                         ),
                       ),
                     ),
-                    const SizedBox(width: 14),
-                    const Expanded(
+                    const SizedBox(width: 12),
+                    Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Courses',
+                          const Text('Courses',
                               style: TextStyle(
                                 fontSize: 20, fontWeight: FontWeight.w800,
                                 color: Colors.white, letterSpacing: -0.4,
                               )),
-                          Text('Specialized programs to land your dream job',
-                              style: TextStyle(
-                                  fontSize: 12, color: Color(0xFF94A3B8))),
+                          Text(
+                            'Specialised programs to land your dream job',
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.white.withOpacity(0.55)),
+                          ),
                         ],
                       ),
                     ),
-                    // Enrolled count badge
-                    if (_enrolled.isNotEmpty)
-                      AnimatedContainer(
-                        duration: const Duration(milliseconds: 300),
+                    if (_enrolled.isNotEmpty) ...[
+                      const SizedBox(width: 8),
+                      Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 6),
+                            horizontal: 10, vertical: 5),
                         decoration: BoxDecoration(
                           color: Colors.white.withOpacity(0.12),
                           borderRadius: BorderRadius.circular(20),
                         ),
-                        child: Text(
-                          '${_enrolled.length} Enrolled',
-                          style: const TextStyle(
-                            fontSize: 12, fontWeight: FontWeight.w700,
-                            color: kAccent,
-                          ),
-                        ),
+                        child: Text('${_enrolled.length} Enrolled',
+                            style: const TextStyle(
+                              fontSize: 11, fontWeight: FontWeight.w700,
+                              color: kAccent,
+                            )),
                       ),
+                    ],
                   ],
                 ),
-                const SizedBox(height: 16),
-                // Stats + banner row
-                Row(
+                const SizedBox(height: 14),
+
+                // ── stats — Wrap so they never overflow ──
+                // "Get Job-Ready" moves to its own line on small screens
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
                     _statPill('${kEngCourses.length}', 'Courses'),
-                    const SizedBox(width: 10),
                     _statPill('95%', 'Placement'),
-                    const SizedBox(width: 10),
                     _statPill('6', 'Domains'),
-                    const Spacer(),
-                    // Banner pill
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 7),
+                          horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
                         color: kPrimary,
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: const Row(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text('🎓',
-                              style: TextStyle(fontSize: 13)),
-                          SizedBox(width: 6),
+                          Text('🎓', style: TextStyle(fontSize: 12)),
+                          SizedBox(width: 5),
                           Text('Get Job-Ready',
                               style: TextStyle(
-                                fontSize: 12, fontWeight: FontWeight.w800,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w800,
                                 color: Colors.white,
                               )),
                         ],
@@ -335,21 +323,23 @@ class _CoursesScreenState extends State<CoursesScreen>
 
   Widget _statPill(String num, String label) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.10),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
           Text(num,
               style: const TextStyle(
-                  fontSize: 13, fontWeight: FontWeight.w800,
+                  fontSize: 12, fontWeight: FontWeight.w800,
                   color: kAccent)),
-          const SizedBox(width: 5),
+          const SizedBox(width: 4),
           Text(label,
-              style: const TextStyle(
-                  fontSize: 12, color: Color(0xFF94A3B8),
+              style: TextStyle(
+                  fontSize: 11,
+                  color: Colors.white.withOpacity(0.55),
                   fontWeight: FontWeight.w600)),
         ],
       ),
@@ -367,10 +357,10 @@ class _CoursesScreenState extends State<CoursesScreen>
         style: const TextStyle(
             fontSize: 14, fontWeight: FontWeight.w600, color: kInk),
         decoration: InputDecoration(
-          hintText: 'Search courses, instructors, or topics…',
+          hintText: 'Search courses, instructors…',
           hintStyle: const TextStyle(fontSize: 13, color: kHint),
-          prefixIcon: const Icon(Icons.search_rounded,
-              color: kMuted, size: 20),
+          prefixIcon: const Icon(Icons.manage_search_rounded,
+              color: kMuted, size: 22),
           filled: true,
           fillColor: kBgPage,
           contentPadding: const EdgeInsets.symmetric(
@@ -411,24 +401,20 @@ class _CoursesScreenState extends State<CoursesScreen>
               onTap: () => setState(() => _category = cat),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 240),
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 16, vertical: 0),
+                padding: const EdgeInsets.symmetric(horizontal: 14),
                 decoration: BoxDecoration(
                   color: selected ? kPrimary : const Color(0xFFF1F5F9),
                   borderRadius: BorderRadius.circular(30),
                   border: Border.all(
-                    color: selected ? kPrimary : kBorder,
-                    width: 1.5,
+                    color: selected ? kPrimary : kBorder, width: 1.5,
                   ),
                 ),
                 child: Center(
-                  child: Text(
-                    cat,
-                    style: TextStyle(
-                      fontSize: 12, fontWeight: FontWeight.w700,
-                      color: selected ? Colors.white : kMuted,
-                    ),
-                  ),
+                  child: Text(cat,
+                      style: TextStyle(
+                        fontSize: 12, fontWeight: FontWeight.w700,
+                        color: selected ? Colors.white : kMuted,
+                      )),
                 ),
               ),
             );
@@ -442,7 +428,6 @@ class _CoursesScreenState extends State<CoursesScreen>
 
   Widget _buildCourseList() {
     final list = _filtered;
-
     if (list.isEmpty) {
       return Center(
         child: Column(
@@ -468,15 +453,13 @@ class _CoursesScreenState extends State<CoursesScreen>
         ),
       );
     }
-
     return ListView.builder(
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 24),
       itemCount: list.length,
       itemBuilder: (_, i) => _EngCourseCard(
         course:     list[i],
-        index:      i,
         isEnrolled: _enrolled.contains(list[i].id),
-        onEnroll:   () {
+        onEnroll: () {
           HapticFeedback.lightImpact();
           setState(() => _enrolled.add(list[i].id));
         },
@@ -487,19 +470,17 @@ class _CoursesScreenState extends State<CoursesScreen>
 }
 
 // ─────────────────────────────────────────────
-//  COURSE CARD WIDGET
+//  COURSE CARD
 // ─────────────────────────────────────────────
 
 class _EngCourseCard extends StatefulWidget {
-  final EngCourse           course;
-  final int                 index;
-  final bool                isEnrolled;
-  final VoidCallback        onEnroll;
+  final EngCourse            course;
+  final bool                 isEnrolled;
+  final VoidCallback         onEnroll;
   final AnimationController? ctrl;
 
   const _EngCourseCard({
     required this.course,
-    required this.index,
     required this.isEnrolled,
     required this.onEnroll,
     this.ctrl,
@@ -512,9 +493,9 @@ class _EngCourseCard extends StatefulWidget {
 class _EngCourseCardState extends State<_EngCourseCard>
     with SingleTickerProviderStateMixin {
 
-  bool _btnPressed = false;
   late AnimationController _btnCtrl;
   late Animation<double>   _btnScale;
+  bool _btnPressed = false;
 
   @override
   void initState() {
@@ -543,9 +524,8 @@ class _EngCourseCardState extends State<_EngCourseCard>
         ? CurvedAnimation(parent: ctrl, curve: Curves.easeOut)
         : const AlwaysStoppedAnimation<double>(1.0);
     final slide = ctrl != null
-        ? Tween<Offset>(
-      begin: const Offset(0, 0.12), end: Offset.zero,
-    ).animate(CurvedAnimation(parent: ctrl, curve: Curves.easeOut))
+        ? Tween<Offset>(begin: const Offset(0, 0.12), end: Offset.zero)
+        .animate(CurvedAnimation(parent: ctrl, curve: Curves.easeOut))
         : const AlwaysStoppedAnimation<Offset>(Offset.zero);
 
     return FadeTransition(
@@ -559,37 +539,40 @@ class _EngCourseCardState extends State<_EngCourseCard>
             borderRadius: BorderRadius.circular(20),
             border: Border.all(color: kBorder, width: 1.5),
           ),
+          // ── Card is a pure Column — no horizontal Row fights ──
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
 
-              // ── TOP ROW ──────────────────────
+              // ── 1. HEADER: badge + title + instructor + desc ──
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                padding: const EdgeInsets.all(16),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Badge tile
+                    // emoji badge
                     Container(
-                      width: 54, height: 54,
+                      width: 52, height: 52,
                       decoration: BoxDecoration(
                         color: c.bgColor,
-                        borderRadius: BorderRadius.circular(15),
+                        borderRadius: BorderRadius.circular(14),
                         border: Border.all(color: kBorder),
                       ),
                       child: Center(
                         child: Text(c.badge,
-                            style: const TextStyle(fontSize: 26)),
+                            style: const TextStyle(fontSize: 24)),
                       ),
                     ),
-                    const SizedBox(width: 14),
+                    const SizedBox(width: 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          // title + level — use Flexible so they share space
                           Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Expanded(
+                              Flexible(
                                 child: Text(c.title,
                                     style: const TextStyle(
                                       fontSize: 14,
@@ -597,18 +580,17 @@ class _EngCourseCardState extends State<_EngCourseCard>
                                       color: kInk,
                                     )),
                               ),
-                              const SizedBox(width: 8),
-                              // Level badge
+                              const SizedBox(width: 6),
                               Container(
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 8, vertical: 3),
+                                    horizontal: 7, vertical: 3),
                                 decoration: BoxDecoration(
                                   color: ls.bg,
                                   borderRadius: BorderRadius.circular(20),
                                 ),
                                 child: Text(c.level,
                                     style: TextStyle(
-                                      fontSize: 10,
+                                      fontSize: 9,
                                       fontWeight: FontWeight.w700,
                                       color: ls.fg,
                                     )),
@@ -616,21 +598,28 @@ class _EngCourseCardState extends State<_EngCourseCard>
                             ],
                           ),
                           const SizedBox(height: 4),
+                          // instructor
                           Row(
                             children: [
-                              const Icon(Icons.person_rounded,
-                                  size: 12, color: kHint),
+                              const Icon(Icons.co_present_rounded,
+                                  size: 12, color: kPrimary),
                               const SizedBox(width: 4),
-                              Text(c.instructor,
-                                  style: const TextStyle(
-                                      fontSize: 12, color: kMuted,
-                                      fontWeight: FontWeight.w600)),
+                              Expanded(
+                                child: Text(c.instructor,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                        fontSize: 12, color: kMuted,
+                                        fontWeight: FontWeight.w600)),
+                              ),
                             ],
                           ),
                           const SizedBox(height: 4),
+                          // desc
                           Text(c.desc,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
-                                  fontSize: 12, color: kHint,
+                                  fontSize: 11, color: kHint,
                                   height: 1.4)),
                         ],
                       ),
@@ -639,147 +628,174 @@ class _EngCourseCardState extends State<_EngCourseCard>
                 ),
               ),
 
-              // ── META CHIPS ───────────────────
+              // ── divider ──────────────────────────────────────
+              Container(
+                  height: 1,
+                  margin: const EdgeInsets.symmetric(horizontal: 16),
+                  color: const Color(0xFFF1F5F9)),
+              const SizedBox(height: 10),
+
+              // ── 2. META CHIPS — Wrap, no overflow ────────────
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                child: Row(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
                   children: [
-                    _metaChip(Icons.schedule_rounded, c.duration),
-                    const SizedBox(width: 7),
-                    _metaChip(Icons.star_rounded, c.rating.toString(),
+                    _chip(icon: Icons.hourglass_bottom_rounded,
+                        label: c.duration),
+                    _chip(icon: Icons.workspace_premium_rounded,
+                        label: c.rating.toStringAsFixed(1),
                         iconColor: kWarning),
-                    const SizedBox(width: 7),
-                    _metaChip(Icons.people_alt_rounded,
-                        '${_formatCount(c.students)} students'),
-                    const SizedBox(width: 7),
-                    // Mode chips
-                    ...c.mode.map((m) => Padding(
-                      padding: const EdgeInsets.only(right: 7),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: m == 'Online'
-                              ? const Color(0xFFEFF6FF)
-                              : const Color(0xFFF0FDF4),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: kBorder),
-                        ),
-                        child: Text(m,
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700,
-                              color: m == 'Online'
-                                  ? kPrimary
-                                  : kSuccess,
-                            )),
-                      ),
-                    )),
+                    _chip(icon: Icons.groups_2_rounded,
+                        label: '${_fmt(c.students)} learners',
+                        iconColor: kPrimary),
+                    ...c.mode.map((m) => _modeChip(m)),
                   ],
                 ),
               ),
+              const SizedBox(height: 10),
 
-              // ── DIVIDER ──────────────────────
+              // ── divider ──────────────────────────────────────
               Container(
-                margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                height: 1, color: const Color(0xFFF1F5F9),
-              ),
+                  height: 1,
+                  margin: const EdgeInsets.symmetric(horizontal: 16),
+                  color: const Color(0xFFF1F5F9)),
+              const SizedBox(height: 10),
 
-              // ── TAGS + PRICE + BUTTON ─────────
+              // ── 3. SKILL TAGS — Wrap, no overflow ────────────
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: c.tags.map((t) => Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF8FAFC),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: kBorder),
+                    ),
+                    child: Text(t,
+                        style: const TextStyle(
+                          fontSize: 11, fontWeight: FontWeight.w700,
+                          color: kSlate,
+                        )),
+                  )).toList(),
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              // ── divider ──────────────────────────────────────
+              Container(
+                  height: 1,
+                  margin: const EdgeInsets.symmetric(horizontal: 16),
+                  color: const Color(0xFFF1F5F9)),
+
+              // ── 4. PRICE + BUTTON ─────────────────────────────
+              // Only 2 items: price label group (left) + button (right)
+              // No tags here → zero overflow risk
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
                 child: Row(
                   children: [
-                    // Tags
-                    Expanded(
-                      child: Wrap(
-                        spacing: 6, runSpacing: 6,
-                        children: c.tags.map((t) => Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 9, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF8FAFC),
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: kBorder),
-                          ),
-                          child: Text(t,
-                              style: const TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
-                                color: kSlate,
-                              )),
-                        )).toList(),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    // Price + button
+                    // ── price ──
                     Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(c.price,
-                            style: const TextStyle(
-                              fontSize: 17, fontWeight: FontWeight.w800,
-                              color: kInk,
-                            )),
-                        const SizedBox(height: 8),
-                        GestureDetector(
-                          onTapDown: (_) {
-                            _btnCtrl.forward();
-                            setState(() => _btnPressed = true);
-                          },
-                          onTapUp: (_) {
-                            _btnCtrl.reverse();
-                            setState(() => _btnPressed = false);
-                            widget.onEnroll();
-                          },
-                          onTapCancel: () {
-                            _btnCtrl.reverse();
-                            setState(() => _btnPressed = false);
-                          },
-                          child: ScaleTransition(
-                            scale: _btnScale,
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 260),
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 18, vertical: 10),
-                              decoration: BoxDecoration(
-                                color: widget.isEnrolled
-                                    ? const Color(0xFFF0FDF4)
-                                    : kPrimary,
-                                borderRadius: BorderRadius.circular(30),
-                                border: widget.isEnrolled
-                                    ? Border.all(
-                                    color: const Color(0xFF86EFAC),
-                                    width: 1.5)
-                                    : null,
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  if (widget.isEnrolled)
-                                    const Icon(Icons.check_rounded,
-                                        size: 14,
-                                        color: kSuccess),
-                                  if (widget.isEnrolled)
-                                    const SizedBox(width: 4),
-                                  Text(
-                                    widget.isEnrolled
-                                        ? 'Enrolled'
-                                        : 'Register',
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w800,
-                                      color: widget.isEnrolled
-                                          ? kSuccess
-                                          : Colors.white,
-                                    ),
-                                  ),
-                                ],
+                        const Text('Course Fee',
+                            style: TextStyle(
+                                fontSize: 10, color: kHint,
+                                fontWeight: FontWeight.w600)),
+                        const SizedBox(height: 2),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.currency_rupee_rounded,
+                                size: 14, color: kInk),
+                            Text(
+                              c.price.replaceAll('₹', ''),
+                              style: const TextStyle(
+                                fontSize: 17,
+                                fontWeight: FontWeight.w800,
+                                color: kInk,
                               ),
                             ),
-                          ),
+                          ],
                         ),
                       ],
+                    ),
+
+                    const Spacer(),
+
+                    // ── register button ──
+                    GestureDetector(
+                      onTapDown: (_) {
+                        _btnCtrl.forward();
+                        setState(() => _btnPressed = true);
+                      },
+                      onTapUp: (_) {
+                        _btnCtrl.reverse();
+                        setState(() => _btnPressed = false);
+                        widget.onEnroll();
+                      },
+                      onTapCancel: () {
+                        _btnCtrl.reverse();
+                        setState(() => _btnPressed = false);
+                      },
+                      child: ScaleTransition(
+                        scale: _btnScale,
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 260),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 20, vertical: 11),
+                          decoration: BoxDecoration(
+                            color: widget.isEnrolled
+                                ? const Color(0xFFF0FDF4)
+                                : kPrimary,
+                            borderRadius: BorderRadius.circular(30),
+                            border: widget.isEnrolled
+                                ? Border.all(
+                                color: const Color(0xFF86EFAC),
+                                width: 1.5)
+                                : null,
+                            boxShadow: widget.isEnrolled || _btnPressed
+                                ? null
+                                : [
+                              BoxShadow(
+                                color: kPrimary.withOpacity(0.28),
+                                blurRadius: 8,
+                                offset: const Offset(0, 3),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                widget.isEnrolled
+                                    ? Icons.check_circle_rounded
+                                    : Icons.bolt_rounded,
+                                size: 15,
+                                color: widget.isEnrolled
+                                    ? kSuccess : Colors.white,
+                              ),
+                              const SizedBox(width: 5),
+                              Text(
+                                widget.isEnrolled
+                                    ? 'Enrolled' : 'Register',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w800,
+                                  color: widget.isEnrolled
+                                      ? kSuccess : Colors.white,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -791,10 +807,15 @@ class _EngCourseCardState extends State<_EngCourseCard>
     );
   }
 
-  Widget _metaChip(IconData icon, String label,
-      {Color iconColor = kHint}) {
+  // ── CHIP HELPERS ───────────────────────────
+
+  Widget _chip({
+    required IconData icon,
+    required String   label,
+    Color iconColor = kMuted,
+  }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
       decoration: BoxDecoration(
         color: const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(8),
@@ -814,6 +835,34 @@ class _EngCourseCardState extends State<_EngCourseCard>
     );
   }
 
-  String _formatCount(int n) =>
+  Widget _modeChip(String mode) {
+    final online = mode == 'Online';
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+      decoration: BoxDecoration(
+        color: online ? const Color(0xFFEFF6FF) : const Color(0xFFF0FDF4),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: kBorder),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            online ? Icons.wifi_rounded : Icons.location_on_rounded,
+            size: 11,
+            color: online ? kPrimary : kSuccess,
+          ),
+          const SizedBox(width: 4),
+          Text(mode,
+              style: TextStyle(
+                fontSize: 11, fontWeight: FontWeight.w700,
+                color: online ? kPrimary : kSuccess,
+              )),
+        ],
+      ),
+    );
+  }
+
+  String _fmt(int n) =>
       n >= 1000 ? '${(n / 1000).toStringAsFixed(1)}k' : '$n';
 }

@@ -2,57 +2,50 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 // ─────────────────────────────────────────────
-//  DESIGN TOKENS — Engineering Theme
+//  DESIGN TOKENS
 // ─────────────────────────────────────────────
 
-const kInk         = Color(0xFF0F172A);   // dark navy header
-const kSlate       = Color(0xFF334155);   // secondary text
-const kMuted       = Color(0xFF64748B);   // muted text
-const kHint        = Color(0xFF94A3B8);   // hints / placeholders
-const kBgPage      = Color(0xFFF0F4F8);   // page background
-const kCardBg      = Color(0xFFFFFFFF);   // card surface
-const kBorder      = Color(0xFFE2E8F0);   // default border
-const kPrimary     = Color(0xFF1D4ED8);   // primary blue
-const kAccent      = Color(0xFF38BDF8);   // sky accent
-const kSuccess     = Color(0xFF16A34A);   // green
-const kWarning     = Color(0xFFF59E0B);   // amber
-const kSelectedBg  = Color(0xFFEFF6FF);   // selected fill
+const kInk        = Color(0xFF0F172A);
+const kSlate      = Color(0xFF334155);
+const kMuted      = Color(0xFF64748B);
+const kHint       = Color(0xFF94A3B8);
+const kBgPage     = Color(0xFFF0F4F8);
+const kCardBg     = Color(0xFFFFFFFF);
+const kBorder     = Color(0xFFE2E8F0);
+const kPrimary    = Color(0xFF1D4ED8);
+const kAccent     = Color(0xFF38BDF8);
+const kSuccess    = Color(0xFF16A34A);
+const kWarning    = Color(0xFFF59E0B);
+const kSelectedBg = Color(0xFFEFF6FF);
 
 // ─────────────────────────────────────────────
 //  MODEL
 // ─────────────────────────────────────────────
 
 class Company {
-  final int    id;
-  final String name;
-  final String city;
-  final String state;
-  final String type;
-  final String size;
-  final int    openings;
-  final String domain;
-  final String logo;
-  final String desc;
-  final String website;
-  final double lat;
-  final double lng;
+  final int          id;
+  final String       name;
+  final String       city;
+  final String       state;
+  final String       type;
+  final String       size;
+  final int          openings;
+  final String       domain;
+  final String       logo;
+  final String       desc;
+  final String       website;
+  final double       lat;
+  final double       lng;
   final List<String> tags;
 
   const Company({
-    required this.id,
-    required this.name,
-    required this.city,
-    required this.state,
-    required this.type,
-    required this.size,
-    required this.openings,
-    required this.domain,
-    required this.logo,
-    required this.desc,
-    required this.website,
-    required this.lat,
-    required this.lng,
-    required this.tags,
+    required this.id,       required this.name,
+    required this.city,     required this.state,
+    required this.type,     required this.size,
+    required this.openings, required this.domain,
+    required this.logo,     required this.desc,
+    required this.website,  required this.lat,
+    required this.lng,      required this.tags,
   });
 }
 
@@ -111,26 +104,29 @@ final List<Company> kCompanies = [
   ),
 ];
 
-const List<String> kFilters = ['All', 'MNC', 'Startup', 'Unicorn', 'Government'];
+const List<String> kFilters = [
+  'All', 'MNC', 'Startup', 'Unicorn', 'Government'
+];
 
 // ─────────────────────────────────────────────
 //  TYPE BADGE COLOURS
 // ─────────────────────────────────────────────
-
-Map<String, _TypeStyle> _typeStyles = {
-  'MNC':        _TypeStyle(bg: Color(0xFFEFF6FF), fg: Color(0xFF1D4ED8)),
-  'Startup':    _TypeStyle(bg: Color(0xFFFFF7ED), fg: Color(0xFFC2410C)),
-  'Unicorn':    _TypeStyle(bg: Color(0xFFF5F3FF), fg: Color(0xFF6D28D9)),
-  'Government': _TypeStyle(bg: Color(0xFFF0FDF4), fg: Color(0xFF15803D)),
-};
 
 class _TypeStyle {
   final Color bg, fg;
   const _TypeStyle({required this.bg, required this.fg});
 }
 
+const Map<String, _TypeStyle> _typeStyles = {
+  'MNC':        _TypeStyle(bg: Color(0xFFEFF6FF), fg: Color(0xFF1D4ED8)),
+  'Startup':    _TypeStyle(bg: Color(0xFFFFF7ED), fg: Color(0xFFC2410C)),
+  'Unicorn':    _TypeStyle(bg: Color(0xFFF5F3FF), fg: Color(0xFF6D28D9)),
+  'Government': _TypeStyle(bg: Color(0xFFF0FDF4), fg: Color(0xFF15803D)),
+};
+
 _TypeStyle _style(String type) =>
-    _typeStyles[type] ?? const _TypeStyle(bg: Color(0xFFF1F5F9), fg: Color(0xFF475569));
+    _typeStyles[type] ?? const _TypeStyle(
+        bg: Color(0xFFF1F5F9), fg: Color(0xFF475569));
 
 // ─────────────────────────────────────────────
 //  SCREEN
@@ -152,11 +148,6 @@ class _CompaniesScreenState extends State<CompaniesScreen>
   String _search = '';
 
   late AnimationController _headerAnim;
-  late AnimationController _detailAnim;
-  late Animation<double>   _detailFade;
-  late Animation<Offset>   _detailSlide;
-
-  // Per-card stagger
   final Map<int, AnimationController> _cardAnims = {};
 
   List<Company> get _filtered {
@@ -164,8 +155,7 @@ class _CompaniesScreenState extends State<CompaniesScreen>
         ? kCompanies
         : kCompanies.where((c) => c.type == _filter).toList();
     if (_search.isNotEmpty) {
-      list = list
-          .where((c) =>
+      list = list.where((c) =>
       c.name.toLowerCase().contains(_search.toLowerCase()) ||
           c.domain.toLowerCase().contains(_search.toLowerCase()) ||
           c.city.toLowerCase().contains(_search.toLowerCase()))
@@ -174,36 +164,23 @@ class _CompaniesScreenState extends State<CompaniesScreen>
     return list;
   }
 
-  Company? get _selectedCompany =>
-      _selected == null ? null : kCompanies.firstWhere((c) => c.id == _selected);
-
   @override
   void initState() {
     super.initState();
-
     _headerAnim = AnimationController(
       vsync: this, duration: const Duration(milliseconds: 600),
     )..forward();
-
-    _detailAnim = AnimationController(
-      vsync: this, duration: const Duration(milliseconds: 340),
-    );
-    _detailFade  = CurvedAnimation(parent: _detailAnim, curve: Curves.easeOut);
-    _detailSlide = Tween<Offset>(
-      begin: const Offset(0, 0.08), end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _detailAnim, curve: Curves.easeOut));
-
     _initCardAnims();
   }
 
   void _initCardAnims() {
     for (int i = 0; i < kCompanies.length; i++) {
-      final c = AnimationController(
+      final ctrl = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 450),
       );
-      _cardAnims[kCompanies[i].id] = c;
+      _cardAnims[kCompanies[i].id] = ctrl;
       Future.delayed(Duration(milliseconds: 80 + i * 80), () {
-        if (mounted) c.forward();
+        if (mounted) ctrl.forward();
       });
     }
   }
@@ -211,7 +188,6 @@ class _CompaniesScreenState extends State<CompaniesScreen>
   @override
   void dispose() {
     _headerAnim.dispose();
-    _detailAnim.dispose();
     for (final c in _cardAnims.values) c.dispose();
     super.dispose();
   }
@@ -219,9 +195,6 @@ class _CompaniesScreenState extends State<CompaniesScreen>
   void _selectCompany(int id) {
     HapticFeedback.selectionClick();
     setState(() => _selected = id);
-    _detailAnim.reset();
-    _detailAnim.forward();
-    // Show bottom sheet on mobile
     _showDetailSheet(kCompanies.firstWhere((c) => c.id == id));
   }
 
@@ -237,7 +210,9 @@ class _CompaniesScreenState extends State<CompaniesScreen>
           _buildSearchBar(),
           _buildFilterBar(),
           Expanded(
-            child: _view == 'list' ? _buildList() : _buildMapPlaceholder(),
+            child: _view == 'list'
+                ? _buildList()
+                : _buildMapPlaceholder(),
           ),
         ],
       ),
@@ -249,7 +224,8 @@ class _CompaniesScreenState extends State<CompaniesScreen>
   Widget _buildHeader() {
     return AnimatedBuilder(
       animation: _headerAnim,
-      builder: (_, child) => Opacity(opacity: _headerAnim.value, child: child),
+      builder: (_, child) =>
+          Opacity(opacity: _headerAnim.value, child: child),
       child: Container(
         color: kInk,
         child: SafeArea(
@@ -269,7 +245,8 @@ class _CompaniesScreenState extends State<CompaniesScreen>
                           color: Colors.white.withOpacity(0.10),
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        child: const Icon(Icons.arrow_back_ios_new_rounded,
+                        child: const Icon(
+                            Icons.arrow_back_ios_new_rounded,
                             color: Colors.white, size: 16),
                       ),
                     ),
@@ -285,11 +262,11 @@ class _CompaniesScreenState extends State<CompaniesScreen>
                               )),
                           Text('Discover where you want to work',
                               style: TextStyle(
-                                  fontSize: 12, color: Color(0xFF94A3B8))),
+                                  fontSize: 12, color: kHint)),
                         ],
                       ),
                     ),
-                    // View toggle
+                    // List / Map toggle
                     Container(
                       padding: const EdgeInsets.all(4),
                       decoration: BoxDecoration(
@@ -304,7 +281,7 @@ class _CompaniesScreenState extends State<CompaniesScreen>
                             child: AnimatedContainer(
                               duration: const Duration(milliseconds: 220),
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 14, vertical: 7),
+                                  horizontal: 12, vertical: 7),
                               decoration: BoxDecoration(
                                 color: active
                                     ? Colors.white.withOpacity(0.18)
@@ -318,18 +295,16 @@ class _CompaniesScreenState extends State<CompaniesScreen>
                                         ? Icons.view_list_rounded
                                         : Icons.map_rounded,
                                     size: 16,
-                                    color: active
-                                        ? kAccent
-                                        : const Color(0xFF64748B),
+                                    color: active ? kAccent : kMuted,
                                   ),
                                   const SizedBox(width: 5),
                                   Text(
                                     v == 'list' ? 'List' : 'Map',
                                     style: TextStyle(
-                                      fontSize: 12, fontWeight: FontWeight.w700,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w700,
                                       color: active
-                                          ? Colors.white
-                                          : const Color(0xFF64748B),
+                                          ? Colors.white : kMuted,
                                     ),
                                   ),
                                 ],
@@ -345,14 +320,14 @@ class _CompaniesScreenState extends State<CompaniesScreen>
                 // Stats row
                 Row(
                   children: [
-                    _statPill('${kCompanies.length}', 'Companies'),
+                    _statPill(Icons.business_rounded,
+                        '${kCompanies.length}', 'Companies'),
                     const SizedBox(width: 10),
-                    _statPill(
-                      '${kCompanies.fold(0, (s, c) => s + c.openings)}',
-                      'Open Roles',
-                    ),
+                    _statPill(Icons.work_rounded,
+                        '${kCompanies.fold(0, (s, c) => s + c.openings)}',
+                        'Open Roles'),
                     const SizedBox(width: 10),
-                    _statPill('6', 'Cities'),
+                    _statPill(Icons.location_city_rounded, '6', 'Cities'),
                   ],
                 ),
               ],
@@ -363,23 +338,26 @@ class _CompaniesScreenState extends State<CompaniesScreen>
     );
   }
 
-  Widget _statPill(String num, String label) {
+  Widget _statPill(IconData icon, String num, String label) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.10),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
+          Icon(icon, size: 12, color: kAccent),
+          const SizedBox(width: 5),
           Text(num,
               style: const TextStyle(
                   fontSize: 13, fontWeight: FontWeight.w800,
                   color: kAccent)),
-          const SizedBox(width: 5),
+          const SizedBox(width: 4),
           Text(label,
               style: const TextStyle(
-                  fontSize: 12, color: Color(0xFF94A3B8),
+                  fontSize: 11, color: kHint,
                   fontWeight: FontWeight.w600)),
         ],
       ),
@@ -399,7 +377,8 @@ class _CompaniesScreenState extends State<CompaniesScreen>
         decoration: InputDecoration(
           hintText: 'Search by company, domain or city…',
           hintStyle: const TextStyle(fontSize: 13, color: kHint),
-          prefixIcon: const Icon(Icons.search_rounded,
+          // Updated: corporate building search icon
+          prefixIcon: const Icon(Icons.corporate_fare_rounded,
               color: kMuted, size: 20),
           filled: true,
           fillColor: kBgPage,
@@ -441,24 +420,20 @@ class _CompaniesScreenState extends State<CompaniesScreen>
               onTap: () => setState(() => _filter = f),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 240),
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 16, vertical: 0),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
                 decoration: BoxDecoration(
                   color: selected ? kPrimary : const Color(0xFFF1F5F9),
                   borderRadius: BorderRadius.circular(30),
                   border: Border.all(
-                    color: selected ? kPrimary : kBorder,
-                    width: 1.5,
+                    color: selected ? kPrimary : kBorder, width: 1.5,
                   ),
                 ),
                 child: Center(
-                  child: Text(
-                    f,
-                    style: TextStyle(
-                      fontSize: 12, fontWeight: FontWeight.w700,
-                      color: selected ? Colors.white : kMuted,
-                    ),
-                  ),
+                  child: Text(f,
+                      style: TextStyle(
+                        fontSize: 12, fontWeight: FontWeight.w700,
+                        color: selected ? Colors.white : kMuted,
+                      )),
                 ),
               ),
             );
@@ -501,203 +476,11 @@ class _CompaniesScreenState extends State<CompaniesScreen>
     return ListView.builder(
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 24),
       itemCount: list.length,
-      itemBuilder: (_, i) => _buildCompanyCard(list[i], i),
-    );
-  }
-
-  // ── COMPANY CARD ───────────────────────────
-
-  Widget _buildCompanyCard(Company c, int index) {
-    final isSelected = _selected == c.id;
-    final ctrl       = _cardAnims[c.id];
-    final fade       = ctrl != null
-        ? CurvedAnimation(parent: ctrl, curve: Curves.easeOut)
-        : const AlwaysStoppedAnimation(1.0);
-    final slide = ctrl != null
-        ? Tween<Offset>(
-      begin: const Offset(0, 0.12), end: Offset.zero,
-    ).animate(CurvedAnimation(parent: ctrl, curve: Curves.easeOut))
-        : const AlwaysStoppedAnimation(Offset.zero);
-
-    final ts = _style(c.type);
-
-    return FadeTransition(
-      opacity: fade,
-      child: SlideTransition(
-        position: slide,
-        child: GestureDetector(
-          onTap: () => _selectCompany(c.id),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 250),
-            margin: const EdgeInsets.only(bottom: 12),
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: kCardBg,
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(
-                color: isSelected ? kPrimary : kBorder,
-                width: isSelected ? 2 : 1.5,
-              ),
-            ),
-            child: Column(
-              children: [
-                // Top row
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Logo tile
-                    Container(
-                      width: 50, height: 50,
-                      decoration: BoxDecoration(
-                        color: kBgPage,
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: kBorder),
-                      ),
-                      child: Center(
-                        child: Text(c.logo,
-                            style: const TextStyle(fontSize: 24)),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Text(c.name,
-                                    style: const TextStyle(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w800,
-                                      color: kInk,
-                                    )),
-                              ),
-                              // Type badge
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 9, vertical: 3),
-                                decoration: BoxDecoration(
-                                  color: ts.bg,
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: Text(c.type,
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w700,
-                                      color: ts.fg,
-                                    )),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 3),
-                          Row(
-                            children: [
-                              const Icon(Icons.location_on_rounded,
-                                  size: 12, color: kHint),
-                              const SizedBox(width: 3),
-                              Text('${c.city}, ${c.state}',
-                                  style: const TextStyle(
-                                      fontSize: 12, color: kMuted)),
-                              const SizedBox(width: 8),
-                              const Icon(Icons.domain_rounded,
-                                  size: 12, color: kHint),
-                              const SizedBox(width: 3),
-                              Text(c.domain,
-                                  style: const TextStyle(
-                                      fontSize: 12, color: kMuted)),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                // Divider
-                Container(
-                  margin: const EdgeInsets.symmetric(vertical: 12),
-                  height: 1, color: const Color(0xFFF1F5F9),
-                ),
-                // Bottom row
-                Row(
-                  children: [
-                    // Size chip
-                    _metaChip(Icons.people_alt_rounded, c.size),
-                    const SizedBox(width: 8),
-                    _metaChip(Icons.language_rounded, c.website),
-                    const Spacer(),
-                    // Openings badge
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 5),
-                      decoration: BoxDecoration(
-                        color: kSelectedBg,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.work_outline_rounded,
-                              size: 13, color: kPrimary),
-                          const SizedBox(width: 5),
-                          Text(
-                            '${c.openings} openings',
-                            style: const TextStyle(
-                              fontSize: 12, fontWeight: FontWeight.w800,
-                              color: kPrimary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                // Skill tags
-                const SizedBox(height: 10),
-                Row(
-                  children: c.tags
-                      .map((t) => Container(
-                    margin: const EdgeInsets.only(right: 6),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 9, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF8FAFC),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: kBorder),
-                    ),
-                    child: Text(t,
-                        style: const TextStyle(
-                          fontSize: 11, fontWeight: FontWeight.w700,
-                          color: kSlate,
-                        )),
-                  ))
-                      .toList(),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _metaChip(IconData icon, String label) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: kBorder),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 11, color: kHint),
-          const SizedBox(width: 4),
-          Text(label,
-              style: const TextStyle(
-                  fontSize: 11, fontWeight: FontWeight.w600,
-                  color: kMuted)),
-        ],
+      itemBuilder: (_, i) => _CompanyCard(
+        company:    list[i],
+        isSelected: _selected == list[i].id,
+        ctrl:       _cardAnims[list[i].id],
+        onTap:      () => _selectCompany(list[i].id),
       ),
     );
   }
@@ -714,21 +497,17 @@ class _CompaniesScreenState extends State<CompaniesScreen>
       ),
       child: Column(
         children: [
-          // Fake map grid
           Expanded(
             child: ClipRRect(
               borderRadius:
               const BorderRadius.vertical(top: Radius.circular(20)),
               child: Stack(
                 children: [
-                  // Grid lines (simulated map)
                   CustomPaint(
                     painter: _MapGridPainter(),
                     child: Container(),
                   ),
-                  // Company pins
                   ..._filtered.map((c) => _buildMapPin(c)),
-                  // "Powered by" note
                   Positioned(
                     bottom: 12, left: 12,
                     child: Container(
@@ -751,23 +530,20 @@ class _CompaniesScreenState extends State<CompaniesScreen>
               ),
             ),
           ),
-          // Pin legend
           Container(
             padding: const EdgeInsets.all(14),
             decoration: const BoxDecoration(
-              border:
-              Border(top: BorderSide(color: kBorder, width: 1)),
+              border: Border(top: BorderSide(color: kBorder, width: 1)),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: _typeStyles.entries.map((e) => Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Container(
                     width: 10, height: 10,
                     decoration: BoxDecoration(
-                      color: e.value.fg,
-                      shape: BoxShape.circle,
-                    ),
+                        color: e.value.fg, shape: BoxShape.circle),
                   ),
                   const SizedBox(width: 5),
                   Text(e.key,
@@ -785,16 +561,15 @@ class _CompaniesScreenState extends State<CompaniesScreen>
 
   Widget _buildMapPin(Company c) {
     final ts = _style(c.type);
-    // Map lat/lng to rough screen position
-    final dx = ((c.lng - 72.5) / 7.0).clamp(0.05, 0.95);
+    final dx = ((c.lng - 72.5) / 7.0).clamp(0.05, 0.90);
     final dy = (1.0 - (c.lat - 11.0) / 10.0).clamp(0.05, 0.85);
-
     return Positioned(
-      left: MediaQuery.of(context).size.width * dx * 0.8,
-      top: 300 * dy,
+      left: MediaQuery.of(context).size.width * dx * 0.82,
+      top:  300 * dy,
       child: GestureDetector(
         onTap: () => _selectCompany(c.id),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
             Container(
               padding: const EdgeInsets.symmetric(
@@ -803,27 +578,21 @@ class _CompaniesScreenState extends State<CompaniesScreen>
                 color: _selected == c.id ? kPrimary : ts.bg,
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                  color: _selected == c.id ? kPrimary : ts.fg,
-                ),
+                    color: _selected == c.id ? kPrimary : ts.fg),
               ),
-              child: Text(
-                c.name,
-                style: TextStyle(
-                  fontSize: 10, fontWeight: FontWeight.w800,
-                  color: _selected == c.id ? Colors.white : ts.fg,
-                ),
-              ),
+              child: Text(c.name,
+                  style: TextStyle(
+                    fontSize: 10, fontWeight: FontWeight.w800,
+                    color: _selected == c.id ? Colors.white : ts.fg,
+                  )),
             ),
-            Container(
-              width: 2, height: 8,
-              color: _selected == c.id ? kPrimary : ts.fg,
-            ),
+            Container(width: 2, height: 8,
+                color: _selected == c.id ? kPrimary : ts.fg),
             Container(
               width: 6, height: 6,
               decoration: BoxDecoration(
-                color: _selected == c.id ? kPrimary : ts.fg,
-                shape: BoxShape.circle,
-              ),
+                  color: _selected == c.id ? kPrimary : ts.fg,
+                  shape: BoxShape.circle),
             ),
           ],
         ),
@@ -841,29 +610,27 @@ class _CompaniesScreenState extends State<CompaniesScreen>
       backgroundColor: Colors.transparent,
       builder: (_) => DraggableScrollableSheet(
         initialChildSize: 0.55,
-        minChildSize: 0.35,
-        maxChildSize: 0.85,
+        minChildSize:     0.35,
+        maxChildSize:     0.85,
         builder: (_, scrollCtrl) => Container(
           decoration: const BoxDecoration(
             color: kCardBg,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+            borderRadius:
+            BorderRadius.vertical(top: Radius.circular(28)),
           ),
           child: ListView(
             controller: scrollCtrl,
             padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
             children: [
-              // Handle
               Center(
                 child: Container(
                   margin: const EdgeInsets.symmetric(vertical: 12),
                   width: 40, height: 4,
                   decoration: BoxDecoration(
-                    color: kBorder,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
+                      color: kBorder,
+                      borderRadius: BorderRadius.circular(4)),
                 ),
               ),
-              // Logo + name
               Row(
                 children: [
                   Container(
@@ -873,10 +640,8 @@ class _CompaniesScreenState extends State<CompaniesScreen>
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(color: kBorder),
                     ),
-                    child: Center(
-                      child: Text(c.logo,
-                          style: const TextStyle(fontSize: 28)),
-                    ),
+                    child: Center(child: Text(c.logo,
+                        style: const TextStyle(fontSize: 28))),
                   ),
                   const SizedBox(width: 14),
                   Expanded(
@@ -885,19 +650,22 @@ class _CompaniesScreenState extends State<CompaniesScreen>
                       children: [
                         Row(
                           children: [
-                            Text(c.name,
-                                style: const TextStyle(
-                                  fontSize: 18, fontWeight: FontWeight.w800,
-                                  color: kInk,
-                                )),
+                            Expanded(
+                              child: Text(c.name,
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w800,
+                                    color: kInk,
+                                  )),
+                            ),
                             const SizedBox(width: 8),
                             Container(
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 9, vertical: 3),
                               decoration: BoxDecoration(
-                                color: ts.bg,
-                                borderRadius: BorderRadius.circular(20),
-                              ),
+                                  color: ts.bg,
+                                  borderRadius:
+                                  BorderRadius.circular(20)),
                               child: Text(c.type,
                                   style: TextStyle(
                                     fontSize: 10,
@@ -917,19 +685,17 @@ class _CompaniesScreenState extends State<CompaniesScreen>
                 ],
               ),
               const SizedBox(height: 16),
-              // Description
               Text(c.desc,
                   style: const TextStyle(
                     fontSize: 13, color: kSlate,
                     height: 1.6, fontWeight: FontWeight.w500,
                   )),
               const SizedBox(height: 16),
-              // Info rows
-              _infoRow(Icons.people_alt_rounded,    'Team Size',  c.size),
-              _infoRow(Icons.language_rounded,      'Website',    c.website),
-              _infoRow(Icons.location_city_rounded, 'City',       '${c.city}, ${c.state}'),
+              _infoRow(Icons.groups_2_rounded,      'Team Size', c.size),
+              _infoRow(Icons.language_rounded,       'Website',  c.website),
+              _infoRow(Icons.location_city_rounded,  'Location',
+                  '${c.city}, ${c.state}'),
               const SizedBox(height: 16),
-              // Skills
               const Text('Required Skills',
                   style: TextStyle(
                     fontSize: 13, fontWeight: FontWeight.w800,
@@ -954,7 +720,6 @@ class _CompaniesScreenState extends State<CompaniesScreen>
                 )).toList(),
               ),
               const SizedBox(height: 20),
-              // CTA
               GestureDetector(
                 onTap: () => Navigator.pop(context),
                 child: Container(
@@ -967,16 +732,14 @@ class _CompaniesScreenState extends State<CompaniesScreen>
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.work_outline_rounded,
+                      const Icon(Icons.work_rounded,
                           color: Colors.white, size: 18),
                       const SizedBox(width: 8),
-                      Text(
-                        'View ${c.openings} Open Roles',
-                        style: const TextStyle(
-                          fontSize: 15, fontWeight: FontWeight.w800,
-                          color: Colors.white,
-                        ),
-                      ),
+                      Text('View ${c.openings} Open Roles',
+                          style: const TextStyle(
+                            fontSize: 15, fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                          )),
                     ],
                   ),
                 ),
@@ -1006,15 +769,300 @@ class _CompaniesScreenState extends State<CompaniesScreen>
                   fontSize: 12, fontWeight: FontWeight.w700,
                   color: kMuted)),
           const Spacer(),
-          Text(value,
-              style: const TextStyle(
-                  fontSize: 13, fontWeight: FontWeight.w800,
-                  color: kInk)),
+          Flexible(
+            child: Text(value,
+                textAlign: TextAlign.right,
+                style: const TextStyle(
+                    fontSize: 13, fontWeight: FontWeight.w800,
+                    color: kInk)),
+          ),
         ],
       ),
     );
   }
 }
+
+// ─────────────────────────────────────────────
+//  COMPANY CARD — extracted widget
+//  FIX: meta row uses Wrap, tags use Wrap → no overflow
+// ─────────────────────────────────────────────
+
+class _CompanyCard extends StatelessWidget {
+  final Company            company;
+  final bool               isSelected;
+  final AnimationController? ctrl;
+  final VoidCallback       onTap;
+
+  const _CompanyCard({
+    required this.company,
+    required this.isSelected,
+    required this.onTap,
+    this.ctrl,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final c    = company;
+    final ts   = _style(c.type);
+
+    final fade  = ctrl != null
+        ? CurvedAnimation(parent: ctrl!, curve: Curves.easeOut)
+        : const AlwaysStoppedAnimation<double>(1.0);
+    final slide = ctrl != null
+        ? Tween<Offset>(
+        begin: const Offset(0, 0.12), end: Offset.zero)
+        .animate(CurvedAnimation(parent: ctrl!, curve: Curves.easeOut))
+        : const AlwaysStoppedAnimation<Offset>(Offset.zero);
+
+    return FadeTransition(
+      opacity: fade,
+      child: SlideTransition(
+        position: slide,
+        child: GestureDetector(
+          onTap: onTap,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 250),
+            margin: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: kCardBg,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(
+                color: isSelected ? kPrimary : kBorder,
+                width: isSelected ? 2 : 1.5,
+              ),
+              boxShadow: isSelected
+                  ? [BoxShadow(
+                  color: kPrimary.withOpacity(0.12),
+                  blurRadius: 12, offset: const Offset(0, 4))]
+                  : null,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+
+                // ── TOP ROW: logo + name + type badge ──
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: 50, height: 50,
+                      decoration: BoxDecoration(
+                        color: kBgPage,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: kBorder),
+                      ),
+                      child: Center(child: Text(c.logo,
+                          style: const TextStyle(fontSize: 24))),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(c.name,
+                                    style: const TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w800,
+                                      color: kInk,
+                                    )),
+                              ),
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 9, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: ts.bg,
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Text(c.type,
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w700,
+                                      color: ts.fg,
+                                    )),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          // Location row — updated icons
+                          Row(
+                            children: [
+                              const Icon(Icons.location_on_rounded,
+                                  size: 13, color: kRose),
+                              const SizedBox(width: 3),
+                              Text('${c.city}, ${c.state}',
+                                  style: const TextStyle(
+                                      fontSize: 12, color: kMuted)),
+                            ],
+                          ),
+                          const SizedBox(height: 3),
+                          // Domain row — updated icon
+                          Row(
+                            children: [
+                              const Icon(Icons.category_rounded,
+                                  size: 13, color: kPrimary),
+                              const SizedBox(width: 3),
+                              Text(c.domain,
+                                  style: const TextStyle(
+                                      fontSize: 12, color: kMuted)),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 12),
+                Container(height: 1, color: const Color(0xFFF1F5F9)),
+                const SizedBox(height: 12),
+
+                // ── META ROW — FIX: Wrap so chips never overflow ──
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    // Team size — updated icon
+                    _metaChip(
+                      icon: Icons.groups_2_rounded,
+                      label: c.size,
+                      iconColor: kMuted,
+                    ),
+                    // Website — updated icon
+                    _metaChip(
+                      icon: Icons.public_rounded,
+                      label: c.website,
+                      iconColor: kMuted,
+                    ),
+                    // Openings badge — stands out with colour
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: kSelectedBg,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                            color: kPrimary.withOpacity(0.20)),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.bolt_rounded,
+                              size: 13, color: kPrimary),
+                          const SizedBox(width: 4),
+                          Text('${c.openings} openings',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w800,
+                                color: kPrimary,
+                              )),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 10),
+
+                // ── SKILL TAGS — FIX: Wrap instead of Row ──────────
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: c.tags.map((t) => Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 9, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF8FAFC),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: kBorder),
+                    ),
+                    child: Text(t,
+                        style: const TextStyle(
+                          fontSize: 11, fontWeight: FontWeight.w700,
+                          color: kSlate,
+                        )),
+                  )).toList(),
+                ),
+
+                const SizedBox(height: 12),
+
+                // ── VIEW ROLES BUTTON ──────────────────────────────
+                GestureDetector(
+                  onTap: onTap,
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 11),
+                    decoration: BoxDecoration(
+                      color: isSelected ? kPrimary : kSelectedBg,
+                      borderRadius: BorderRadius.circular(12),
+                      border: isSelected
+                          ? null
+                          : Border.all(color: kBorder),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.work_history_rounded,
+                          size: 15,
+                          color: isSelected ? Colors.white : kPrimary,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          'View Details  ·  ${c.openings} Roles',
+                          style: TextStyle(
+                            fontSize: 13, fontWeight: FontWeight.w800,
+                            color: isSelected ? Colors.white : kPrimary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _metaChip({
+    required IconData icon,
+    required String   label,
+    Color iconColor = kHint,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: kBorder),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: iconColor),
+          const SizedBox(width: 5),
+          Text(label,
+              style: const TextStyle(
+                  fontSize: 11, fontWeight: FontWeight.w600,
+                  color: kMuted)),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────
+//  CONSTANTS used inside _CompanyCard
+// ─────────────────────────────────────────────
+
+const kRose = Color(0xFFF43F5E);
 
 // ─────────────────────────────────────────────
 //  MAP GRID PAINTER
@@ -1023,34 +1071,27 @@ class _CompaniesScreenState extends State<CompaniesScreen>
 class _MapGridPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    final bgPaint = Paint()..color = const Color(0xFFEFF6FF);
-    canvas.drawRect(Offset.zero & size, bgPaint);
+    canvas.drawRect(Offset.zero & size,
+        Paint()..color = const Color(0xFFEFF6FF));
 
     final gridPaint = Paint()
-      ..color = const Color(0xFFBFDBFE)
+      ..color      = const Color(0xFFBFDBFE)
       ..strokeWidth = 0.8;
 
-    // Horizontal lines
     for (double y = 0; y < size.height; y += 40) {
       canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
     }
-    // Vertical lines
     for (double x = 0; x < size.width; x += 40) {
       canvas.drawLine(Offset(x, 0), Offset(x, size.height), gridPaint);
     }
 
-    // Roads (faint diagonal lines)
     final roadPaint = Paint()
-      ..color = const Color(0xFFBAE6FD)
+      ..color      = const Color(0xFFBAE6FD)
       ..strokeWidth = 2;
-    canvas.drawLine(
-        Offset(0, size.height * 0.3),
-        Offset(size.width, size.height * 0.5),
-        roadPaint);
-    canvas.drawLine(
-        Offset(size.width * 0.2, 0),
-        Offset(size.width * 0.4, size.height),
-        roadPaint);
+    canvas.drawLine(Offset(0, size.height * 0.3),
+        Offset(size.width, size.height * 0.5), roadPaint);
+    canvas.drawLine(Offset(size.width * 0.2, 0),
+        Offset(size.width * 0.4, size.height), roadPaint);
   }
 
   @override

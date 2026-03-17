@@ -1,13 +1,13 @@
 import 'package:go_router/go_router.dart';
 
-/// AUTH — common entry point for all roles
+/// ── AUTH (one common login + signup for ALL roles) ───────────────────────────
 import '../screens/auth/common_login.dart';
 import '../screens/auth/common_signup.dart';
 
-/// LANDING
+/// ── LANDING ──────────────────────────────────────────────────────────────────
 import '../screens/landing/landing_screen.dart';
 
-/// ENGINEERING PORTAL
+/// ── ENGINEERING / POST-GRAD PORTAL ───────────────────────────────────────────
 import '../screens/dashboard/main_dashboard.dart';
 import '../screens/jobs/jobs_screen.dart';
 import '../screens/internships/internships_screen.dart';
@@ -16,75 +16,79 @@ import '../screens/hackathons/hackathons_screen.dart';
 import '../screens/courses/courses_screen.dart';
 import '../screens/profile/profile_screen.dart';
 
-/// SCHOOL PORTAL
-import '../screens/school/school_login_screen.dart';
-import '../screens/school/school_signup_screen.dart';
+/// ── SCHOOL PORTAL ────────────────────────────────────────────────────────────
 import '../screens/school/school_layout_screen.dart';
 import '../screens/school/school_dashboard_screen.dart';
 import '../screens/school/school_courses_screen.dart';
 import '../screens/school/school_booking_screen.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  APP FLOW
+//  COMPLETE APP FLOW
 //
-//  /                    → LandingScreen
-//  /login               → CommonLoginScreen   (role selector + sign in)
-//  /signup              → CommonSignupScreen  (role selector + register)
+//  /                       LandingScreen
+//  /login                  CommonLoginScreen   ← ONE page for ALL roles
+//  /signup                 CommonSignupScreen  ← ONE page for ALL roles
 //
-//  role = engineering / postgrad:
-//    /engineering        → MainDashboard      (eng bottom-nav shell)
-//    /jobs /internships /companies /hackathons /courses /profile
+//  After login/signup — role decides the destination:
 //
-//  role = school:
-//    /school/login       → SchoolLoginScreen
-//    /school/signup      → SchoolSignupScreen
-//    /school/layout      → SchoolLayoutScreen (school bottom-nav shell)
-//    /school/dashboard   → SchoolDashboardScreen  (tab inside layout)
-//    /school/courses     → SchoolCoursesScreen     (tab inside layout)
-//    /school/booking     → SchoolBookingScreen     (tab inside layout)
+//  💼 Engineering / 📚 Post-Grad  →  /engineering  (MainDashboard)
+//     /jobs          JobsScreen
+//     /internships   InternshipsScreen
+//     /companies     CompaniesScreen
+//     /hackathons    HackathonsScreen
+//     /courses       CoursesScreen
+//     /profile       ProfileScreen
 //
-//  SAFETY NET:
-//    /school             → redirects to /school/login
-//    (prevents GoException if any old Navigator.pushNamed('/school') survives)
+//  🎒 School  →  /school/layout  (SchoolLayoutScreen — bottom-nav shell)
+//     /school/dashboard   SchoolDashboardScreen   (tab 0)
+//     /school/courses     SchoolCoursesScreen      (tab 1)
+//     /school/booking     SchoolBookingScreen      (tab 2)
+//
+//  SAFETY NETS (redirect stale paths so app never hard-crashes):
+//     /school             →  /school/layout
+//     /school/login       →  /login
+//     /school/signup      →  /signup
 // ─────────────────────────────────────────────────────────────────────────────
 
 final GoRouter router = GoRouter(
   initialLocation: '/',
 
-  // ── Safety-net redirect ──────────────────────────────────────────────────
-  // If anything navigates to bare /school, redirect to /school/login
-  redirect: (context, state) {
-    if (state.matchedLocation == '/school') {
-      return '/school/login';
-    }
-    return null; // no redirect needed
-  },
-
   routes: [
 
-    // ── LANDING ─────────────────────────────────────────────────────────────
+    // ── LANDING ────────────────────────────────────────────────────────────
     GoRoute(
       path: '/',
       builder: (context, state) => const LandingScreen(),
     ),
 
-    // ── COMMON AUTH ─────────────────────────────────────────────────────────
+    // ── COMMON AUTH ────────────────────────────────────────────────────────
+    // Single login page — dropdown selects role, routes accordingly
     GoRoute(
       path: '/login',
       builder: (context, state) => const CommonLoginScreen(),
     ),
+    // Single signup page — dropdown selects role, routes accordingly
     GoRoute(
       path: '/signup',
       builder: (context, state) => const CommonSignupScreen(),
     ),
 
-    // ── SAFETY NET: bare /school → /school/login ─────────────────────────
+    // ── SAFETY NETS ────────────────────────────────────────────────────────
+    // Redirect any stale /school routes to the correct unified pages
     GoRoute(
       path: '/school',
-      redirect: (context, state) => '/school/login',
+      redirect: (context, state) => '/school/layout',
+    ),
+    GoRoute(
+      path: '/school/login',
+      redirect: (context, state) => '/login',
+    ),
+    GoRoute(
+      path: '/school/signup',
+      redirect: (context, state) => '/signup',
     ),
 
-    // ── ENGINEERING / POST-GRAD PORTAL ──────────────────────────────────────
+    // ── ENGINEERING / POST-GRAD PORTAL ─────────────────────────────────────
     GoRoute(
       path: '/engineering',
       builder: (context, state) => const MainDashboard(),
@@ -114,15 +118,8 @@ final GoRouter router = GoRouter(
       builder: (context, state) => const ProfileScreen(),
     ),
 
-    // ── SCHOOL PORTAL ────────────────────────────────────────────────────────
-    GoRoute(
-      path: '/school/login',
-      builder: (context, state) => const SchoolLoginScreen(),
-    ),
-    GoRoute(
-      path: '/school/signup',
-      builder: (context, state) => const SchoolSignupScreen(),
-    ),
+    // ── SCHOOL PORTAL ──────────────────────────────────────────────────────
+    // /school/layout is the bottom-nav shell — always enter here first
     GoRoute(
       path: '/school/layout',
       builder: (context, state) => const SchoolLayoutScreen(),

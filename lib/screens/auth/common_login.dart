@@ -3,19 +3,17 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
 // ─────────────────────────────────────────────
-//  DESIGN TOKENS — shared with Signup
+//  DESIGN TOKENS
 // ─────────────────────────────────────────────
 
 const kInk        = Color(0xFF0F172A);
 const kSlate      = Color(0xFF334155);
 const kMuted      = Color(0xFF64748B);
 const kHint       = Color(0xFF94A3B8);
-const kBgPage     = Color(0xFFF0F4F8);
 const kCardBg     = Color(0xFFFFFFFF);
 const kBorder     = Color(0xFFE2E8F0);
 const kPrimary    = Color(0xFF1D4ED8);
 const kAccent     = Color(0xFF38BDF8);
-const kSuccess    = Color(0xFF16A34A);
 const kSelectedBg = Color(0xFFEFF6FF);
 const kInputFill  = Color(0xFFF8FAFC);
 
@@ -25,46 +23,51 @@ const kInputFill  = Color(0xFFF8FAFC);
 
 class _Role {
   final String value;
-  final String title;
-  final String subtitle;
+  final String label;
   final String emoji;
-  final Color  accentColor;
-  final Color  bgColor;
+  final String subtitle;
+  final Color  accent;
+  final Color  bg;
+  final String route;        // where to go after login
 
   const _Role({
     required this.value,
-    required this.title,
-    required this.subtitle,
+    required this.label,
     required this.emoji,
-    required this.accentColor,
-    required this.bgColor,
+    required this.subtitle,
+    required this.accent,
+    required this.bg,
+    required this.route,
   });
 }
 
 const _roles = [
   _Role(
-    value:       'engineering',
-    title:       'Engineering Student',
-    subtitle:    'Jobs, internships, companies & hackathons',
-    emoji:       '💼',
-    accentColor: kPrimary,
-    bgColor:     kSelectedBg,
+    value:    'engineering',
+    label:    'Engineering / Graduate',
+    emoji:    '💼',
+    subtitle: 'B.E / B.Tech / B.Sc / Degree',
+    accent:   kPrimary,
+    bg:       kSelectedBg,
+    route:    '/engineering',
   ),
   _Role(
-    value:       'school',
-    title:       'School Student',
-    subtitle:    'Coding, AI, robotics & summer programmes',
-    emoji:       '🎒',
-    accentColor: Color(0xFF0D9488),
-    bgColor:     Color(0xFFEFFCF9),
+    value:    'school',
+    label:    'School Student',
+    emoji:    '🎒',
+    subtitle: 'Grade 5 – Grade 12',
+    accent:   Color(0xFF0D9488),
+    bg:       Color(0xFFEFFCF9),
+    route:    '/school/layout',
   ),
   _Role(
-    value:       'postgrad',
-    title:       'Post Graduation',
-    subtitle:    'Research, higher studies & advanced roles',
-    emoji:       '📚',
-    accentColor: Color(0xFF7C3AED),
-    bgColor:     Color(0xFFF5F3FF),
+    value:    'postgrad',
+    label:    'Post Graduation',
+    emoji:    '📚',
+    subtitle: 'M.E / M.Tech / MBA / M.Sc',
+    accent:   Color(0xFF7C3AED),
+    bg:       Color(0xFFF5F3FF),
+    route:    '/engineering',
   ),
 ];
 
@@ -82,95 +85,128 @@ class CommonLoginScreen extends StatefulWidget {
 class _CommonLoginScreenState extends State<CommonLoginScreen>
     with TickerProviderStateMixin {
 
-  String _role       = 'engineering';
-  bool   _showPass   = false;
-  bool   _isLoading  = false;
-  bool   _btnPressed = false;
+  _Role    _selectedRole = _roles[0];
+  bool     _showPass     = false;
+  bool     _isLoading    = false;
+  bool     _btnPressed   = false;
+  bool     _dropdownOpen = false;
 
-  final _emailCtrl = TextEditingController();
-  final _passCtrl  = TextEditingController();
+  // Controllers — shared across all roles
+  final _emailCtrl    = TextEditingController();
+  final _passCtrl     = TextEditingController();
 
-  late AnimationController _cardAnim;
+  // Engineering / Postgrad specific
+  final _collegeCtrl  = TextEditingController();
+  final _branchCtrl   = TextEditingController();
+  final _yearCtrl     = TextEditingController();
+
+  // School specific
+  final _schoolCtrl   = TextEditingController();
+  final _gradeCtrl    = TextEditingController();
+
+  // Animation controllers
+  late AnimationController _headerAnim;
+  late AnimationController _dropAnim;
   late AnimationController _fieldsAnim;
   late AnimationController _btnCtrl;
+  late AnimationController _roleSwapAnim;
 
-  late Animation<double> _cardFade;
-  late Animation<Offset>  _cardSlide;
+  late Animation<double> _headerFade;
+  late Animation<Offset>  _headerSlide;
   late Animation<double>  _fieldsFade;
   late Animation<Offset>  _fieldsSlide;
   late Animation<double>  _btnScale;
+  late Animation<double>  _roleSwapFade;
+  late Animation<Offset>  _roleSwapSlide;
 
-  _Role get _selectedRole =>
-      _roles.firstWhere((r) => r.value == _role);
+  _Role get _role => _selectedRole;
 
   @override
   void initState() {
     super.initState();
 
-    _cardAnim = AnimationController(
-      vsync: this, duration: const Duration(milliseconds: 600),
-    );
-    _cardFade  = CurvedAnimation(parent: _cardAnim, curve: Curves.easeOut);
-    _cardSlide = Tween<Offset>(
-      begin: const Offset(0, 0.14), end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _cardAnim, curve: Curves.easeOut));
+    _headerAnim = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 600))
+      ..forward();
+    _headerFade  = CurvedAnimation(parent: _headerAnim, curve: Curves.easeOut);
+    _headerSlide = Tween<Offset>(
+        begin: const Offset(0, -0.12), end: Offset.zero)
+        .animate(CurvedAnimation(parent: _headerAnim, curve: Curves.easeOut));
+
+    _dropAnim = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 500));
 
     _fieldsAnim = AnimationController(
-      vsync: this, duration: const Duration(milliseconds: 500),
-    );
+        vsync: this, duration: const Duration(milliseconds: 500));
     _fieldsFade  = CurvedAnimation(parent: _fieldsAnim, curve: Curves.easeOut);
     _fieldsSlide = Tween<Offset>(
-      begin: const Offset(0, 0.10), end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _fieldsAnim, curve: Curves.easeOut));
+        begin: const Offset(0, 0.10), end: Offset.zero)
+        .animate(CurvedAnimation(parent: _fieldsAnim, curve: Curves.easeOut));
 
-    _btnCtrl = AnimationController(
-      vsync: this, duration: const Duration(milliseconds: 150),
-    );
+    _btnCtrl  = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 150));
     _btnScale = Tween<double>(begin: 1.0, end: 0.96).animate(
-      CurvedAnimation(parent: _btnCtrl, curve: Curves.easeInOut),
-    );
+        CurvedAnimation(parent: _btnCtrl, curve: Curves.easeInOut));
 
-    Future.delayed(const Duration(milliseconds: 100), () {
-      if (mounted) _cardAnim.forward();
+    _roleSwapAnim = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 320));
+    _roleSwapFade  = CurvedAnimation(
+        parent: _roleSwapAnim, curve: Curves.easeOut);
+    _roleSwapSlide = Tween<Offset>(
+        begin: const Offset(0, 0.08), end: Offset.zero)
+        .animate(CurvedAnimation(
+        parent: _roleSwapAnim, curve: Curves.easeOut));
+
+    Future.delayed(const Duration(milliseconds: 120), () {
+      if (mounted) _dropAnim.forward();
     });
-    Future.delayed(const Duration(milliseconds: 280), () {
-      if (mounted) _fieldsAnim.forward();
+    Future.delayed(const Duration(milliseconds: 260), () {
+      if (mounted) {
+        _fieldsAnim.forward();
+        _roleSwapAnim.forward();
+      }
     });
   }
 
   @override
   void dispose() {
-    _cardAnim.dispose();
+    _headerAnim.dispose();
+    _dropAnim.dispose();
     _fieldsAnim.dispose();
     _btnCtrl.dispose();
+    _roleSwapAnim.dispose();
     _emailCtrl.dispose();
     _passCtrl.dispose();
+    _collegeCtrl.dispose();
+    _branchCtrl.dispose();
+    _yearCtrl.dispose();
+    _schoolCtrl.dispose();
+    _gradeCtrl.dispose();
     super.dispose();
   }
 
-  // ── Login — routes based on selected role ──────────────────────────────────
-  //   school             → /school/login  (school portal own login)
-  //   engineering / PG   → /engineering   (main dashboard)
+  // ── Role change — animate the extra fields out/in ─────────────────────────
+
+  Future<void> _changeRole(_Role r) async {
+    if (r.value == _selectedRole.value) return;
+    HapticFeedback.selectionClick();
+    await _roleSwapAnim.reverse();
+    if (!mounted) return;
+    setState(() => _selectedRole = r);
+    _roleSwapAnim.forward();
+  }
+
+  // ── Login ──────────────────────────────────
 
   Future<void> _login() async {
     setState(() => _isLoading = true);
     await Future.delayed(const Duration(milliseconds: 900));
     if (!mounted) return;
     setState(() => _isLoading = false);
-
-    if (_role == 'school') {
-      context.go('/school/login');
-    } else {
-      // covers both 'engineering' and 'postgrad'
-      context.go('/engineering');
-    }
+    context.go(_role.route);
   }
 
-  void _selectRole(String value) {
-    if (_role == value) return;
-    HapticFeedback.selectionClick();
-    setState(() => _role = value);
-  }
+  // ── build ──────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
@@ -203,7 +239,6 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
               ),
             ),
 
-            // Content
             SafeArea(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(
@@ -211,18 +246,41 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildTopBar(),
-                    const SizedBox(height: 24),
-                    _buildHeroText(),
-                    const SizedBox(height: 24),
+                    // ── TOP BAR ──────────────────────────────
                     FadeTransition(
-                      opacity: _cardFade,
+                      opacity: _headerFade,
                       child: SlideTransition(
-                        position: _cardSlide,
-                        child: _buildRoleSelector(),
+                        position: _headerSlide,
+                        child: _buildTopBar(),
                       ),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 24),
+
+                    // ── HERO TEXT ─────────────────────────────
+                    FadeTransition(
+                      opacity: _headerFade,
+                      child: SlideTransition(
+                        position: _headerSlide,
+                        child: _buildHeroText(),
+                      ),
+                    ),
+                    const SizedBox(height: 22),
+
+                    // ── ROLE DROPDOWN ─────────────────────────
+                    FadeTransition(
+                      opacity: CurvedAnimation(
+                          parent: _dropAnim, curve: Curves.easeOut),
+                      child: SlideTransition(
+                        position: Tween<Offset>(
+                            begin: const Offset(0, 0.12), end: Offset.zero)
+                            .animate(CurvedAnimation(
+                            parent: _dropAnim, curve: Curves.easeOut)),
+                        child: _buildRoleDropdown(),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // ── FORM CARD ─────────────────────────────
                     FadeTransition(
                       opacity: _fieldsFade,
                       child: SlideTransition(
@@ -231,9 +289,11 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
                       ),
                     ),
                     const SizedBox(height: 16),
-                    Center(
-                      child: FadeTransition(
-                        opacity: _fieldsFade,
+
+                    // ── SIGN UP LINK ──────────────────────────
+                    FadeTransition(
+                      opacity: _fieldsFade,
+                      child: Center(
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -259,7 +319,7 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
                         ),
                       ),
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 28),
                   ],
                 ),
               ),
@@ -269,6 +329,8 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
       ),
     );
   }
+
+  // ── TOP BAR ────────────────────────────────
 
   Widget _buildTopBar() {
     return Row(
@@ -281,10 +343,8 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
               color: Colors.white.withOpacity(0.10),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: const Icon(
-              Icons.arrow_back_ios_new,
-              color: Colors.white, size: 16,
-            ),
+            child: const Icon(Icons.arrow_back_ios_new,
+                color: Colors.white, size: 16),
           ),
         ),
         const SizedBox(width: 14),
@@ -295,63 +355,59 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
             borderRadius: BorderRadius.circular(10),
           ),
           child: const Center(
-            child: Text('⚡', style: TextStyle(fontSize: 16)),
-          ),
+              child: Text('⚡', style: TextStyle(fontSize: 16))),
         ),
         const SizedBox(width: 10),
         const Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'NextStep',
-              style: TextStyle(
-                fontSize: 15, fontWeight: FontWeight.w800,
-                color: Colors.white,
-              ),
-            ),
-            Text(
-              'Welcome back',
-              style: TextStyle(
-                fontSize: 10, color: kHint,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
+            Text('NextStep',
+                style: TextStyle(
+                    fontSize: 15, fontWeight: FontWeight.w800,
+                    color: Colors.white)),
+            Text('Welcome back',
+                style: TextStyle(
+                    fontSize: 10, color: kHint,
+                    fontWeight: FontWeight.w600)),
           ],
         ),
       ],
     );
   }
 
+  // ── HERO TEXT ──────────────────────────────
+
   Widget _buildHeroText() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Sign In',
-          style: TextStyle(
-            fontSize: 28, fontWeight: FontWeight.w800,
-            color: Colors.white, letterSpacing: -0.6,
-            height: 1.1,
-          ),
-        ),
+        const Text('Sign In',
+            style: TextStyle(
+              fontSize: 28, fontWeight: FontWeight.w800,
+              color: Colors.white, letterSpacing: -0.6,
+              height: 1.1,
+            )),
         const SizedBox(height: 8),
         Text(
-          'Choose your role and sign in to continue.',
+          'Select your role and sign in to continue.',
           style: TextStyle(
-            fontSize: 13, height: 1.5,
-            color: Colors.white.withOpacity(0.55),
-          ),
+              fontSize: 13, height: 1.5,
+              color: Colors.white.withOpacity(0.55)),
         ),
       ],
     );
   }
 
-  Widget _buildRoleSelector() {
+  // ── ROLE SELECTOR ──────────────────────────
+  // Custom-built selector — no DropdownButton constraints,
+  // full control over spacing, zero overflow risk.
+
+  Widget _buildRoleDropdown() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'I am a…',
+          'SELECT YOUR ROLE',
           style: TextStyle(
             fontSize: 11, fontWeight: FontWeight.w700,
             color: Colors.white.withOpacity(0.45),
@@ -359,93 +415,113 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
           ),
         ),
         const SizedBox(height: 10),
-        ..._roles.map((r) {
-          final selected = _role == r.value;
-          return GestureDetector(
-            onTap: () => _selectRole(r.value),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 250),
-              margin: const EdgeInsets.only(bottom: 10),
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: selected
-                    ? kCardBg
-                    : Colors.white.withOpacity(0.06),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: selected
-                      ? r.accentColor.withOpacity(0.5)
-                      : Colors.white.withOpacity(0.10),
-                  width: 1.5,
+
+        // ── Collapsed "selected" tile — tap to open sheet ──────────────
+        GestureDetector(
+          onTap: _openRoleSheet,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 250),
+            padding: const EdgeInsets.symmetric(
+                horizontal: 16, vertical: 14),
+            decoration: BoxDecoration(
+              color: kCardBg,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(
+                  color: _role.accent.withOpacity(0.45), width: 1.5),
+              boxShadow: [
+                BoxShadow(
+                  color: kInk.withOpacity(0.18),
+                  blurRadius: 24, offset: const Offset(0, 8),
                 ),
-              ),
-              child: Row(
-                children: [
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 250),
-                    width: 44, height: 44,
-                    decoration: BoxDecoration(
-                      color: selected
-                          ? r.bgColor
-                          : Colors.white.withOpacity(0.08),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Center(
-                      child: Text(r.emoji,
-                          style: const TextStyle(fontSize: 22)),
-                    ),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          r.title,
-                          style: TextStyle(
-                            fontSize: 14, fontWeight: FontWeight.w800,
-                            color: selected ? kInk : Colors.white,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          r.subtitle,
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: selected
-                                ? kMuted
-                                : Colors.white.withOpacity(0.45),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 250),
-                    width: 22, height: 22,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: selected ? r.accentColor : Colors.transparent,
-                      border: Border.all(
-                        color: selected
-                            ? r.accentColor
-                            : Colors.white.withOpacity(0.20),
-                        width: 2,
-                      ),
-                    ),
-                    child: selected
-                        ? const Icon(Icons.check,
-                        color: Colors.white, size: 13)
-                        : null,
-                  ),
-                ],
-              ),
+              ],
             ),
-          );
-        }),
+            child: Row(
+              children: [
+                // Emoji tile
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 250),
+                  width: 46, height: 46,
+                  decoration: BoxDecoration(
+                    color: _role.bg,
+                    borderRadius: BorderRadius.circular(13),
+                  ),
+                  child: Center(
+                    child: Text(_role.emoji,
+                        style: const TextStyle(fontSize: 22)),
+                  ),
+                ),
+                const SizedBox(width: 14),
+
+                // Label + subtitle
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 220),
+                        child: Text(
+                          _role.label,
+                          key: ValueKey(_role.value),
+                          style: const TextStyle(
+                            fontSize: 15, fontWeight: FontWeight.w800,
+                            color: kInk,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 220),
+                        child: Text(
+                          _role.subtitle,
+                          key: ValueKey('sub_${_role.value}'),
+                          style: const TextStyle(
+                              fontSize: 12, color: kMuted),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 10),
+
+                // Chevron
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 250),
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: _role.bg,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(Icons.keyboard_arrow_down_rounded,
+                      color: _role.accent, size: 20),
+                ),
+              ],
+            ),
+          ),
+        ),
       ],
     );
   }
+
+  // ── Bottom sheet role picker ────────────────
+
+  void _openRoleSheet() {
+    HapticFeedback.lightImpact();
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (_) => _RolePickerSheet(
+        roles:        _roles,
+        selectedRole: _role,
+        onSelect:     (r) {
+          Navigator.pop(context);
+          _changeRole(r);
+        },
+      ),
+    );
+  }
+
+  // ── FORM CARD ──────────────────────────────
 
   Widget _buildFormCard() {
     return Container(
@@ -464,69 +540,159 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // ── Section label ─────────────────
           Row(
             children: [
-              Container(
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
                 width: 28, height: 28,
                 decoration: BoxDecoration(
-                  color: kSelectedBg,
+                  color: _role.bg,
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(Icons.lock, color: kPrimary, size: 15),
+                child: Center(
+                  child: Text(_role.emoji,
+                      style: const TextStyle(fontSize: 14)),
+                ),
               ),
               const SizedBox(width: 10),
-              const Text(
-                'Your Credentials',
-                style: TextStyle(
-                  fontSize: 14, fontWeight: FontWeight.w800,
-                  color: kInk,
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 250),
+                child: Text(
+                  key: ValueKey(_role.value),
+                  '${_role.label} Login',
+                  style: const TextStyle(
+                    fontSize: 14, fontWeight: FontWeight.w800,
+                    color: kInk,
+                  ),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 18),
+
+          // ── Common fields ─────────────────
           _field(
-            ctrl:  _emailCtrl,
+            ctrl: _emailCtrl,
             label: 'Email Address',
-            icon:  Icons.email_outlined,
-            type:  TextInputType.emailAddress,
+            icon: Icons.email_outlined,
+            type: TextInputType.emailAddress,
           ),
           const SizedBox(height: 12),
           _field(
-            ctrl:    _passCtrl,
-            label:   'Password',
-            icon:    Icons.lock_outline,
+            ctrl: _passCtrl,
+            label: 'Password',
+            icon: Icons.lock_outline,
             obscure: !_showPass,
             suffix: IconButton(
               icon: Icon(
                 _showPass ? Icons.visibility_off : Icons.visibility,
                 color: kMuted, size: 18,
               ),
-              onPressed: () => setState(() => _showPass = !_showPass),
+              onPressed: () =>
+                  setState(() => _showPass = !_showPass),
             ),
           ),
+
+          // ── Role-specific extra fields ────
+          const SizedBox(height: 12),
+          FadeTransition(
+            opacity: _roleSwapFade,
+            child: SlideTransition(
+              position: _roleSwapSlide,
+              child: _buildRoleFields(),
+            ),
+          ),
+
+          // ── Forgot password ───────────────
           const SizedBox(height: 10),
           Align(
             alignment: Alignment.centerRight,
             child: GestureDetector(
-              onTap: () {
-                // TODO: wire up forgot-password route when ready
-              },
-              child: const Text(
+              onTap: () {},
+              child: Text(
                 'Forgot Password?',
                 style: TextStyle(
                   fontSize: 12, fontWeight: FontWeight.w700,
-                  color: kPrimary,
+                  color: _role.accent,
                 ),
               ),
             ),
           ),
           const SizedBox(height: 18),
+
+          // ── Submit button ─────────────────
           _buildSubmitBtn(),
         ],
       ),
     );
   }
+
+  // ── ROLE-SPECIFIC FIELDS ──────────────────
+  // Animates in/out when role changes
+
+  Widget _buildRoleFields() {
+    switch (_role.value) {
+
+    // Engineering & Postgrad show college + branch + year
+      case 'engineering':
+      case 'postgrad':
+        return Column(
+          key: ValueKey(_role.value),
+          children: [
+            _field(
+              ctrl: _collegeCtrl,
+              label: _role.value == 'postgrad'
+                  ? 'University / Institution'
+                  : 'College Name',
+              icon: Icons.account_balance_outlined,
+            ),
+            const SizedBox(height: 12),
+            _field(
+              ctrl: _branchCtrl,
+              label: _role.value == 'postgrad'
+                  ? 'Specialisation / Department'
+                  : 'Branch / Department',
+              icon: Icons.school_outlined,
+            ),
+            const SizedBox(height: 12),
+            _field(
+              ctrl: _yearCtrl,
+              label: _role.value == 'postgrad'
+                  ? 'Current Year (PG)'
+                  : 'Current Year (e.g. 2nd Year)',
+              icon: Icons.calendar_today_outlined,
+              type: TextInputType.number,
+            ),
+          ],
+        );
+
+    // School shows school name + grade
+      case 'school':
+        return Column(
+          key: const ValueKey('school'),
+          children: [
+            _field(
+              ctrl: _schoolCtrl,
+              label: 'School Name',
+              icon: Icons.location_city_outlined,
+            ),
+            const SizedBox(height: 12),
+            _field(
+              ctrl: _gradeCtrl,
+              label: 'Grade / Class (e.g. Grade 9)',
+              icon: Icons.class_outlined,
+              type: TextInputType.number,
+            ),
+          ],
+        );
+
+      default:
+        return const SizedBox.shrink();
+    }
+  }
+
+  // ── TEXT FIELD ─────────────────────────────
 
   Widget _field({
     required TextEditingController ctrl,
@@ -562,13 +728,16 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: kPrimary, width: 2),
+          borderSide: BorderSide(color: _role.accent, width: 2),
         ),
       ),
     );
   }
 
+  // ── SUBMIT BUTTON ──────────────────────────
+
   Widget _buildSubmitBtn() {
+
     return GestureDetector(
       onTapDown: (_) {
         _btnCtrl.forward();
@@ -590,14 +759,15 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
           width: double.infinity,
           padding: const EdgeInsets.symmetric(vertical: 15),
           decoration: BoxDecoration(
-            color: _selectedRole.accentColor,
+            color: _role.accent,
             borderRadius: BorderRadius.circular(16),
             boxShadow: _btnPressed
                 ? null
                 : [
               BoxShadow(
-                color: _selectedRole.accentColor.withOpacity(0.35),
-                blurRadius: 16, offset: const Offset(0, 6),
+                color: _role.accent.withOpacity(0.35),
+                blurRadius: 16,
+                offset: const Offset(0, 6),
               ),
             ],
           ),
@@ -614,22 +784,190 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
                 : Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  _selectedRole.emoji,
-                  style: const TextStyle(fontSize: 16),
-                ),
+                Text(_role.emoji,
+                    style: const TextStyle(fontSize: 16)),
                 const SizedBox(width: 8),
-                const Text(
-                  'Sign In',
-                  style: TextStyle(
-                    fontSize: 15, fontWeight: FontWeight.w800,
-                    color: Colors.white, letterSpacing: 0.2,
-                  ),
-                ),
+                const Text('Sign In',
+                    style: TextStyle(
+                      fontSize: 15, fontWeight: FontWeight.w800,
+                      color: Colors.white, letterSpacing: 0.2,
+                    )),
               ],
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────
+//  ROLE PICKER BOTTOM SHEET
+//  Fully custom — no DropdownButton, no overflow.
+//  Each option has generous padding and clear spacing.
+// ─────────────────────────────────────────────
+
+class _RolePickerSheet extends StatelessWidget {
+  final List<_Role>  roles;
+  final _Role        selectedRole;
+  final void Function(_Role) onSelect;
+
+  const _RolePickerSheet({
+    required this.roles,
+    required this.selectedRole,
+    required this.onSelect,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: Color(0xFF0F172A),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // ── Drag handle ──────────────────────
+          Container(
+            width: 40, height: 4,
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.20),
+              borderRadius: BorderRadius.circular(4),
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          // ── Sheet title ──────────────────────
+          Row(
+            children: [
+              const Text(
+                'Choose your role',
+                style: TextStyle(
+                  fontSize: 18, fontWeight: FontWeight.w800,
+                  color: Colors.white, letterSpacing: -0.3,
+                ),
+              ),
+              const Spacer(),
+              GestureDetector(
+                onTap: () => Navigator.pop(context),
+                child: Container(
+                  width: 32, height: 32,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.10),
+                    borderRadius: BorderRadius.circular(9),
+                  ),
+                  child: const Icon(Icons.close_rounded,
+                      color: Colors.white, size: 16),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Your role determines which portal you enter.',
+            style: TextStyle(
+              fontSize: 13, color: Colors.white.withOpacity(0.45),
+            ),
+          ),
+          const SizedBox(height: 22),
+
+          // ── Role tiles ───────────────────────
+          ...roles.map((r) {
+            final isSelected = r.value == selectedRole.value;
+            return GestureDetector(
+              onTap: () => onSelect(r),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 220),
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 18, vertical: 16),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? Colors.white
+                      : Colors.white.withOpacity(0.07),
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(
+                    color: isSelected
+                        ? r.accent.withOpacity(0.55)
+                        : Colors.white.withOpacity(0.12),
+                    width: 1.5,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    // Emoji tile
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 220),
+                      width: 52, height: 52,
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? r.bg
+                            : Colors.white.withOpacity(0.10),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Center(
+                        child: Text(r.emoji,
+                            style: const TextStyle(fontSize: 24)),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+
+                    // Text
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            r.label,
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w800,
+                              color: isSelected ? kInk : Colors.white,
+                            ),
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            r.subtitle,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: isSelected
+                                  ? kMuted
+                                  : Colors.white.withOpacity(0.45),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+
+                    // Check circle
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 220),
+                      width: 26, height: 26,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: isSelected
+                            ? r.accent : Colors.transparent,
+                        border: Border.all(
+                          color: isSelected
+                              ? r.accent
+                              : Colors.white.withOpacity(0.25),
+                          width: 2,
+                        ),
+                      ),
+                      child: isSelected
+                          ? const Icon(Icons.check_rounded,
+                          color: Colors.white, size: 14)
+                          : null,
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }),
+        ],
       ),
     );
   }

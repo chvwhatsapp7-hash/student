@@ -219,32 +219,16 @@ class _CommonSignupScreenState extends State<CommonSignupScreen>
   Future<void> _signup() async {
     setState(() => _isLoading = true);
 
-    final url = Uri.parse('https://internship-app.vercel.app/api/auth/signup');
+    final url = Uri.parse(
+      'https://studenthub-backend-woad.vercel.app/api/auth/register',
+    );
 
-    Map<String, dynamic> body = {
-      "name": _nameCtrl.text,
-      "email": _emailCtrl.text,
-      "phone": _phoneCtrl.text,
-      "password": _passCtrl.text,
-      "confirmPassword": _confirmCtrl.text,
-      "role": _role.value,
+    final body = {
+      "full_name": _nameCtrl.text.trim(),
+      "email": _emailCtrl.text.trim(),
+      "password": _passCtrl.text.trim(),
+      "phone": _phoneCtrl.text.trim(),
     };
-
-    // Engineering / Postgrad
-    if (_role.value == 'engineering' || _role.value == 'postgrad') {
-      body["college"] = _collegeCtrl.text;
-      body["branch"] = _branchCtrl.text;
-      body["year"] = _selectedYear;
-      body["rollNumber"] = _rollCtrl.text;
-    }
-
-    // School
-    else if (_role.value == 'school') {
-      body["school"] = _schoolCtrl.text;
-      body["grade"] = _selectedGrade;
-      body["parentName"] = _parentCtrl.text;
-      body["parentPhone"] = _parentPhoneCtrl.text;
-    }
 
     try {
       final response = await http.post(
@@ -253,20 +237,20 @@ class _CommonSignupScreenState extends State<CommonSignupScreen>
         body: jsonEncode(body),
       );
 
+      print("STATUS: ${response.statusCode}");
+      print("BODY: ${response.body}");
+
       final data = jsonDecode(response.body);
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        print("Signup Success: $data");
+        print("✅ Signup Success");
 
-        // After signup → go to login
         context.go('/login');
-
       } else {
-        print("Error: ${data["message"]}");
+        print("❌ Error: ${data["message"]}");
       }
-
     } catch (e) {
-      print("Exception: $e");
+      print("❌ Exception: $e");
     }
 
     setState(() => _isLoading = false);

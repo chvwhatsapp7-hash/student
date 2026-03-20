@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -216,12 +218,59 @@ class _CommonSignupScreenState extends State<CommonSignupScreen>
 
   Future<void> _signup() async {
     setState(() => _isLoading = true);
-    await Future.delayed(const Duration(milliseconds: 900));
-    if (!mounted) return;
-    setState(() => _isLoading = false);
-    context.go(_role.route);
-  }
 
+    final url = Uri.parse('https://internship-app.vercel.app/api/auth/signup');
+
+    Map<String, dynamic> body = {
+      "name": _nameCtrl.text,
+      "email": _emailCtrl.text,
+      "phone": _phoneCtrl.text,
+      "password": _passCtrl.text,
+      "confirmPassword": _confirmCtrl.text,
+      "role": _role.value,
+    };
+
+    // Engineering / Postgrad
+    if (_role.value == 'engineering' || _role.value == 'postgrad') {
+      body["college"] = _collegeCtrl.text;
+      body["branch"] = _branchCtrl.text;
+      body["year"] = _selectedYear;
+      body["rollNumber"] = _rollCtrl.text;
+    }
+
+    // School
+    else if (_role.value == 'school') {
+      body["school"] = _schoolCtrl.text;
+      body["grade"] = _selectedGrade;
+      body["parentName"] = _parentCtrl.text;
+      body["parentPhone"] = _parentPhoneCtrl.text;
+    }
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode(body),
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        print("Signup Success: $data");
+
+        // After signup → go to login
+        context.go('/login');
+
+      } else {
+        print("Error: ${data["message"]}");
+      }
+
+    } catch (e) {
+      print("Exception: $e");
+    }
+
+    setState(() => _isLoading = false);
+  }
   // ── build ──────────────────────────────────
 
   @override

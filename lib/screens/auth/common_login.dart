@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -200,10 +202,49 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
 
   Future<void> _login() async {
     setState(() => _isLoading = true);
-    await Future.delayed(const Duration(milliseconds: 900));
-    if (!mounted) return;
+
+    final url = Uri.parse('https://internship-app.vercel.app/api/auth/login');
+
+    Map<String, dynamic> body = {
+      "email": _emailCtrl.text,
+      "password": _passCtrl.text,
+      "role": _role.value,
+    };
+
+    // Role-based fields
+    if (_role.value == 'engineering' || _role.value == 'postgrad') {
+      body["college"] = _collegeCtrl.text;
+      body["branch"]  = _branchCtrl.text;
+      body["year"]    = _yearCtrl.text;
+    } else if (_role.value == 'school') {
+      body["school"] = _schoolCtrl.text;
+      body["grade"]  = _gradeCtrl.text;
+    }
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode(body),
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        print("Login Success: $data");
+
+        // Navigate after login
+        context.go(_role.route);
+
+      } else {
+        print("Error: ${data["message"]}");
+      }
+
+    } catch (e) {
+      print("Exception: $e");
+    }
+
     setState(() => _isLoading = false);
-    context.go(_role.route);
   }
 
   // ── build ──────────────────────────────────

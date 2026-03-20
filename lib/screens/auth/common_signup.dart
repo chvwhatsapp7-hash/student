@@ -228,7 +228,43 @@ class _CommonSignupScreenState extends State<CommonSignupScreen>
       "email": _emailCtrl.text.trim(),
       "password": _passCtrl.text.trim(),
       "phone": _phoneCtrl.text.trim(),
+
+      "university": "",
+      "degree": "",
+      "graduation_year": 0,
+      "resume_url": "",
+      "linkedin_url": "",
+      "github_url": "",
+      "age": 0,
     };
+
+    final jsonBody = jsonEncode(body);
+
+    print("URL: $url");
+    print("BODY: $jsonBody");
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: jsonBody,
+      );
+
+      print("STATUS: ${response.statusCode}");
+      print("RESPONSE: ${response.body}");
+
+      dynamic data;
+      try {
+        data = jsonDecode(response.body);
+      } catch (e) {
+        print("Non-JSON response: ${response.body}");
+      }
+
+    } catch (e) {
+      print("EXCEPTION: $e");
+    }
 
     try {
       final response = await http.post(

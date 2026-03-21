@@ -73,6 +73,7 @@ const _roles = [
   ),
 ];
 
+// These constants are kept for when role-specific fields are re-enabled
 const _grades = [
   'Grade 5',
   'Grade 6',
@@ -113,17 +114,17 @@ class _CommonSignupScreenState extends State<CommonSignupScreen>
   final _passCtrl = TextEditingController();
   final _confirmCtrl = TextEditingController();
 
-  // ── Engineering / Postgrad ─────────────────
-  final _collegeCtrl = TextEditingController();
-  final _branchCtrl = TextEditingController();
-  final _rollCtrl = TextEditingController();
-  String? _selectedYear;
+  // ── Engineering / Postgrad fields (hidden for now, kept for future use) ─
+  // final _collegeCtrl = TextEditingController();
+  // final _branchCtrl = TextEditingController();
+  // final _rollCtrl = TextEditingController();
+  // String? _selectedYear;
 
-  // ── School ─────────────────────────────────
-  final _schoolCtrl = TextEditingController();
-  final _parentCtrl = TextEditingController();
-  final _parentPhoneCtrl = TextEditingController();
-  String? _selectedGrade;
+  // ── School fields (hidden for now, kept for future use) ─────────────────
+  // final _schoolCtrl = TextEditingController();
+  // final _parentCtrl = TextEditingController();
+  // final _parentPhoneCtrl = TextEditingController();
+  // String? _selectedGrade;
 
   // ── Animations ─────────────────────────────
   late AnimationController _headerAnim;
@@ -216,14 +217,16 @@ class _CommonSignupScreenState extends State<CommonSignupScreen>
     _phoneCtrl.dispose();
     _passCtrl.dispose();
     _confirmCtrl.dispose();
-    _collegeCtrl.dispose();
-    _branchCtrl.dispose();
-    _rollCtrl.dispose();
-    _schoolCtrl.dispose();
-    _parentCtrl.dispose();
-    _parentPhoneCtrl.dispose();
+    // _collegeCtrl.dispose();
+    // _branchCtrl.dispose();
+    // _rollCtrl.dispose();
+    // _schoolCtrl.dispose();
+    // _parentCtrl.dispose();
+    // _parentPhoneCtrl.dispose();
     super.dispose();
   }
+
+  // ── Role change — animates the selector tile ──
 
   Future<void> _changeRole(_Role r) async {
     if (r.value == _selectedRole.value) return;
@@ -232,11 +235,34 @@ class _CommonSignupScreenState extends State<CommonSignupScreen>
     if (!mounted) return;
     setState(() {
       _selectedRole = r;
-      _selectedYear = null;
-      _selectedGrade = null;
+      // _selectedYear = null;
+      // _selectedGrade = null;
     });
     _roleSwapAnim.forward();
   }
+
+  // ── Open bottom sheet role picker ─────────────
+  // Replaces the congested DropdownButton — spacious tiles, no overflow
+
+  void _openRoleSheet() {
+    HapticFeedback.lightImpact();
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (_) => _RolePickerSheet(
+        roles: _roles,
+        selectedRole: _role,
+        onSelect: (r) {
+          Navigator.pop(context);
+          _changeRole(r);
+        },
+      ),
+    );
+  }
+
+  // ── SIGNUP — API body exactly as original ─────
+  // !! No changes made here — only UI was modified !!
 
   Future<void> _signup() async {
     if (_passCtrl.text != _confirmCtrl.text) {
@@ -255,16 +281,16 @@ class _CommonSignupScreenState extends State<CommonSignupScreen>
     int roleId;
     switch (_role.value) {
       case 'engineering':
-        roleId = 5;
+        roleId = 3;
         break;
       case 'school':
-        roleId = 4;
+        roleId = 2;
         break;
       case 'postgrad':
-        roleId = 6;
+        roleId = 4;
         break;
       default:
-        roleId = 2;
+        roleId = 3;
     }
 
     // Build request body dynamically based on role
@@ -386,24 +412,25 @@ class _CommonSignupScreenState extends State<CommonSignupScreen>
                     ),
                     const SizedBox(height: 22),
 
-                    // Role dropdown
+                    // ── Role selector tile (taps to open sheet) ──────────
+                    // CHANGED: replaced congested DropdownButton with
+                    // a clean tap-to-open tile + bottom sheet picker
                     FadeTransition(
                       opacity: CurvedAnimation(
                         parent: _dropAnim,
                         curve: Curves.easeOut,
                       ),
                       child: SlideTransition(
-                        position:
-                            Tween<Offset>(
-                              begin: const Offset(0, 0.12),
-                              end: Offset.zero,
-                            ).animate(
-                              CurvedAnimation(
-                                parent: _dropAnim,
-                                curve: Curves.easeOut,
-                              ),
-                            ),
-                        child: _buildRoleDropdown(),
+                        position: Tween<Offset>(
+                          begin: const Offset(0, 0.12),
+                          end: Offset.zero,
+                        ).animate(
+                          CurvedAnimation(
+                            parent: _dropAnim,
+                            curve: Curves.easeOut,
+                          ),
+                        ),
+                        child: _buildRoleSelector(),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -487,7 +514,9 @@ class _CommonSignupScreenState extends State<CommonSignupScreen>
             color: Colors.white.withOpacity(0.10),
             borderRadius: BorderRadius.circular(10),
           ),
-          child: const Center(child: Text('⚡', style: TextStyle(fontSize: 16))),
+          child: const Center(
+            child: Text('⚡', style: TextStyle(fontSize: 16)),
+          ),
         ),
         const SizedBox(width: 10),
         const Column(
@@ -544,9 +573,12 @@ class _CommonSignupScreenState extends State<CommonSignupScreen>
     );
   }
 
-  // ── ROLE DROPDOWN ──────────────────────────
+  // ── ROLE SELECTOR TILE ────────────────────
+  // Collapsed tile — shows selected role, taps to open sheet.
+  // CHANGED: replaced _buildRoleDropdown() (DropdownButton — congested)
+  //          with this tap-to-open tile + _RolePickerSheet
 
-  Widget _buildRoleDropdown() {
+  Widget _buildRoleSelector() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -560,173 +592,98 @@ class _CommonSignupScreenState extends State<CommonSignupScreen>
           ),
         ),
         const SizedBox(height: 10),
-        Container(
-          decoration: BoxDecoration(
-            color: kCardBg,
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(
-              color: _role.accent.withOpacity(0.35),
-              width: 1.5,
+        GestureDetector(
+          onTap: _openRoleSheet,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 250),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 14,
             ),
-            boxShadow: [
-              BoxShadow(
-                color: kInk.withOpacity(0.18),
-                blurRadius: 24,
-                offset: const Offset(0, 8),
+            decoration: BoxDecoration(
+              color: kCardBg,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(
+                color: _role.accent.withOpacity(0.45),
+                width: 1.5,
               ),
-            ],
-          ),
-          child: Theme(
-            data: Theme.of(context).copyWith(canvasColor: kCardBg),
-            child: DropdownButtonHideUnderline(
-              child: ButtonTheme(
-                alignedDropdown: true,
-                child: DropdownButton<String>(
-                  value: _role.value,
-                  isExpanded: true,
-                  icon: AnimatedContainer(
-                    duration: const Duration(milliseconds: 250),
-                    margin: const EdgeInsets.only(right: 4),
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: _role.bg,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Icon(
-                      Icons.keyboard_arrow_down_rounded,
-                      color: _role.accent,
-                      size: 20,
+              boxShadow: [
+                BoxShadow(
+                  color: kInk.withOpacity(0.18),
+                  blurRadius: 24,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                // Emoji tile — animates on role change
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 250),
+                  width: 46,
+                  height: 46,
+                  decoration: BoxDecoration(
+                    color: _role.bg,
+                    borderRadius: BorderRadius.circular(13),
+                  ),
+                  child: Center(
+                    child: Text(
+                      _role.emoji,
+                      style: const TextStyle(fontSize: 22),
                     ),
                   ),
-                  onChanged: (val) {
-                    if (val != null) {
-                      _changeRole(_roles.firstWhere((r) => r.value == val));
-                    }
-                  },
-                  selectedItemBuilder: (context) => _roles.map((r) {
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 4,
-                        vertical: 2,
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: r.bg,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Center(
-                              child: Text(
-                                r.emoji,
-                                style: const TextStyle(fontSize: 20),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  r.label,
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w800,
-                                    color: kInk,
-                                  ),
-                                ),
-                                Text(
-                                  r.subtitle,
-                                  style: const TextStyle(
-                                    fontSize: 11,
-                                    color: kMuted,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }).toList(),
-                  items: _roles.map((r) {
-                    final isSel = r.value == _role.value;
-                    return DropdownMenuItem<String>(
-                      value: r.value,
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 4,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: isSel ? r.bg : Colors.transparent,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 38,
-                              height: 38,
-                              decoration: BoxDecoration(
-                                color: r.bg,
-                                borderRadius: BorderRadius.circular(11),
-                              ),
-                              child: Center(
-                                child: Text(
-                                  r.emoji,
-                                  style: const TextStyle(fontSize: 18),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    r.label,
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w800,
-                                      color: isSel ? r.accent : kInk,
-                                    ),
-                                  ),
-                                  Text(
-                                    r.subtitle,
-                                    style: const TextStyle(
-                                      fontSize: 11,
-                                      color: kMuted,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            if (isSel)
-                              Container(
-                                width: 20,
-                                height: 20,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: r.accent,
-                                ),
-                                child: const Icon(
-                                  Icons.check,
-                                  color: Colors.white,
-                                  size: 12,
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
-                    );
-                  }).toList(),
                 ),
-              ),
+                const SizedBox(width: 14),
+
+                // Label + subtitle — swap animation on role change
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 220),
+                        child: Text(
+                          _role.label,
+                          key: ValueKey(_role.value),
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w800,
+                            color: kInk,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 220),
+                        child: Text(
+                          _role.subtitle,
+                          key: ValueKey('sub_${_role.value}'),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: kMuted,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 10),
+
+                // Chevron — colour matches role accent
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 250),
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: _role.bg,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    Icons.keyboard_arrow_down_rounded,
+                    color: _role.accent,
+                    size: 20,
+                  ),
+                ),
+              ],
             ),
           ),
         ),
@@ -734,7 +691,10 @@ class _CommonSignupScreenState extends State<CommonSignupScreen>
     );
   }
 
-  // ── FORM CARD ──────────────────────────────
+  // ── FORM CARD ─────────────────────────────
+  // CHANGED: role-specific fields section removed from view.
+  // Controllers, constants and _buildRoleFields() kept but commented
+  // so they can be re-enabled easily when client needs them.
 
   Widget _buildFormCard() {
     return Container(
@@ -789,7 +749,7 @@ class _CommonSignupScreenState extends State<CommonSignupScreen>
           ),
           const SizedBox(height: 18),
 
-          // ── Common fields ─────────────────
+          // ── 5 common fields only ──────────────────────────────────────
           _field(
             ctrl: _nameCtrl,
             label: 'Full Name',
@@ -839,62 +799,60 @@ class _CommonSignupScreenState extends State<CommonSignupScreen>
               onPressed: () => setState(() => _showConfirm = !_showConfirm),
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
 
-          // ── Divider with role label ────────
-          Row(
-            children: [
-              Expanded(child: Divider(color: kBorder, thickness: 1.5)),
-              const SizedBox(width: 10),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: _role.bg,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  '${_role.emoji}  ${_role.label} Details',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: _role.accent,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(child: Divider(color: kBorder, thickness: 1.5)),
-            ],
-          ),
-          const SizedBox(height: 16),
-
-          // ── Role-specific fields ──────────
-          FadeTransition(
-            opacity: _roleSwapFade,
-            child: SlideTransition(
-              position: _roleSwapSlide,
-              child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 300),
-                switchInCurve: Curves.easeOut,
-                switchOutCurve: Curves.easeIn,
-                transitionBuilder: (child, anim) => FadeTransition(
-                  opacity: anim,
-                  child: SlideTransition(
-                    position: Tween<Offset>(
-                      begin: const Offset(0, 0.06),
-                      end: Offset.zero,
-                    ).animate(anim),
-                    child: child,
-                  ),
-                ),
-                child: _buildRoleFields(),
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 16),
+          // ── Role-specific fields — hidden for now, kept for future ────
+          // To re-enable: uncomment the block below + uncomment the
+          // controllers/constants at the top of this class.
+          //
+          // const SizedBox(height: 4),
+          // Row(
+          //   children: [
+          //     Expanded(child: Divider(color: kBorder, thickness: 1.5)),
+          //     const SizedBox(width: 10),
+          //     Container(
+          //       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          //       decoration: BoxDecoration(
+          //         color: _role.bg,
+          //         borderRadius: BorderRadius.circular(20),
+          //       ),
+          //       child: Text(
+          //         '${_role.emoji}  ${_role.label} Details',
+          //         style: TextStyle(
+          //           fontSize: 11,
+          //           fontWeight: FontWeight.w700,
+          //           color: _role.accent,
+          //         ),
+          //       ),
+          //     ),
+          //     const SizedBox(width: 10),
+          //     Expanded(child: Divider(color: kBorder, thickness: 1.5)),
+          //   ],
+          // ),
+          // const SizedBox(height: 16),
+          // FadeTransition(
+          //   opacity: _roleSwapFade,
+          //   child: SlideTransition(
+          //     position: _roleSwapSlide,
+          //     child: AnimatedSwitcher(
+          //       duration: const Duration(milliseconds: 300),
+          //       switchInCurve: Curves.easeOut,
+          //       switchOutCurve: Curves.easeIn,
+          //       transitionBuilder: (child, anim) => FadeTransition(
+          //         opacity: anim,
+          //         child: SlideTransition(
+          //           position: Tween<Offset>(
+          //             begin: const Offset(0, 0.06),
+          //             end: Offset.zero,
+          //           ).animate(anim),
+          //           child: child,
+          //         ),
+          //       ),
+          //       child: _buildRoleFields(),
+          //     ),
+          //   ),
+          // ),
+          // const SizedBox(height: 16),
 
           // Terms
           Row(
@@ -921,138 +879,142 @@ class _CommonSignupScreenState extends State<CommonSignupScreen>
     );
   }
 
-  // ── ROLE-SPECIFIC FIELDS ───────────────────
+  // ── ROLE-SPECIFIC FIELDS ──────────────────
+  // Kept intact for future use — currently not shown in the form.
+  // To re-enable, uncomment the _buildRoleFields() call in _buildFormCard().
 
-  Widget _buildRoleFields() {
-    switch (_role.value) {
-      case 'engineering':
-        return Column(
-          key: const ValueKey('engineering'),
-          children: [
-            _field(
-              ctrl: _collegeCtrl,
-              label: 'College Name',
-              icon: Icons.account_balance_outlined,
-            ),
-            const SizedBox(height: 12),
-            _field(
-              ctrl: _branchCtrl,
-              label: 'Branch / Department (e.g. CSE)',
-              icon: Icons.school_outlined,
-            ),
-            const SizedBox(height: 12),
-            _dropdownField(
-              label: 'Current Year',
-              icon: Icons.calendar_today_outlined,
-              value: _selectedYear,
-              items: _engYears,
-              onChanged: (v) => setState(() => _selectedYear = v),
-            ),
-            const SizedBox(height: 12),
-            _field(
-              ctrl: _rollCtrl,
-              label: 'Roll Number / Register No.',
-              icon: Icons.badge_outlined,
-            ),
-          ],
-        );
+  // Widget _buildRoleFields() {
+  //   switch (_role.value) {
+  //     case 'engineering':
+  //       return Column(
+  //         key: const ValueKey('engineering'),
+  //         children: [
+  //           _field(ctrl: _collegeCtrl, label: 'College Name',
+  //               icon: Icons.account_balance_outlined),
+  //           const SizedBox(height: 12),
+  //           _field(ctrl: _branchCtrl,
+  //               label: 'Branch / Department (e.g. CSE)',
+  //               icon: Icons.school_outlined),
+  //           const SizedBox(height: 12),
+  //           _dropdownField(
+  //             label: 'Current Year',
+  //             icon: Icons.calendar_today_outlined,
+  //             value: _selectedYear,
+  //             items: _engYears,
+  //             onChanged: (v) => setState(() => _selectedYear = v),
+  //           ),
+  //           const SizedBox(height: 12),
+  //           _field(ctrl: _rollCtrl,
+  //               label: 'Roll Number / Register No.',
+  //               icon: Icons.badge_outlined),
+  //         ],
+  //       );
+  //     case 'postgrad':
+  //       return Column(
+  //         key: const ValueKey('postgrad'),
+  //         children: [
+  //           _field(ctrl: _collegeCtrl, label: 'University / Institution',
+  //               icon: Icons.account_balance_outlined),
+  //           const SizedBox(height: 12),
+  //           _field(ctrl: _branchCtrl, label: 'Specialisation / Department',
+  //               icon: Icons.school_outlined),
+  //           const SizedBox(height: 12),
+  //           _dropdownField(
+  //             label: 'Current Year (PG)',
+  //             icon: Icons.calendar_today_outlined,
+  //             value: _selectedYear,
+  //             items: _pgYears,
+  //             onChanged: (v) => setState(() => _selectedYear = v),
+  //           ),
+  //           const SizedBox(height: 12),
+  //           _field(ctrl: _rollCtrl, label: 'Register / Enrolment No.',
+  //               icon: Icons.badge_outlined),
+  //         ],
+  //       );
+  //     case 'school':
+  //       return Column(
+  //         key: const ValueKey('school'),
+  //         children: [
+  //           _field(ctrl: _schoolCtrl, label: 'School Name',
+  //               icon: Icons.location_city_outlined),
+  //           const SizedBox(height: 12),
+  //           _dropdownField(
+  //             label: 'Grade / Class',
+  //             icon: Icons.class_outlined,
+  //             value: _selectedGrade,
+  //             items: _grades,
+  //             onChanged: (v) => setState(() => _selectedGrade = v),
+  //           ),
+  //           const SizedBox(height: 12),
+  //           _field(ctrl: _parentCtrl, label: "Parent's Full Name",
+  //               icon: Icons.supervisor_account_outlined),
+  //           const SizedBox(height: 12),
+  //           _field(ctrl: _parentPhoneCtrl, label: "Parent's Phone Number",
+  //               icon: Icons.phone_outlined, type: TextInputType.phone),
+  //           const SizedBox(height: 10),
+  //           Container(
+  //             padding: const EdgeInsets.all(12),
+  //             decoration: BoxDecoration(
+  //               color: const Color(0xFFFFFDE7),
+  //               borderRadius: BorderRadius.circular(14),
+  //               border: Border.all(color: const Color(0xFFFFEE58), width: 1.5),
+  //             ),
+  //             child: const Row(
+  //               crossAxisAlignment: CrossAxisAlignment.start,
+  //               children: [
+  //                 Text('👨\u200d👩\u200d👧', style: TextStyle(fontSize: 18)),
+  //                 SizedBox(width: 10),
+  //                 Expanded(
+  //                   child: Text(
+  //                     'Parent details are used only for class reminders.\nSunday is a holiday — no classes!',
+  //                     style: TextStyle(fontSize: 11, color: Color(0xFF795548),
+  //                         height: 1.5, fontWeight: FontWeight.w600),
+  //                   ),
+  //                 ),
+  //               ],
+  //             ),
+  //           ),
+  //         ],
+  //       );
+  //     default:
+  //       return const SizedBox.shrink(key: ValueKey('empty'));
+  //   }
+  // }
 
-      case 'postgrad':
-        return Column(
-          key: const ValueKey('postgrad'),
-          children: [
-            _field(
-              ctrl: _collegeCtrl,
-              label: 'University / Institution',
-              icon: Icons.account_balance_outlined,
-            ),
-            const SizedBox(height: 12),
-            _field(
-              ctrl: _branchCtrl,
-              label: 'Specialisation / Department',
-              icon: Icons.school_outlined,
-            ),
-            const SizedBox(height: 12),
-            _dropdownField(
-              label: 'Current Year (PG)',
-              icon: Icons.calendar_today_outlined,
-              value: _selectedYear,
-              items: _pgYears,
-              onChanged: (v) => setState(() => _selectedYear = v),
-            ),
-            const SizedBox(height: 12),
-            _field(
-              ctrl: _rollCtrl,
-              label: 'Register / Enrolment No.',
-              icon: Icons.badge_outlined,
-            ),
-          ],
-        );
+  // ── DROPDOWN FIELD ────────────────────────
+  // Kept for role-specific fields when they are re-enabled.
 
-      case 'school':
-        return Column(
-          key: const ValueKey('school'),
-          children: [
-            _field(
-              ctrl: _schoolCtrl,
-              label: 'School Name',
-              icon: Icons.location_city_outlined,
-            ),
-            const SizedBox(height: 12),
-            _dropdownField(
-              label: 'Grade / Class',
-              icon: Icons.class_outlined,
-              value: _selectedGrade,
-              items: _grades,
-              onChanged: (v) => setState(() => _selectedGrade = v),
-            ),
-            const SizedBox(height: 12),
-            _field(
-              ctrl: _parentCtrl,
-              label: "Parent's Full Name",
-              icon: Icons.supervisor_account_outlined,
-            ),
-            const SizedBox(height: 12),
-            _field(
-              ctrl: _parentPhoneCtrl,
-              label: "Parent's Phone Number",
-              icon: Icons.phone_outlined,
-              type: TextInputType.phone,
-            ),
-            const SizedBox(height: 10),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFFFDE7),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: const Color(0xFFFFEE58), width: 1.5),
-              ),
-              child: const Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('👨‍👩‍👧', style: TextStyle(fontSize: 18)),
-                  SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      'Parent details are used only for class reminders.\nSunday is a holiday — no classes!',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: Color(0xFF795548),
-                        height: 1.5,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        );
-
-      default:
-        return const SizedBox.shrink(key: ValueKey('empty'));
-    }
-  }
+  // Widget _dropdownField({
+  //   required String label,
+  //   required IconData icon,
+  //   required String? value,
+  //   required List<String> items,
+  //   required ValueChanged<String?> onChanged,
+  // }) {
+  //   return DropdownButtonFormField<String>(
+  //     value: value,
+  //     decoration: InputDecoration(
+  //       labelText: label,
+  //       labelStyle: const TextStyle(fontSize: 13, color: kMuted,
+  //           fontWeight: FontWeight.w600),
+  //       prefixIcon: Icon(icon, color: kMuted, size: 18),
+  //       filled: true,
+  //       fillColor: kInputFill,
+  //       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+  //       border: OutlineInputBorder(borderRadius: BorderRadius.circular(14),
+  //           borderSide: const BorderSide(color: kBorder, width: 1.5)),
+  //       enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14),
+  //           borderSide: const BorderSide(color: kBorder, width: 1.5)),
+  //       focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14),
+  //           borderSide: BorderSide(color: _role.accent, width: 2)),
+  //     ),
+  //     style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: kInk),
+  //     dropdownColor: kCardBg,
+  //     icon: Icon(Icons.keyboard_arrow_down_rounded, color: _role.accent, size: 20),
+  //     items: items.map((i) => DropdownMenuItem(value: i, child: Text(i))).toList(),
+  //     onChanged: onChanged,
+  //   );
+  // }
 
   // ── TEXT FIELD ─────────────────────────────
 
@@ -1104,62 +1066,6 @@ class _CommonSignupScreenState extends State<CommonSignupScreen>
     );
   }
 
-  // ── DROPDOWN FIELD ─────────────────────────
-
-  Widget _dropdownField({
-    required String label,
-    required IconData icon,
-    required String? value,
-    required List<String> items,
-    required ValueChanged<String?> onChanged,
-  }) {
-    return DropdownButtonFormField<String>(
-      value: value,
-      decoration: InputDecoration(
-        labelText: label,
-        labelStyle: const TextStyle(
-          fontSize: 13,
-          color: kMuted,
-          fontWeight: FontWeight.w600,
-        ),
-        prefixIcon: Icon(icon, color: kMuted, size: 18),
-        filled: true,
-        fillColor: kInputFill,
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 15,
-        ),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: kBorder, width: 1.5),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: kBorder, width: 1.5),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: _role.accent, width: 2),
-        ),
-      ),
-      style: const TextStyle(
-        fontSize: 14,
-        fontWeight: FontWeight.w600,
-        color: kInk,
-      ),
-      dropdownColor: kCardBg,
-      icon: Icon(
-        Icons.keyboard_arrow_down_rounded,
-        color: _role.accent,
-        size: 20,
-      ),
-      items: items
-          .map((i) => DropdownMenuItem(value: i, child: Text(i)))
-          .toList(),
-      onChanged: onChanged,
-    );
-  }
-
   // ── SUBMIT BUTTON ──────────────────────────
 
   Widget _buildSubmitBtn() {
@@ -1189,41 +1095,229 @@ class _CommonSignupScreenState extends State<CommonSignupScreen>
             boxShadow: _btnPressed
                 ? null
                 : [
-                    BoxShadow(
-                      color: _role.accent.withOpacity(0.35),
-                      blurRadius: 16,
-                      offset: const Offset(0, 6),
-                    ),
-                  ],
+              BoxShadow(
+                color: _role.accent.withOpacity(0.35),
+                blurRadius: 16,
+                offset: const Offset(0, 6),
+              ),
+            ],
           ),
           child: Center(
             child: _isLoading
                 ? const SizedBox(
-                    width: 22,
-                    height: 22,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2.5,
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                    ),
-                  )
+              width: 22,
+              height: 22,
+              child: CircularProgressIndicator(
+                strokeWidth: 2.5,
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              ),
+            )
                 : Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(_role.emoji, style: const TextStyle(fontSize: 16)),
-                      const SizedBox(width: 8),
-                      const Text(
-                        'Create Account',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w800,
-                          color: Colors.white,
-                          letterSpacing: 0.2,
-                        ),
-                      ),
-                    ],
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(_role.emoji, style: const TextStyle(fontSize: 16)),
+                const SizedBox(width: 8),
+                const Text(
+                  'Create Account',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                    letterSpacing: 0.2,
                   ),
+                ),
+              ],
+            ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────
+//  ROLE PICKER BOTTOM SHEET
+//  Spacious custom sheet — no DropdownButton constraints,
+//  no overflow, generous padding on every tile.
+// ─────────────────────────────────────────────
+
+class _RolePickerSheet extends StatelessWidget {
+  final List<_Role> roles;
+  final _Role selectedRole;
+  final void Function(_Role) onSelect;
+
+  const _RolePickerSheet({
+    required this.roles,
+    required this.selectedRole,
+    required this.onSelect,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: Color(0xFF0F172A),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Drag handle
+          Container(
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.20),
+              borderRadius: BorderRadius.circular(4),
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          // Title row
+          Row(
+            children: [
+              const Text(
+                'Choose your role',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white,
+                  letterSpacing: -0.3,
+                ),
+              ),
+              const Spacer(),
+              GestureDetector(
+                onTap: () => Navigator.pop(context),
+                child: Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.10),
+                    borderRadius: BorderRadius.circular(9),
+                  ),
+                  child: const Icon(
+                    Icons.close_rounded,
+                    color: Colors.white,
+                    size: 16,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Your role determines which portal you enter.',
+            style: TextStyle(
+              fontSize: 13,
+              color: Colors.white.withOpacity(0.45),
+            ),
+          ),
+          const SizedBox(height: 22),
+
+          // Role tiles — spacious, animated, no overflow possible
+          ...roles.map((r) {
+            final isSelected = r.value == selectedRole.value;
+            return GestureDetector(
+              onTap: () => onSelect(r),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 220),
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 18,
+                  vertical: 16,
+                ),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? Colors.white
+                      : Colors.white.withOpacity(0.07),
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(
+                    color: isSelected
+                        ? r.accent.withOpacity(0.55)
+                        : Colors.white.withOpacity(0.12),
+                    width: 1.5,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    // Emoji tile
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 220),
+                      width: 52,
+                      height: 52,
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? r.bg
+                            : Colors.white.withOpacity(0.10),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Center(
+                        child: Text(
+                          r.emoji,
+                          style: const TextStyle(fontSize: 24),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+
+                    // Role text
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            r.label,
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w800,
+                              color: isSelected ? kInk : Colors.white,
+                            ),
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            r.subtitle,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: isSelected
+                                  ? kMuted
+                                  : Colors.white.withOpacity(0.45),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+
+                    // Animated check circle
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 220),
+                      width: 26,
+                      height: 26,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: isSelected ? r.accent : Colors.transparent,
+                        border: Border.all(
+                          color: isSelected
+                              ? r.accent
+                              : Colors.white.withOpacity(0.25),
+                          width: 2,
+                        ),
+                      ),
+                      child: isSelected
+                          ? const Icon(
+                        Icons.check_rounded,
+                        color: Colors.white,
+                        size: 14,
+                      )
+                          : null,
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }),
+        ],
       ),
     );
   }

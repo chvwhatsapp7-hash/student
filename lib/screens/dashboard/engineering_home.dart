@@ -1,27 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../dashboard/dashboard_screen.dart';
-import '../jobs/jobs_screen.dart';
-import '../internships/internships_screen.dart';
 import '../companies/companies_screen.dart';
-import '../hackathons/hackathons_screen.dart';
 import '../courses/courses_screen.dart';
+import '../dashboard/dashboard_screen.dart';
+import '../hackathons/hackathons_screen.dart';
+import '../internships/internships_screen.dart';
+import '../jobs/jobs_screen.dart';
 import '../profile/profile_screen.dart';
 
 // ─────────────────────────────────────────────
 //  DESIGN TOKENS — Engineering Theme
 // ─────────────────────────────────────────────
 
-const kInk        = Color(0xFF0F172A);
-const kSlate      = Color(0xFF334155);
-const kMuted      = Color(0xFF64748B);
-const kHint       = Color(0xFF94A3B8);
-const kBgPage     = Color(0xFFF0F4F8);
-const kCardBg     = Color(0xFFFFFFFF);
-const kBorder     = Color(0xFFE2E8F0);
-const kPrimary    = Color(0xFF1D4ED8);
-const kAccent     = Color(0xFF38BDF8);
+const kInk = Color(0xFF0F172A);
+const kSlate = Color(0xFF334155);
+const kMuted = Color(0xFF64748B);
+const kHint = Color(0xFF94A3B8);
+const kBgPage = Color(0xFFF0F4F8);
+const kCardBg = Color(0xFFFFFFFF);
+const kBorder = Color(0xFFE2E8F0);
+const kPrimary = Color(0xFF1D4ED8);
+const kAccent = Color(0xFF38BDF8);
 const kSelectedBg = Color(0xFFEFF6FF);
 
 // ─────────────────────────────────────────────
@@ -31,8 +31,8 @@ const kSelectedBg = Color(0xFFEFF6FF);
 class _NavItem {
   final IconData activeIcon;
   final IconData inactiveIcon;
-  final String   label;
-  final bool     hasBadge;
+  final String label;
+  final bool hasBadge;
 
   const _NavItem({
     required this.activeIcon,
@@ -44,33 +44,33 @@ class _NavItem {
 
 const _navItems = [
   _NavItem(
-    activeIcon:   Icons.dashboard_rounded,
+    activeIcon: Icons.dashboard_rounded,
     inactiveIcon: Icons.dashboard_outlined,
     label: 'Home',
   ),
   _NavItem(
-    activeIcon:   Icons.work_rounded,
+    activeIcon: Icons.work_rounded,
     inactiveIcon: Icons.work_outline_rounded,
     label: 'Jobs',
     hasBadge: true,
   ),
   _NavItem(
-    activeIcon:   Icons.rocket_launch_rounded,
+    activeIcon: Icons.rocket_launch_rounded,
     inactiveIcon: Icons.rocket_launch_outlined,
     label: 'Intern',
   ),
   _NavItem(
-    activeIcon:   Icons.business_rounded,
+    activeIcon: Icons.business_rounded,
     inactiveIcon: Icons.business_outlined,
     label: 'Companies',
   ),
   _NavItem(
-    activeIcon:   Icons.code_rounded,
+    activeIcon: Icons.code_rounded,
     inactiveIcon: Icons.code_rounded,
     label: 'Hack',
   ),
   _NavItem(
-    activeIcon:   Icons.person_rounded,
+    activeIcon: Icons.person_rounded,
     inactiveIcon: Icons.person_outline_rounded,
     label: 'Profile',
   ),
@@ -89,20 +89,19 @@ class EngineeringHome extends StatefulWidget {
 
 class _EngineeringHomeState extends State<EngineeringHome>
     with TickerProviderStateMixin {
-
   int _currentIndex = 0;
 
   // Page transition
   late AnimationController _pageAnim;
-  late Animation<double>   _pageFade;
-  late Animation<Offset>   _pageSlide;
+  late Animation<double> _pageFade;
+  late Animation<Offset> _pageSlide;
 
   // Top bar entrance
   late AnimationController _topBarAnim;
 
   // Per-nav-item scale
   late List<AnimationController> _navAnims;
-  late List<Animation<double>>   _navScales;
+  late List<Animation<double>> _navScales;
 
   final List<Widget> _pages = const [
     DashboardScreen(),
@@ -130,31 +129,37 @@ class _EngineeringHomeState extends State<EngineeringHome>
     super.initState();
 
     _topBarAnim = AnimationController(
-      vsync: this, duration: const Duration(milliseconds: 600),
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
     )..forward();
 
     _pageAnim = AnimationController(
-      vsync: this, duration: const Duration(milliseconds: 300),
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
     )..forward();
 
-    _pageFade  = CurvedAnimation(parent: _pageAnim, curve: Curves.easeOut);
+    _pageFade = CurvedAnimation(parent: _pageAnim, curve: Curves.easeOut);
     _pageSlide = Tween<Offset>(
-      begin: const Offset(0, 0.03), end: Offset.zero,
+      begin: const Offset(0, 0.03),
+      end: Offset.zero,
     ).animate(CurvedAnimation(parent: _pageAnim, curve: Curves.easeOut));
 
     _navAnims = List.generate(
       _navItems.length,
-          (i) => AnimationController(
+      (i) => AnimationController(
         vsync: this,
         duration: const Duration(milliseconds: 260),
         value: i == 0 ? 1.0 : 0.0,
       ),
     );
-    _navScales = _navAnims.map((c) =>
-        Tween<double>(begin: 0.82, end: 1.0).animate(
-          CurvedAnimation(parent: c, curve: Curves.easeOut),
-        ),
-    ).toList();
+    _navScales = _navAnims
+        .map(
+          (c) => Tween<double>(
+            begin: 0.82,
+            end: 1.0,
+          ).animate(CurvedAnimation(parent: c, curve: Curves.easeOut)),
+        )
+        .toList();
   }
 
   @override
@@ -194,10 +199,7 @@ class _EngineeringHomeState extends State<EngineeringHome>
                 opacity: _pageFade,
                 child: SlideTransition(
                   position: _pageSlide,
-                  child: IndexedStack(
-                    index: _currentIndex,
-                    children: _pages,
-                  ),
+                  child: IndexedStack(index: _currentIndex, children: _pages),
                 ),
               ),
             ),
@@ -230,7 +232,8 @@ class _EngineeringHomeState extends State<EngineeringHome>
               children: [
                 // Logo tile
                 Container(
-                  width: 40, height: 40,
+                  width: 40,
+                  height: 40,
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.12),
                     borderRadius: BorderRadius.circular(12),
@@ -248,8 +251,10 @@ class _EngineeringHomeState extends State<EngineeringHome>
                       const Text(
                         'NextStep',
                         style: TextStyle(
-                          fontSize: 17, fontWeight: FontWeight.w800,
-                          color: Colors.white, letterSpacing: -0.3,
+                          fontSize: 17,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                          letterSpacing: -0.3,
                         ),
                       ),
                       AnimatedSwitcher(
@@ -258,7 +263,8 @@ class _EngineeringHomeState extends State<EngineeringHome>
                           _pageTitles[_currentIndex],
                           key: ValueKey(_currentIndex),
                           style: const TextStyle(
-                            fontSize: 11, fontWeight: FontWeight.w600,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
                             color: kAccent,
                           ),
                         ),
@@ -270,22 +276,27 @@ class _EngineeringHomeState extends State<EngineeringHome>
                 Stack(
                   children: [
                     Container(
-                      width: 36, height: 36,
+                      width: 36,
+                      height: 36,
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.10),
                         borderRadius: BorderRadius.circular(11),
                       ),
                       child: const Icon(
                         Icons.notifications_none_rounded,
-                        color: Colors.white, size: 19,
+                        color: Colors.white,
+                        size: 19,
                       ),
                     ),
                     Positioned(
-                      top: 7, right: 7,
+                      top: 7,
+                      right: 7,
                       child: Container(
-                        width: 7, height: 7,
+                        width: 7,
+                        height: 7,
                         decoration: const BoxDecoration(
-                          color: kAccent, shape: BoxShape.circle,
+                          color: kAccent,
+                          shape: BoxShape.circle,
                         ),
                       ),
                     ),
@@ -294,12 +305,15 @@ class _EngineeringHomeState extends State<EngineeringHome>
                 const SizedBox(width: 10),
                 // Avatar
                 Container(
-                  width: 36, height: 36,
+                  width: 36,
+                  height: 36,
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.14),
                     shape: BoxShape.circle,
                     border: Border.all(
-                        color: Colors.white.withOpacity(0.28), width: 1.5),
+                      color: Colors.white.withOpacity(0.28),
+                      width: 1.5,
+                    ),
                   ),
                   child: const Center(
                     child: Text('👨‍💻', style: TextStyle(fontSize: 17)),
@@ -324,14 +338,10 @@ class _EngineeringHomeState extends State<EngineeringHome>
       child: SafeArea(
         top: false,
         child: Padding(
-          padding: const EdgeInsets.symmetric(
-              horizontal: 8, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: List.generate(
-              _navItems.length,
-              _buildNavItem,
-            ),
+            children: List.generate(_navItems.length, _buildNavItem),
           ),
         ),
       ),
@@ -339,7 +349,7 @@ class _EngineeringHomeState extends State<EngineeringHome>
   }
 
   Widget _buildNavItem(int index) {
-    final item       = _navItems[index];
+    final item = _navItems[index];
     final isSelected = _currentIndex == index;
 
     return GestureDetector(
@@ -357,9 +367,7 @@ class _EngineeringHomeState extends State<EngineeringHome>
           decoration: BoxDecoration(
             color: isSelected ? kSelectedBg : Colors.transparent,
             borderRadius: BorderRadius.circular(30),
-            border: isSelected
-                ? Border.all(color: kBorder, width: 1.5)
-                : null,
+            border: isSelected ? Border.all(color: kBorder, width: 1.5) : null,
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -379,11 +387,14 @@ class _EngineeringHomeState extends State<EngineeringHome>
                   ),
                   if (item.hasBadge && !isSelected)
                     Positioned(
-                      top: -3, right: -3,
+                      top: -3,
+                      right: -3,
                       child: Container(
-                        width: 7, height: 7,
+                        width: 7,
+                        height: 7,
                         decoration: const BoxDecoration(
-                          color: kAccent, shape: BoxShape.circle,
+                          color: kAccent,
+                          shape: BoxShape.circle,
                         ),
                       ),
                     ),
@@ -395,17 +406,18 @@ class _EngineeringHomeState extends State<EngineeringHome>
                 curve: Curves.easeOut,
                 child: isSelected
                     ? Row(
-                  children: [
-                    const SizedBox(width: 7),
-                    Text(
-                      item.label,
-                      style: const TextStyle(
-                        fontSize: 12, fontWeight: FontWeight.w800,
-                        color: kPrimary,
-                      ),
-                    ),
-                  ],
-                )
+                        children: [
+                          const SizedBox(width: 7),
+                          Text(
+                            item.label,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w800,
+                              color: kPrimary,
+                            ),
+                          ),
+                        ],
+                      )
                     : const SizedBox.shrink(),
               ),
             ],

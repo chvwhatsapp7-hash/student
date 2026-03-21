@@ -3,24 +3,24 @@ import 'package:go_router/go_router.dart';
 /// ── AUTH (one common login + signup for ALL roles) ───────────────────────────
 import '../screens/auth/common_login.dart';
 import '../screens/auth/common_signup.dart';
-
-/// ── LANDING ──────────────────────────────────────────────────────────────────
-import '../screens/landing/landing_screen.dart';
+import '../screens/companies/companies_screen.dart';
+import '../screens/courses/courses_screen.dart';
 
 /// ── ENGINEERING / POST-GRAD PORTAL ───────────────────────────────────────────
 import '../screens/dashboard/main_dashboard.dart';
-import '../screens/jobs/jobs_screen.dart';
-import '../screens/internships/internships_screen.dart';
-import '../screens/companies/companies_screen.dart';
 import '../screens/hackathons/hackathons_screen.dart';
-import '../screens/courses/courses_screen.dart';
+import '../screens/internships/internships_screen.dart';
+import '../screens/jobs/jobs_screen.dart';
+
+/// ── LANDING ──────────────────────────────────────────────────────────────────
+import '../screens/landing/landing_screen.dart';
 import '../screens/profile/profile_screen.dart';
+import '../screens/school/school_booking_screen.dart';
+import '../screens/school/school_courses_screen.dart';
+import '../screens/school/school_dashboard_screen.dart';
 
 /// ── SCHOOL PORTAL ────────────────────────────────────────────────────────────
 import '../screens/school/school_layout_screen.dart';
-import '../screens/school/school_dashboard_screen.dart';
-import '../screens/school/school_courses_screen.dart';
-import '../screens/school/school_booking_screen.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  COMPLETE APP FLOW
@@ -54,12 +54,8 @@ final GoRouter router = GoRouter(
   initialLocation: '/',
 
   routes: [
-
     // ── LANDING ────────────────────────────────────────────────────────────
-    GoRoute(
-      path: '/',
-      builder: (context, state) => const LandingScreen(),
-    ),
+    GoRoute(path: '/', builder: (context, state) => const LandingScreen()),
 
     // ── COMMON AUTH ────────────────────────────────────────────────────────
     // Single login page — dropdown selects role, routes accordingly
@@ -75,28 +71,16 @@ final GoRouter router = GoRouter(
 
     // ── SAFETY NETS ────────────────────────────────────────────────────────
     // Redirect any stale /school routes to the correct unified pages
-    GoRoute(
-      path: '/school',
-      redirect: (context, state) => '/school/layout',
-    ),
-    GoRoute(
-      path: '/school/login',
-      redirect: (context, state) => '/login',
-    ),
-    GoRoute(
-      path: '/school/signup',
-      redirect: (context, state) => '/signup',
-    ),
+    GoRoute(path: '/school', redirect: (context, state) => '/school/layout'),
+    GoRoute(path: '/school/login', redirect: (context, state) => '/login'),
+    GoRoute(path: '/school/signup', redirect: (context, state) => '/signup'),
 
     // ── ENGINEERING / POST-GRAD PORTAL ─────────────────────────────────────
     GoRoute(
       path: '/engineering',
       builder: (context, state) => const MainDashboard(),
     ),
-    GoRoute(
-      path: '/jobs',
-      builder: (context, state) => const JobsScreen(),
-    ),
+    GoRoute(path: '/jobs', builder: (context, state) => const JobsScreen()),
     GoRoute(
       path: '/internships',
       builder: (context, state) => const InternshipsScreen(),
@@ -136,6 +120,5 @@ final GoRouter router = GoRouter(
       path: '/school/booking',
       builder: (context, state) => const SchoolBookingScreen(),
     ),
-
   ],
 );

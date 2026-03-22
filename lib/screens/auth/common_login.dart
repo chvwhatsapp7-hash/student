@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
 
@@ -123,6 +124,8 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
 
   _Role get _role => _selectedRole;
 
+  final FlutterSecureStorage _storage = const FlutterSecureStorage();
+
   @override
   void initState() {
     super.initState();
@@ -216,25 +219,23 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
   // ── Login ──────────────────────────────────
 
   Future<void> _login() async {
+    if (_emailCtrl.text.isEmpty || _passCtrl.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Email and password are required")),
+      );
+      return;
+    }
+
     setState(() => _isLoading = true);
 
-    final url = Uri.parse('https://internship-app.vercel.app/api/auth/login');
+    final url = Uri.parse(
+      'https://studenthub-backend-woad.vercel.app/api/auth/login',
+    );
 
-    Map<String, dynamic> body = {
-      "email": _emailCtrl.text,
-      "password": _passCtrl.text,
-      "role": _role.value,
+    final body = {
+      "email": _emailCtrl.text.trim(),
+      "password": _passCtrl.text.trim(),
     };
-
-    // Role-based fields — kept for future use, not sent for now
-    // if (_role.value == 'engineering' || _role.value == 'postgrad') {
-    //   body["college"] = _collegeCtrl.text;
-    //   body["branch"] = _branchCtrl.text;
-    //   body["year"] = _yearCtrl.text;
-    // } else if (_role.value == 'school') {
-    //   body["school"] = _schoolCtrl.text;
-    //   body["grade"] = _gradeCtrl.text;
-    // }
 
     try {
       final response = await http.post(
@@ -245,16 +246,37 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
 
       final data = jsonDecode(response.body);
 
-      if (response.statusCode == 200) {
-        print("Login Success: $data");
+      if (response.statusCode == 200 && data["success"] == true) {
+        final userId = data["data"]["user_id"];
+        final roleId = data["data"]["role_id"];
 
-        // Navigate after login
-        context.go(_role.route);
+        await _storage.write(key: "user_id", value: userId.toString());
+        await _storage.write(key: "role_id", value: roleId.toString());
+
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text("Login Successful")));
+
+        // 👉 Navigate based on role
+        if (roleId == 3 || roleId == 4) {
+          context.go('/engineering');
+        } else if (roleId == 2) {
+          context.go('/school/layout');
+        } else {
+          context.go('/');
+        }
+
+        print("✅ User ID: $userId, Role ID: $roleId");
       } else {
-        print("Error: ${data["message"]}");
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(data["message"] ?? "Login failed")),
+        );
       }
     } catch (e) {
-      print("Exception: $e");
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Something went wrong")));
+      print("❌ Login Error: $e");
     }
 
     setState(() => _isLoading = false);
@@ -333,15 +355,16 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
                         curve: Curves.easeOut,
                       ),
                       child: SlideTransition(
-                        position: Tween<Offset>(
-                          begin: const Offset(0, 0.12),
-                          end: Offset.zero,
-                        ).animate(
-                          CurvedAnimation(
-                            parent: _dropAnim,
-                            curve: Curves.easeOut,
-                          ),
-                        ),
+                        position:
+                            Tween<Offset>(
+                              begin: const Offset(0, 0.12),
+                              end: Offset.zero,
+                            ).animate(
+                              CurvedAnimation(
+                                parent: _dropAnim,
+                                curve: Curves.easeOut,
+                              ),
+                            ),
                         child: _buildRoleDropdown(),
                       ),
                     ),
@@ -426,9 +449,7 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
             color: Colors.white.withOpacity(0.10),
             borderRadius: BorderRadius.circular(10),
           ),
-          child: const Center(
-            child: Text('⚡', style: TextStyle(fontSize: 16)),
-          ),
+          child: const Center(child: Text('⚡', style: TextStyle(fontSize: 16))),
         ),
         const SizedBox(width: 10),
         const Column(
@@ -853,7 +874,6 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
         _btnCtrl.reverse();
         setState(() => _btnPressed = false);
         _login();
-        context.go(_role.route); // navigate to portal based on selected role
       },
       onTapCancel: () {
         _btnCtrl.reverse();
@@ -871,39 +891,39 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
             boxShadow: _btnPressed
                 ? null
                 : [
-              BoxShadow(
-                color: _role.accent.withOpacity(0.35),
-                blurRadius: 16,
-                offset: const Offset(0, 6),
-              ),
-            ],
+                    BoxShadow(
+                      color: _role.accent.withOpacity(0.35),
+                      blurRadius: 16,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
           ),
           child: Center(
             child: _isLoading
                 ? const SizedBox(
-              width: 22,
-              height: 22,
-              child: CircularProgressIndicator(
-                strokeWidth: 2.5,
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-              ),
-            )
+                    width: 22,
+                    height: 22,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
+                  )
                 : Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(_role.emoji, style: const TextStyle(fontSize: 16)),
-                const SizedBox(width: 8),
-                const Text(
-                  'Sign In',
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.white,
-                    letterSpacing: 0.2,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(_role.emoji, style: const TextStyle(fontSize: 16)),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'Sign In',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                          letterSpacing: 0.2,
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ],
-            ),
           ),
         ),
       ),
@@ -1082,10 +1102,10 @@ class _RolePickerSheet extends StatelessWidget {
                       ),
                       child: isSelected
                           ? const Icon(
-                        Icons.check_rounded,
-                        color: Colors.white,
-                        size: 14,
-                      )
+                              Icons.check_rounded,
+                              color: Colors.white,
+                              size: 14,
+                            )
                           : null,
                     ),
                   ],

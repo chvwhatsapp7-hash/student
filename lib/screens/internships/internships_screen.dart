@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 
+import '../../api_services/applications.dart';
+
 // ─────────────────────────────────────────────
 //  DESIGN TOKENS
 // ─────────────────────────────────────────────
@@ -22,7 +24,7 @@ const kSelectedBg = Color(0xFFEFF6FF);
 const kTabs = ['All', 'Paid', 'Unpaid'];
 
 // ─────────────────────────────────────────────
-//  MODEL — untouched
+//  MODEL
 // ─────────────────────────────────────────────
 class Internship {
   final int id;
@@ -72,9 +74,8 @@ class Internship {
 }
 
 // ─────────────────────────────────────────────
-//  PROFESSIONAL ICON SYSTEM — design only
+//  PROFESSIONAL ICON SYSTEM
 // ─────────────────────────────────────────────
-
 class _InternTheme {
   final IconData icon;
   final Color grad1;
@@ -85,7 +86,6 @@ class _InternTheme {
 _InternTheme _resolveInternTheme(String title, String company) {
   final t = title.toLowerCase();
   final c = company.toLowerCase();
-
   if (t.contains('software engineer') || t.contains('sde'))
     return const _InternTheme(Icons.code, Color(0xFF1D4ED8), Color(0xFF3B82F6));
   if (t.contains('frontend') ||
@@ -280,7 +280,6 @@ _InternTheme _resolveInternTheme(String title, String company) {
       Color(0xFFDC2626),
       Color(0xFFEF4444),
     );
-
   return const _InternTheme(
     Icons.work_outline,
     Color(0xFF1D4ED8),
@@ -336,10 +335,12 @@ class InternshipsScreen extends StatefulWidget {
 
 class _InternshipsScreenState extends State<InternshipsScreen>
     with TickerProviderStateMixin {
-  // state — untouched
   List<Internship> _internships = [];
   final Set<int> _saved = {};
+
+  // ✅ FIX: Single source of truth — use ONE Set for applied IDs
   final Set<int> _applied = {};
+
   final Map<int, AnimationController> _cardAnims = {};
   String _tab = 'All';
   String _search = '';
@@ -352,10 +353,39 @@ class _InternshipsScreenState extends State<InternshipsScreen>
       vsync: this,
       duration: const Duration(milliseconds: 600),
     )..forward();
+    _loadAppliedInternships(); // load first
     _fetchInternships();
   }
 
-  // _fetchInternships — completely untouched
+  // ✅ FIX: Populates _applied (Set) instead of a separate list
+  Future<void> _loadAppliedInternships() async {
+    final appsData = await ApplicationsService.getApplications();
+    if (appsData != null && appsData['success'] == true) {
+      final dataList = appsData['data'] as List;
+      setState(() {
+        _applied.addAll(
+          dataList
+              .where((app) => app['internship_id'] != null)
+              .map<int>((app) => app['internship_id'] as int),
+        );
+      });
+    }
+  }
+
+  Future<void> _handleApply(int internshipId, String company) async {
+    if (_applied.contains(internshipId)) return;
+    HapticFeedback.lightImpact();
+    final result = await ApplicationsService.apply(internshipId: internshipId);
+    if (result == "Applied successfully") {
+      setState(() => _applied.add(internshipId));
+      _showAppliedSnack(company);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(result), backgroundColor: kWarning),
+      );
+    }
+  }
+
   Future<void> _fetchInternships() async {
     try {
       final response = await http.get(
@@ -406,7 +436,6 @@ class _InternshipsScreenState extends State<InternshipsScreen>
     }
   }
 
-  // _filtered — untouched
   List<Internship> get _filtered {
     var list = _tab == 'All'
         ? _internships
@@ -433,10 +462,6 @@ class _InternshipsScreenState extends State<InternshipsScreen>
     super.dispose();
   }
 
-  // ── INTERNSHIP DETAIL SHEET (NEW) ───────────
-  // Opens when user taps any part of the card.
-  // Apply button inside also triggers _showApplyDialog.
-
   void _showDetailSheet(Internship intern) {
     final theme = _resolveInternTheme(intern.title, intern.company);
     final isPaid = intern.type == 'Paid';
@@ -458,7 +483,6 @@ class _InternshipsScreenState extends State<InternshipsScreen>
             controller: scrollCtrl,
             padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
             children: [
-              // ── Handle ──────────────────────
               Center(
                 child: Container(
                   margin: const EdgeInsets.symmetric(vertical: 12),
@@ -470,8 +494,6 @@ class _InternshipsScreenState extends State<InternshipsScreen>
                   ),
                 ),
               ),
-
-              // ── Company header ──────────────
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -548,8 +570,6 @@ class _InternshipsScreenState extends State<InternshipsScreen>
                 ],
               ),
               const SizedBox(height: 20),
-
-              // ── Gradient stats bar ──────────
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -583,8 +603,6 @@ class _InternshipsScreenState extends State<InternshipsScreen>
                 ),
               ),
               const SizedBox(height: 20),
-
-              // ── Internship details grid ─────
               const Text(
                 'Internship Details',
                 style: TextStyle(
@@ -621,8 +639,6 @@ class _InternshipsScreenState extends State<InternshipsScreen>
                 ),
               ),
               const SizedBox(height: 20),
-
-              // ── Tags ────────────────────────
               if (intern.tags.isNotEmpty) ...[
                 const Text(
                   'Skills Required',
@@ -669,8 +685,6 @@ class _InternshipsScreenState extends State<InternshipsScreen>
                 ),
                 const SizedBox(height: 20),
               ],
-
-              // ── Description ─────────────────
               const Text(
                 'About the Role',
                 style: TextStyle(
@@ -698,8 +712,6 @@ class _InternshipsScreenState extends State<InternshipsScreen>
                 ),
               ),
               const SizedBox(height: 20),
-
-              // ── About company ───────────────
               const Text(
                 'About the Company',
                 style: TextStyle(
@@ -740,8 +752,7 @@ class _InternshipsScreenState extends State<InternshipsScreen>
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'This internship is offered by ${intern.company}. '
-                            'Location: ${intern.location}. '
+                            'This internship is offered by ${intern.company}. Location: ${intern.location}. '
                             '${intern.remote ? "This is a fully remote opportunity." : ""}',
                             style: const TextStyle(
                               fontSize: 12,
@@ -757,7 +768,7 @@ class _InternshipsScreenState extends State<InternshipsScreen>
               ),
               const SizedBox(height: 24),
 
-              // ── CTA ─────────────────────────
+              // ✅ FIX: Check _applied Set (not old separate list)
               _applied.contains(intern.id)
                   ? Container(
                       width: double.infinity,
@@ -787,12 +798,10 @@ class _InternshipsScreenState extends State<InternshipsScreen>
                       ),
                     )
                   : GestureDetector(
-                      onTap: () {
+                      onTap: () async {
                         Navigator.pop(context);
-                        HapticFeedback.lightImpact();
-                        setState(() => _applied.add(intern.id));
+                        await _handleApply(intern.id, intern.company);
                         _showApplyDialog(intern);
-                        _showAppliedSnack(intern.company);
                       },
                       child: Container(
                         width: double.infinity,
@@ -909,7 +918,6 @@ class _InternshipsScreenState extends State<InternshipsScreen>
     margin: const EdgeInsets.symmetric(horizontal: 14),
   );
 
-  // ── APPLY DIALOG — untouched ────────────────
   void _showApplyDialog(Internship intern) {
     final theme = _resolveInternTheme(intern.title, intern.company);
     showDialog(
@@ -1117,18 +1125,14 @@ class _InternshipsScreenState extends State<InternshipsScreen>
     );
   }
 
-  // _showAppliedSnack — untouched
-  void _showAppliedSnack(String company) {
+  void _showAppliedSnack(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
           children: [
             const Icon(Icons.check_circle, color: Colors.white, size: 18),
             const SizedBox(width: 10),
-            Text(
-              'Application sent to $company!',
-              style: const TextStyle(fontWeight: FontWeight.w700),
-            ),
+            Text(message, style: const TextStyle(fontWeight: FontWeight.w700)),
           ],
         ),
         backgroundColor: kSuccess,
@@ -1446,9 +1450,9 @@ class _InternshipsScreenState extends State<InternshipsScreen>
                     itemBuilder: (_, i) => _InternshipCard(
                       internship: _filtered[i],
                       isSaved: _saved.contains(_filtered[i].id),
+                      // ✅ FIX: Pass _applied Set correctly
                       isApplied: _applied.contains(_filtered[i].id),
                       ctrl: _cardAnims[_filtered[i].id],
-                      // onTap — NEW: opens detail sheet
                       onTap: () => _showDetailSheet(_filtered[i]),
                       onSave: () {
                         HapticFeedback.selectionClick();
@@ -1458,13 +1462,8 @@ class _InternshipsScreenState extends State<InternshipsScreen>
                               : _saved.add(_filtered[i].id);
                         });
                       },
-                      // onApply — untouched logic
-                      onApply: () {
-                        HapticFeedback.lightImpact();
-                        setState(() => _applied.add(_filtered[i].id));
-                        _showApplyDialog(_filtered[i]);
-                        _showAppliedSnack(_filtered[i].company);
-                      },
+                      onApply: () =>
+                          _handleApply(_filtered[i].id, _filtered[i].company),
                     ),
                   ),
           ),
@@ -1509,7 +1508,7 @@ class _InternshipsScreenState extends State<InternshipsScreen>
 }
 
 // ─────────────────────────────────────────────
-//  INTERNSHIP CARD — onTap added
+//  INTERNSHIP CARD
 // ─────────────────────────────────────────────
 class _InternshipCard extends StatefulWidget {
   final Internship internship;
@@ -1518,7 +1517,7 @@ class _InternshipCard extends StatefulWidget {
   final AnimationController? ctrl;
   final VoidCallback onSave;
   final VoidCallback onApply;
-  final VoidCallback onTap; // ← NEW
+  final VoidCallback onTap;
 
   const _InternshipCard({
     required this.internship,
@@ -1582,7 +1581,7 @@ class _InternshipCardState extends State<_InternshipCard>
       child: SlideTransition(
         position: slide,
         child: GestureDetector(
-          onTap: widget.onTap, // ← card tap → detail sheet
+          onTap: widget.onTap,
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 400),
             margin: const EdgeInsets.only(bottom: 14),
@@ -1623,13 +1622,11 @@ class _InternshipCardState extends State<_InternshipCard>
                       ),
                     ),
                   ),
-
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // TOP ROW
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -1703,7 +1700,6 @@ class _InternshipCardState extends State<_InternshipCard>
                               ],
                             ),
                           ),
-                          // Bookmark — own tap, doesn't open sheet
                           GestureDetector(
                             onTap: widget.onSave,
                             behavior: HitTestBehavior.opaque,
@@ -1729,8 +1725,6 @@ class _InternshipCardState extends State<_InternshipCard>
                           ),
                         ],
                       ),
-
-                      // DESCRIPTION
                       const SizedBox(height: 12),
                       Text(
                         intern.desc,
@@ -1742,8 +1736,6 @@ class _InternshipCardState extends State<_InternshipCard>
                           height: 1.5,
                         ),
                       ),
-
-                      // "Tap to view details" hint
                       const SizedBox(height: 6),
                       Row(
                         children: [
@@ -1763,8 +1755,6 @@ class _InternshipCardState extends State<_InternshipCard>
                           ),
                         ],
                       ),
-
-                      // META CHIPS
                       const SizedBox(height: 12),
                       Wrap(
                         spacing: 7,
@@ -1835,15 +1825,11 @@ class _InternshipCardState extends State<_InternshipCard>
                             ),
                         ],
                       ),
-
-                      // DIVIDER
                       Container(
                         margin: const EdgeInsets.symmetric(vertical: 12),
                         height: 1,
                         color: const Color(0xFFF1F5F9),
                       ),
-
-                      // BOTTOM ROW
                       Row(
                         children: [
                           if (widget.isApplied)
@@ -1881,7 +1867,6 @@ class _InternshipCardState extends State<_InternshipCard>
                           else if (intern.match > 0)
                             _matchBadge(intern.match),
                           const Spacer(),
-                          // Apply button — own tap, doesn't open sheet
                           GestureDetector(
                             onTapDown: widget.isApplied
                                 ? null

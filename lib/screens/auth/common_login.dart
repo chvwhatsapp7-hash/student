@@ -97,12 +97,12 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
   final _emailCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
 
-  // Engineering / Postgrad specific
+  // Engineering / Postgrad specific — kept for future use
   final _collegeCtrl = TextEditingController();
   final _branchCtrl = TextEditingController();
   final _yearCtrl = TextEditingController();
 
-  // School specific
+  // School specific — kept for future use
   final _schoolCtrl = TextEditingController();
   final _gradeCtrl = TextEditingController();
 
@@ -226,15 +226,15 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
       "role": _role.value,
     };
 
-    // Role-based fields
-    if (_role.value == 'engineering' || _role.value == 'postgrad') {
-      body["college"] = _collegeCtrl.text;
-      body["branch"] = _branchCtrl.text;
-      body["year"] = _yearCtrl.text;
-    } else if (_role.value == 'school') {
-      body["school"] = _schoolCtrl.text;
-      body["grade"] = _gradeCtrl.text;
-    }
+    // Role-based fields — kept for future use, not sent for now
+    // if (_role.value == 'engineering' || _role.value == 'postgrad') {
+    //   body["college"] = _collegeCtrl.text;
+    //   body["branch"] = _branchCtrl.text;
+    //   body["year"] = _yearCtrl.text;
+    // } else if (_role.value == 'school') {
+    //   body["school"] = _schoolCtrl.text;
+    //   body["grade"] = _gradeCtrl.text;
+    // }
 
     try {
       final response = await http.post(
@@ -333,16 +333,15 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
                         curve: Curves.easeOut,
                       ),
                       child: SlideTransition(
-                        position:
-                            Tween<Offset>(
-                              begin: const Offset(0, 0.12),
-                              end: Offset.zero,
-                            ).animate(
-                              CurvedAnimation(
-                                parent: _dropAnim,
-                                curve: Curves.easeOut,
-                              ),
-                            ),
+                        position: Tween<Offset>(
+                          begin: const Offset(0, 0.12),
+                          end: Offset.zero,
+                        ).animate(
+                          CurvedAnimation(
+                            parent: _dropAnim,
+                            curve: Curves.easeOut,
+                          ),
+                        ),
                         child: _buildRoleDropdown(),
                       ),
                     ),
@@ -427,7 +426,9 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
             color: Colors.white.withOpacity(0.10),
             borderRadius: BorderRadius.circular(10),
           ),
-          child: const Center(child: Text('⚡', style: TextStyle(fontSize: 16))),
+          child: const Center(
+            child: Text('⚡', style: TextStyle(fontSize: 16)),
+          ),
         ),
         const SizedBox(width: 10),
         const Column(
@@ -671,7 +672,7 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
           ),
           const SizedBox(height: 18),
 
-          // ── Common fields ─────────────────
+          // ── Email ─────────────────────────
           _field(
             ctrl: _emailCtrl,
             label: 'Email Address',
@@ -679,6 +680,8 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
             type: TextInputType.emailAddress,
           ),
           const SizedBox(height: 12),
+
+          // ── Password ──────────────────────
           _field(
             ctrl: _passCtrl,
             label: 'Password',
@@ -694,15 +697,15 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
             ),
           ),
 
-          // ── Role-specific extra fields ────
-          const SizedBox(height: 12),
-          FadeTransition(
-            opacity: _roleSwapFade,
-            child: SlideTransition(
-              position: _roleSwapSlide,
-              child: _buildRoleFields(),
-            ),
-          ),
+          // ── Role-specific extra fields — hidden for now, kept for future ──
+          // const SizedBox(height: 12),
+          // FadeTransition(
+          //   opacity: _roleSwapFade,
+          //   child: SlideTransition(
+          //     position: _roleSwapSlide,
+          //     child: _buildRoleFields(),
+          //   ),
+          // ),
 
           // ── Forgot password ───────────────
           const SizedBox(height: 10),
@@ -729,68 +732,64 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
     );
   }
 
-  // ── ROLE-SPECIFIC FIELDS ──────────────────
-  // Animates in/out when role changes
+  // ── ROLE-SPECIFIC FIELDS — kept for future use ────────────────────────────
+  // To re-enable: uncomment the FadeTransition block above in _buildFormCard()
 
-  Widget _buildRoleFields() {
-    switch (_role.value) {
-      // Engineering & Postgrad show college + branch + year
-      case 'engineering':
-      case 'postgrad':
-        return Column(
-          key: ValueKey(_role.value),
-          children: [
-            _field(
-              ctrl: _collegeCtrl,
-              label: _role.value == 'postgrad'
-                  ? 'University / Institution'
-                  : 'College Name',
-              icon: Icons.account_balance_outlined,
-            ),
-            const SizedBox(height: 12),
-            _field(
-              ctrl: _branchCtrl,
-              label: _role.value == 'postgrad'
-                  ? 'Specialisation / Department'
-                  : 'Branch / Department',
-              icon: Icons.school_outlined,
-            ),
-            const SizedBox(height: 12),
-            _field(
-              ctrl: _yearCtrl,
-              label: _role.value == 'postgrad'
-                  ? 'Current Year (PG)'
-                  : 'Current Year (e.g. 2nd Year)',
-              icon: Icons.calendar_today_outlined,
-              type: TextInputType.number,
-            ),
-          ],
-        );
-
-      // School shows school name + grade
-      case 'school':
-        return Column(
-          key: const ValueKey('school'),
-          children: [
-            _field(
-              ctrl: _schoolCtrl,
-              label: 'School Name',
-              icon: Icons.location_city_outlined,
-            ),
-            const SizedBox(height: 12),
-            _field(
-              ctrl: _gradeCtrl,
-              label: 'Grade / Class (e.g. Grade 9)',
-              icon: Icons.class_outlined,
-              type: TextInputType.number,
-            ),
-          ],
-        );
-
-      default:
-        return const SizedBox.shrink();
-    }
-  }
+  // Widget _buildRoleFields() {
+  //   switch (_role.value) {
+  //     case 'engineering':
+  //     case 'postgrad':
+  //       return Column(
+  //         key: ValueKey(_role.value),
+  //         children: [
+  //           _field(
+  //             ctrl: _collegeCtrl,
+  //             label: _role.value == 'postgrad'
+  //                 ? 'University / Institution'
+  //                 : 'College Name',
+  //             icon: Icons.account_balance_outlined,
+  //           ),
+  //           const SizedBox(height: 12),
+  //           _field(
+  //             ctrl: _branchCtrl,
+  //             label: _role.value == 'postgrad'
+  //                 ? 'Specialisation / Department'
+  //                 : 'Branch / Department',
+  //             icon: Icons.school_outlined,
+  //           ),
+  //           const SizedBox(height: 12),
+  //           _field(
+  //             ctrl: _yearCtrl,
+  //             label: _role.value == 'postgrad'
+  //                 ? 'Current Year (PG)'
+  //                 : 'Current Year (e.g. 2nd Year)',
+  //             icon: Icons.calendar_today_outlined,
+  //             type: TextInputType.number,
+  //           ),
+  //         ],
+  //       );
+  //     case 'school':
+  //       return Column(
+  //         key: const ValueKey('school'),
+  //         children: [
+  //           _field(
+  //             ctrl: _schoolCtrl,
+  //             label: 'School Name',
+  //             icon: Icons.location_city_outlined,
+  //           ),
+  //           const SizedBox(height: 12),
+  //           _field(
+  //             ctrl: _gradeCtrl,
+  //             label: 'Grade / Class (e.g. Grade 9)',
+  //             icon: Icons.class_outlined,
+  //             type: TextInputType.number,
+  //           ),
+  //         ],
+  //       );
+  //     default:
+  //       return const SizedBox.shrink();
+  //   }
+  // }
 
   // ── TEXT FIELD ─────────────────────────────
 
@@ -853,8 +852,8 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
       onTapUp: (_) {
         _btnCtrl.reverse();
         setState(() => _btnPressed = false);
-        //_login();
-        context.go(_role.route);
+        _login();
+        context.go(_role.route); // navigate to portal based on selected role
       },
       onTapCancel: () {
         _btnCtrl.reverse();
@@ -872,39 +871,39 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
             boxShadow: _btnPressed
                 ? null
                 : [
-                    BoxShadow(
-                      color: _role.accent.withOpacity(0.35),
-                      blurRadius: 16,
-                      offset: const Offset(0, 6),
-                    ),
-                  ],
+              BoxShadow(
+                color: _role.accent.withOpacity(0.35),
+                blurRadius: 16,
+                offset: const Offset(0, 6),
+              ),
+            ],
           ),
           child: Center(
             child: _isLoading
                 ? const SizedBox(
-                    width: 22,
-                    height: 22,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2.5,
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                    ),
-                  )
+              width: 22,
+              height: 22,
+              child: CircularProgressIndicator(
+                strokeWidth: 2.5,
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              ),
+            )
                 : Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(_role.emoji, style: const TextStyle(fontSize: 16)),
-                      const SizedBox(width: 8),
-                      const Text(
-                        'Sign In',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w800,
-                          color: Colors.white,
-                          letterSpacing: 0.2,
-                        ),
-                      ),
-                    ],
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(_role.emoji, style: const TextStyle(fontSize: 16)),
+                const SizedBox(width: 8),
+                const Text(
+                  'Sign In',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                    letterSpacing: 0.2,
                   ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -1083,10 +1082,10 @@ class _RolePickerSheet extends StatelessWidget {
                       ),
                       child: isSelected
                           ? const Icon(
-                              Icons.check_rounded,
-                              color: Colors.white,
-                              size: 14,
-                            )
+                        Icons.check_rounded,
+                        color: Colors.white,
+                        size: 14,
+                      )
                           : null,
                     ),
                   ],

@@ -95,22 +95,199 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
     _btnCtrl.dispose();
     _emailCtrl.dispose();
     _passCtrl.dispose();
-    // kept controllers for future use — disposed even if unused
     super.dispose();
   }
 
-  // ── LOGIN — completely untouched ───────────
+  // ── VALIDATION HELPERS ─────────────────────
 
-  Future<void> _login() async {
-    if (_emailCtrl.text.isEmpty || _passCtrl.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Email and password are required")),
-      );
+  // Shows a styled snackbar for field errors
+  void _showErrorSnack(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.error_outline_rounded,
+                color: Colors.white, size: 18),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(message,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600, fontSize: 13,
+                  )),
+            ),
+          ],
+        ),
+        backgroundColor: const Color(0xFFDC2626),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14)),
+        margin: const EdgeInsets.all(16),
+        duration: const Duration(seconds: 3),
+      ),
+    );
+  }
+
+  // Shows "Account not found — please create account" dialog
+  void _showNoAccountDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => Dialog(
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24)),
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        child: Container(
+          decoration: BoxDecoration(
+            color: kCardBg,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: kInk.withValues(alpha: 0.15),
+                blurRadius: 40, offset: const Offset(0, 12),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Gradient top band
+              Container(
+                height: 5,
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xFFDC2626), Color(0xFFEF4444),
+                      kAccent],
+                  ),
+                  borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(24)),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 22, 24, 24),
+                child: Column(
+                  children: [
+                    // Icon
+                    Container(
+                      width: 68, height: 68,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: const Color(0xFFFFF1F2),
+                        border: Border.all(
+                            color: const Color(0xFFFCA5A5), width: 2),
+                      ),
+                      child: const Center(
+                        child: Icon(Icons.person_off_rounded,
+                            color: Color(0xFFDC2626), size: 32),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    const Text('Account Not Found',
+                        style: TextStyle(
+                          fontSize: 18, fontWeight: FontWeight.w800,
+                          color: kInk, letterSpacing: -0.3,
+                        )),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'We couldn\'t find an account with these credentials.\nPlease create an account first to sign in.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                          fontSize: 13, color: kMuted, height: 1.6),
+                    ),
+                    const SizedBox(height: 22),
+
+                    // Create account button
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.pop(context);
+                        context.go('/signup');
+                      },
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [kPrimary, Color(0xFF4F46E5)],
+                            begin: Alignment.centerLeft,
+                            end: Alignment.centerRight,
+                          ),
+                          borderRadius: BorderRadius.circular(14),
+                          boxShadow: [
+                            BoxShadow(
+                              color: kPrimary.withValues(alpha: 0.28),
+                              blurRadius: 10, offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: const Center(
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.person_add_rounded,
+                                  color: Colors.white, size: 18),
+                              SizedBox(width: 8),
+                              Text('Create Account',
+                                  style: TextStyle(
+                                    fontSize: 15, fontWeight: FontWeight.w800,
+                                    color: Colors.white,
+                                  )),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+
+                    // Try again button
+                    GestureDetector(
+                      onTap: () => Navigator.pop(context),
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: 13),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF1F5F9),
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: const Center(
+                          child: Text('Try Again',
+                              style: TextStyle(
+                                fontSize: 14, fontWeight: FontWeight.w700,
+                                color: kMuted,
+                              )),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ── SIGN IN — API completely untouched ──────
+
+  Future<void> _signIn() async {
+    // ── Validation: empty field checks ─────────
+    if (_emailCtrl.text.trim().isEmpty && _passCtrl.text.trim().isEmpty) {
+      _showErrorSnack('Please enter your email and password to sign in.');
+      return;
+    }
+    if (_emailCtrl.text.trim().isEmpty) {
+      _showErrorSnack('Email address is required.');
+      return;
+    }
+    if (_passCtrl.text.trim().isEmpty) {
+      _showErrorSnack('Password is required.');
       return;
     }
 
     setState(() => _isLoading = true);
 
+    // ── API call — completely untouched ─────────
     final url = Uri.parse(
       'https://studenthub-backend-woad.vercel.app/api/auth/login',
     );
@@ -137,10 +314,26 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
         await _storage.write(key: "role_id", value: roleId.toString());
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Login Successful")),
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle_rounded,
+                    color: Colors.white, size: 18),
+                const SizedBox(width: 10),
+                const Text('Signed in successfully!',
+                    style: TextStyle(fontWeight: FontWeight.w700)),
+              ],
+            ),
+            backgroundColor: const Color(0xFF16A34A),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14)),
+            margin: const EdgeInsets.all(16),
+            duration: const Duration(seconds: 2),
+          ),
         );
 
-        // Navigate based on role returned by API
+        // Navigate based on role returned by API — untouched
         if (roleId == 3 || roleId == 4) {
           context.go('/engineering');
         } else if (roleId == 2) {
@@ -151,15 +344,13 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
 
         print("✅ User ID: $userId, Role ID: $roleId");
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(data["message"] ?? "Login failed")),
-        );
+        // Account not found or wrong credentials → show dialog
+        _showNoAccountDialog();
+        print("❌ ${data["message"]}");
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Something went wrong")),
-      );
-      print("❌ Login Error: $e");
+      _showErrorSnack('Something went wrong. Please try again.');
+      print("❌ Sign In Error: $e");
     }
 
     setState(() => _isLoading = false);
@@ -208,7 +399,6 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
 
-                    // ── TOP BAR ──────────────────────────────
                     FadeTransition(
                       opacity: _headerFade,
                       child: SlideTransition(
@@ -218,7 +408,6 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
                     ),
                     const SizedBox(height: 24),
 
-                    // ── HERO TEXT ─────────────────────────────
                     FadeTransition(
                       opacity: _headerFade,
                       child: SlideTransition(
@@ -228,7 +417,6 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
                     ),
                     const SizedBox(height: 28),
 
-                    // ── FORM CARD ─────────────────────────────
                     FadeTransition(
                       opacity: _fieldsFade,
                       child: SlideTransition(
@@ -238,7 +426,7 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
                     ),
                     const SizedBox(height: 20),
 
-                    // ── SIGN UP LINK ──────────────────────────
+                    // Sign up link
                     FadeTransition(
                       opacity: _fieldsFade,
                       child: Center(
@@ -350,9 +538,6 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
   }
 
   // ── FORM CARD ──────────────────────────────
-  // CHANGED: role selector removed — role is determined
-  // by the API response (role_id) not by user selection.
-  // Only email + password shown.
 
   Widget _buildFormCard() {
     return Container(
@@ -372,7 +557,7 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
 
-          // ── Card header ───────────────────
+          // Card header
           Row(
             children: [
               Container(
@@ -385,19 +570,19 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
                   ),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Icon(Icons.login_rounded,
+                child: const Icon(Icons.shield_rounded,
                     color: Colors.white, size: 18),
               ),
               const SizedBox(width: 12),
               const Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Account Login',
+                  Text('Welcome Back',
                       style: TextStyle(
                         fontSize: 15, fontWeight: FontWeight.w800,
                         color: kInk,
                       )),
-                  Text('Your role is auto-detected after login',
+                  Text('Your portal is auto-detected after sign in',
                       style: TextStyle(
                           fontSize: 11, color: kMuted)),
                 ],
@@ -406,31 +591,33 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
           ),
           const SizedBox(height: 20),
 
-          // ── Email ─────────────────────────
+          // Email
           _field(
             ctrl:  _emailCtrl,
             label: 'Email Address',
-            icon:  Icons.email_outlined,
+            icon:  Icons.alternate_email_rounded,
             type:  TextInputType.emailAddress,
           ),
           const SizedBox(height: 12),
 
-          // ── Password ──────────────────────
+          // Password
           _field(
             ctrl:    _passCtrl,
             label:   'Password',
-            icon:    Icons.lock_outline,
+            icon:    Icons.lock_outline_rounded,
             obscure: !_showPass,
             suffix: IconButton(
               icon: Icon(
-                _showPass ? Icons.visibility_off : Icons.visibility,
+                _showPass
+                    ? Icons.visibility_off_rounded
+                    : Icons.visibility_rounded,
                 color: kMuted, size: 18,
               ),
               onPressed: () => setState(() => _showPass = !_showPass),
             ),
           ),
 
-          // ── Forgot password ───────────────
+          // Forgot password
           const SizedBox(height: 10),
           Align(
             alignment: Alignment.centerRight,
@@ -443,36 +630,35 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
                   )),
             ),
           ),
-          const SizedBox(height: 20),
-
-          // ── Info note ─────────────────────
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: kSelectedBg,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: kBorder),
-            ),
-            child: const Row(
-              children: [
-                Icon(Icons.info_outline_rounded,
-                    size: 16, color: kPrimary),
-                SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    'Your portal is automatically assigned based on the role you selected during sign up.',
-                    style: TextStyle(
-                      fontSize: 11, color: kPrimary,
-                      height: 1.5, fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
           const SizedBox(height: 18),
 
-          // ── Submit button ─────────────────
+          // Info note
+          // Container(
+          //   padding: const EdgeInsets.all(12),
+          //   decoration: BoxDecoration(
+          //     color: kSelectedBg,
+          //     borderRadius: BorderRadius.circular(12),
+          //     border: Border.all(color: kBorder),
+          //   ),
+          //   child: const Row(
+          //     children: [
+          //       Icon(Icons.info_outline_rounded,
+          //           size: 16, color: kPrimary),
+          //       SizedBox(width: 10),
+          //       Expanded(
+          //         child: Text(
+          //           'Your portal is automatically assigned based on the role you selected during sign up.',
+          //           style: TextStyle(
+          //             fontSize: 11, color: kPrimary,
+          //             height: 1.5, fontWeight: FontWeight.w600,
+          //           ),
+          //         ),
+          //       ),
+          //     ],
+          //   ),
+          // ),
+          const SizedBox(height: 18),
+
           _buildSubmitBtn(),
         ],
       ),
@@ -490,13 +676,13 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
     Widget? suffix,
   }) {
     return TextField(
-      controller:  ctrl,
-      obscureText: obscure,
+      controller:   ctrl,
+      obscureText:  obscure,
       keyboardType: type,
       style: const TextStyle(
           fontSize: 14, fontWeight: FontWeight.w600, color: kInk),
       decoration: InputDecoration(
-        labelText: label,
+        labelText:  label,
         labelStyle: const TextStyle(
             fontSize: 13, color: kMuted, fontWeight: FontWeight.w600),
         prefixIcon: Icon(icon, color: kMuted, size: 18),
@@ -532,7 +718,7 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
       onTapUp: (_) {
         _btnCtrl.reverse();
         setState(() => _btnPressed = false);
-        _login();
+        _signIn();   // ← calls _signIn not _login
       },
       onTapCancel: () {
         _btnCtrl.reverse();
@@ -576,7 +762,7 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
                 : const Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.login_rounded,
+                Icon(Icons.shield_rounded,
                     color: Colors.white, size: 18),
                 SizedBox(width: 8),
                 Text('Sign In',

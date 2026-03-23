@@ -169,7 +169,6 @@ class ProfileState extends ChangeNotifier {
     }).toList();
   }
 
-  // ✅ FIX 1 — store certificate_id so _deleteCertificate can call the API
   void _mapCertificates(List<dynamic> list) {
     certifications = list
         .map(
@@ -479,7 +478,7 @@ class _ProfileScreenState extends State<ProfileScreen>
         throw Exception(data['message'] ?? 'Failed');
       }
     } catch (e) {
-      _showSnack('Error: $e', Colors.red); // ✅ visible error
+      _showSnack('Error: $e', Colors.red);
     }
   }
 
@@ -1241,583 +1240,604 @@ class _ProfileScreenState extends State<ProfileScreen>
   }
 
   // ─────────────────────────────────────────────
-  //  TAB 3 — CERTS
+  //  TAB 3 — CERTS  ✅ pull-to-refresh
   // ─────────────────────────────────────────────
   Widget _certs(double sw) {
     final p = profileState;
-    return ListView(
-      padding: EdgeInsets.all(sw * 0.040),
-      children: [
-        ...p.certifications.asMap().entries.map((e) {
-          final i = e.key;
-          final c = e.value;
-          final ct = _certTheme(c['name']!);
-          return Container(
-            margin: EdgeInsets.only(bottom: sw * 0.030),
-            decoration: BoxDecoration(
-              color: kCardBg,
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: kBorder, width: 1.5),
-            ),
-            child: Column(
-              children: [
-                Container(
-                  height: 3,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(colors: [ct.g1, ct.g2]),
-                    borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(18),
+    return RefreshIndicator(
+      color: kPrimary,
+      onRefresh: () => profileState.fetchProfile(),
+      child: ListView(
+        padding: EdgeInsets.all(sw * 0.040),
+        children: [
+          ...p.certifications.asMap().entries.map((e) {
+            final i = e.key;
+            final c = e.value;
+            final ct = _certTheme(c['name']!);
+            return Container(
+              margin: EdgeInsets.only(bottom: sw * 0.030),
+              decoration: BoxDecoration(
+                color: kCardBg,
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: kBorder, width: 1.5),
+              ),
+              child: Column(
+                children: [
+                  Container(
+                    height: 3,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(colors: [ct.g1, ct.g2]),
+                      borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(18),
+                      ),
                     ),
                   ),
-                ),
-                Padding(
-                  padding: EdgeInsets.all(sw * 0.040),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: sw * 0.125,
-                        height: sw * 0.125,
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [ct.g1, ct.g2],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          borderRadius: BorderRadius.circular(14),
-                          boxShadow: [
-                            BoxShadow(
-                              color: ct.g1.withOpacity(0.28),
-                              blurRadius: 8,
-                              offset: const Offset(0, 3),
+                  Padding(
+                    padding: EdgeInsets.all(sw * 0.040),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: sw * 0.125,
+                          height: sw * 0.125,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [ct.g1, ct.g2],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
                             ),
-                          ],
+                            borderRadius: BorderRadius.circular(14),
+                            boxShadow: [
+                              BoxShadow(
+                                color: ct.g1.withOpacity(0.28),
+                                blurRadius: 8,
+                                offset: const Offset(0, 3),
+                              ),
+                            ],
+                          ),
+                          child: Icon(
+                            ct.icon,
+                            color: Colors.white,
+                            size: sw * 0.055,
+                          ),
                         ),
-                        child: Icon(
-                          ct.icon,
-                          color: Colors.white,
-                          size: sw * 0.055,
+                        SizedBox(width: sw * 0.035),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                c['name']!,
+                                style: TextStyle(
+                                  fontSize: sw * 0.035,
+                                  fontWeight: FontWeight.w800,
+                                  color: kInk,
+                                ),
+                              ),
+                              SizedBox(height: sw * 0.008),
+                              Text(
+                                c['issuer']!,
+                                style: TextStyle(
+                                  fontSize: sw * 0.030,
+                                  color: kMuted,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                      SizedBox(width: sw * 0.035),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
-                            Text(
-                              c['name']!,
-                              style: TextStyle(
-                                fontSize: sw * 0.035,
-                                fontWeight: FontWeight.w800,
-                                color: kInk,
+                            Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: sw * 0.023,
+                                vertical: sw * 0.010,
+                              ),
+                              decoration: BoxDecoration(
+                                color: ct.bg,
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: ct.g1.withOpacity(0.30),
+                                ),
+                              ),
+                              child: Text(
+                                c['date']!,
+                                style: TextStyle(
+                                  fontSize: sw * 0.025,
+                                  fontWeight: FontWeight.w700,
+                                  color: ct.g1,
+                                ),
                               ),
                             ),
-                            SizedBox(height: sw * 0.008),
-                            Text(
-                              c['issuer']!,
-                              style: TextStyle(
-                                fontSize: sw * 0.030,
-                                color: kMuted,
-                                fontWeight: FontWeight.w600,
+                            SizedBox(height: sw * 0.020),
+                            GestureDetector(
+                              onTap: () => _deleteCertificate(i),
+                              child: Icon(
+                                Icons.delete_outline,
+                                size: sw * 0.038,
+                                color: kHint,
                               ),
                             ),
                           ],
                         ),
-                      ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: sw * 0.023,
-                              vertical: sw * 0.010,
-                            ),
-                            decoration: BoxDecoration(
-                              color: ct.bg,
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: ct.g1.withOpacity(0.30),
-                              ),
-                            ),
-                            child: Text(
-                              c['date']!,
-                              style: TextStyle(
-                                fontSize: sw * 0.025,
-                                fontWeight: FontWeight.w700,
-                                color: ct.g1,
-                              ),
-                            ),
-                          ),
-                          SizedBox(height: sw * 0.020),
-                          // ✅ Correct — calls _deleteCertificate
-                          GestureDetector(
-                            onTap: () => _deleteCertificate(i),
-                            child: Icon(
-                              Icons.delete_outline,
-                              size: sw * 0.038,
-                              color: kHint,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-              ],
-            ),
-          );
-        }),
-        SizedBox(height: sw * 0.010),
-        _addCta(
-          Icons.upload_file,
-          'Add / Upload Certificate',
-          _addCertDialog,
-          sw,
-        ),
-      ],
+                ],
+              ),
+            );
+          }),
+          SizedBox(height: sw * 0.010),
+          _addCta(
+            Icons.upload_file,
+            'Add / Upload Certificate',
+            _addCertDialog,
+            sw,
+          ),
+        ],
+      ),
     );
   }
 
   // ─────────────────────────────────────────────
-  //  TAB 4 — PROJECTS
+  //  TAB 4 — PROJECTS  ✅ pull-to-refresh
   // ─────────────────────────────────────────────
   Widget _projectsTab(double sw) {
     final p = profileState;
-    return ListView(
-      padding: EdgeInsets.all(sw * 0.040),
-      children: [
-        ...p.projects.asMap().entries.map((e) {
-          final i = e.key;
-          final proj = e.value;
-          return Container(
-            margin: EdgeInsets.only(bottom: sw * 0.035),
-            decoration: BoxDecoration(
-              color: kCardBg,
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: kBorder, width: 1.5),
-            ),
-            child: Column(
-              children: [
-                Container(
-                  height: 3,
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [kPrimary, Color(0xFF4F46E5)],
-                    ),
-                    borderRadius: BorderRadius.vertical(
-                      top: Radius.circular(18),
+    return RefreshIndicator(
+      color: kPrimary,
+      onRefresh: () => profileState.fetchProfile(),
+      child: ListView(
+        padding: EdgeInsets.all(sw * 0.040),
+        children: [
+          ...p.projects.asMap().entries.map((e) {
+            final i = e.key;
+            final proj = e.value;
+            return Container(
+              margin: EdgeInsets.only(bottom: sw * 0.035),
+              decoration: BoxDecoration(
+                color: kCardBg,
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: kBorder, width: 1.5),
+              ),
+              child: Column(
+                children: [
+                  Container(
+                    height: 3,
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [kPrimary, Color(0xFF4F46E5)],
+                      ),
+                      borderRadius: BorderRadius.vertical(
+                        top: Radius.circular(18),
+                      ),
                     ),
                   ),
-                ),
-                Padding(
-                  padding: EdgeInsets.all(sw * 0.040),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            width: sw * 0.105,
-                            height: sw * 0.105,
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  kPrimary.withOpacity(0.14),
-                                  const Color(0xFF4F46E5).withOpacity(0.07),
-                                ],
-                              ),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: kPrimary.withOpacity(0.25),
-                              ),
-                            ),
-                            child: Icon(
-                              Icons.folder,
-                              color: kPrimary,
-                              size: sw * 0.050,
-                            ),
-                          ),
-                          SizedBox(width: sw * 0.030),
-                          Expanded(
-                            child: Text(
-                              proj['title'] as String,
-                              style: TextStyle(
-                                fontSize: sw * 0.035,
-                                fontWeight: FontWeight.w800,
-                                color: kInk,
-                              ),
-                            ),
-                          ),
-                          GestureDetector(
-                            onTap: () => _editProjectDialog(i),
-                            child: Container(
-                              padding: EdgeInsets.all(sw * 0.015),
+                  Padding(
+                    padding: EdgeInsets.all(sw * 0.040),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              width: sw * 0.105,
+                              height: sw * 0.105,
                               decoration: BoxDecoration(
-                                color: kSelectedBg,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Icon(
-                                Icons.edit,
-                                size: sw * 0.035,
-                                color: kPrimary,
-                              ),
-                            ),
-                          ),
-                          SizedBox(width: sw * 0.015),
-                          // ✅ FIX 2 — was _deleteCertificate(i), now correctly _deleteProject(i)
-                          GestureDetector(
-                            onTap: () => _deleteProject(i),
-                            child: Container(
-                              padding: EdgeInsets.all(sw * 0.015),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFFFF1F2),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Icon(
-                                Icons.delete_outline,
-                                size: sw * 0.035,
-                                color: const Color(0xFFDC2626),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: sw * 0.025),
-                      Text(
-                        proj['desc'] as String,
-                        style: TextStyle(
-                          fontSize: sw * 0.030,
-                          color: kMuted,
-                          height: 1.5,
-                        ),
-                      ),
-                      SizedBox(height: sw * 0.020),
-                      Row(
-                        children: [
-                          Icon(Icons.link, size: sw * 0.030, color: kHint),
-                          SizedBox(width: sw * 0.010),
-                          Flexible(
-                            child: Text(
-                              (proj['link'] as String).isNotEmpty
-                                  ? proj['link'] as String
-                                  : 'No link added',
-                              style: TextStyle(
-                                fontSize: sw * 0.028,
-                                color: kPrimary,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: sw * 0.025),
-                      Wrap(
-                        spacing: sw * 0.018,
-                        runSpacing: sw * 0.015,
-                        children: (proj['tech'] as List<String>)
-                            .map(
-                              (t) => Container(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: sw * 0.025,
-                                  vertical: sw * 0.010,
+                                gradient: LinearGradient(
+                                  colors: [
+                                    kPrimary.withOpacity(0.14),
+                                    const Color(0xFF4F46E5).withOpacity(0.07),
+                                  ],
                                 ),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: kPrimary.withOpacity(0.25),
+                                ),
+                              ),
+                              child: Icon(
+                                Icons.folder,
+                                color: kPrimary,
+                                size: sw * 0.050,
+                              ),
+                            ),
+                            SizedBox(width: sw * 0.030),
+                            Expanded(
+                              child: Text(
+                                proj['title'] as String,
+                                style: TextStyle(
+                                  fontSize: sw * 0.035,
+                                  fontWeight: FontWeight.w800,
+                                  color: kInk,
+                                ),
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: () => _editProjectDialog(i),
+                              child: Container(
+                                padding: EdgeInsets.all(sw * 0.015),
                                 decoration: BoxDecoration(
                                   color: kSelectedBg,
                                   borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(color: kBorder),
                                 ),
-                                child: Text(
-                                  t,
-                                  style: TextStyle(
-                                    fontSize: sw * 0.028,
-                                    fontWeight: FontWeight.w700,
-                                    color: kPrimary,
-                                  ),
+                                child: Icon(
+                                  Icons.edit,
+                                  size: sw * 0.035,
+                                  color: kPrimary,
                                 ),
                               ),
-                            )
-                            .toList(),
-                      ),
-                    ],
+                            ),
+                            SizedBox(width: sw * 0.015),
+                            GestureDetector(
+                              onTap: () => _deleteProject(i),
+                              child: Container(
+                                padding: EdgeInsets.all(sw * 0.015),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFFFF1F2),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Icon(
+                                  Icons.delete_outline,
+                                  size: sw * 0.035,
+                                  color: const Color(0xFFDC2626),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: sw * 0.025),
+                        Text(
+                          proj['desc'] as String,
+                          style: TextStyle(
+                            fontSize: sw * 0.030,
+                            color: kMuted,
+                            height: 1.5,
+                          ),
+                        ),
+                        SizedBox(height: sw * 0.020),
+                        Row(
+                          children: [
+                            Icon(Icons.link, size: sw * 0.030, color: kHint),
+                            SizedBox(width: sw * 0.010),
+                            Flexible(
+                              child: Text(
+                                (proj['link'] as String).isNotEmpty
+                                    ? proj['link'] as String
+                                    : 'No link added',
+                                style: TextStyle(
+                                  fontSize: sw * 0.028,
+                                  color: kPrimary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: sw * 0.025),
+                        Wrap(
+                          spacing: sw * 0.018,
+                          runSpacing: sw * 0.015,
+                          children: (proj['tech'] as List<String>)
+                              .map(
+                                (t) => Container(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: sw * 0.025,
+                                    vertical: sw * 0.010,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: kSelectedBg,
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(color: kBorder),
+                                  ),
+                                  child: Text(
+                                    t,
+                                    style: TextStyle(
+                                      fontSize: sw * 0.028,
+                                      fontWeight: FontWeight.w700,
+                                      color: kPrimary,
+                                    ),
+                                  ),
+                                ),
+                              )
+                              .toList(),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
-            ),
-          );
-        }),
-        _addCta(Icons.add_circle, 'Add a Project', _addProjectDialog, sw),
-      ],
+                ],
+              ),
+            );
+          }),
+          _addCta(Icons.add_circle, 'Add a Project', _addProjectDialog, sw),
+        ],
+      ),
     );
   }
 
   // ─────────────────────────────────────────────
-  //  TAB 5 — APPLICATIONS
+  //  TAB 5 — APPLICATIONS  ✅ pull-to-refresh
   // ─────────────────────────────────────────────
   Widget _applicationsTab(double sw) {
     final apps = profileState.applications;
     if (apps.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+      return RefreshIndicator(
+        color: kPrimary,
+        onRefresh: () => profileState.fetchProfile(),
+        child: ListView(
           children: [
-            Container(
-              width: sw * 0.18,
-              height: sw * 0.18,
-              decoration: const BoxDecoration(
-                color: kSelectedBg,
-                shape: BoxShape.circle,
+            SizedBox(height: MediaQuery.of(context).size.height * 0.25),
+            Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: sw * 0.18,
+                    height: sw * 0.18,
+                    decoration: const BoxDecoration(
+                      color: kSelectedBg,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.work_off_outlined,
+                      color: kPrimary,
+                      size: sw * 0.08,
+                    ),
+                  ),
+                  SizedBox(height: sw * 0.040),
+                  Text(
+                    'No applications yet',
+                    style: TextStyle(
+                      fontSize: sw * 0.038,
+                      fontWeight: FontWeight.w700,
+                      color: kSlate,
+                    ),
+                  ),
+                  SizedBox(height: sw * 0.015),
+                  Text(
+                    'Pull down to refresh',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: sw * 0.030, color: kMuted),
+                  ),
+                ],
               ),
-              child: Icon(
-                Icons.work_off_outlined,
-                color: kPrimary,
-                size: sw * 0.08,
-              ),
-            ),
-            SizedBox(height: sw * 0.040),
-            Text(
-              'No applications yet',
-              style: TextStyle(
-                fontSize: sw * 0.038,
-                fontWeight: FontWeight.w700,
-                color: kSlate,
-              ),
-            ),
-            SizedBox(height: sw * 0.015),
-            Text(
-              'Apply to jobs & internships — see them here',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: sw * 0.030, color: kMuted),
             ),
           ],
         ),
       );
     }
-    return ListView(
-      padding: EdgeInsets.all(sw * 0.040),
-      children: [
-        Container(
-          margin: EdgeInsets.only(bottom: sw * 0.035),
-          padding: EdgeInsets.symmetric(
-            horizontal: sw * 0.035,
-            vertical: sw * 0.025,
-          ),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                kPrimary.withOpacity(0.08),
-                const Color(0xFF4F46E5).withOpacity(0.04),
-              ],
+    return RefreshIndicator(
+      color: kPrimary,
+      onRefresh: () => profileState.fetchProfile(),
+      child: ListView(
+        padding: EdgeInsets.all(sw * 0.040),
+        children: [
+          Container(
+            margin: EdgeInsets.only(bottom: sw * 0.035),
+            padding: EdgeInsets.symmetric(
+              horizontal: sw * 0.035,
+              vertical: sw * 0.025,
             ),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: kPrimary.withOpacity(0.20)),
-          ),
-          child: Row(
-            children: [
-              Icon(Icons.sync, size: sw * 0.035, color: kPrimary),
-              SizedBox(width: sw * 0.020),
-              Expanded(
-                child: Text(
-                  'Live sync  •  ${apps.length} applications',
-                  style: TextStyle(
-                    fontSize: sw * 0.028,
-                    color: kPrimary,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        ...apps.asMap().entries.map((e) {
-          final i = e.key;
-          final app = e.value;
-          final status = app['status'] as String? ?? 'Applied';
-          Color statusBg, statusFg;
-          IconData statusIcon;
-          switch (status) {
-            case 'Shortlisted':
-              statusBg = const Color(0xFFF0FDF4);
-              statusFg = kSuccess;
-              statusIcon = Icons.check_circle;
-              break;
-            case 'Viewed':
-              statusBg = const Color(0xFFFFFBEB);
-              statusFg = kWarning;
-              statusIcon = Icons.visibility;
-              break;
-            default:
-              statusBg = kSelectedBg;
-              statusFg = kPrimary;
-              statusIcon = Icons.send;
-          }
-          final isJob = (app['type'] ?? 'Job') == 'Job';
-          return Container(
-            margin: EdgeInsets.only(bottom: sw * 0.030),
             decoration: BoxDecoration(
-              color: kCardBg,
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: kBorder, width: 1.5),
+              gradient: LinearGradient(
+                colors: [
+                  kPrimary.withOpacity(0.08),
+                  const Color(0xFF4F46E5).withOpacity(0.04),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: kPrimary.withOpacity(0.20)),
             ),
-            child: Column(
+            child: Row(
               children: [
-                Container(
-                  height: 3,
-                  decoration: BoxDecoration(
-                    color: statusFg.withOpacity(0.50),
-                    borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(18),
+                Icon(Icons.sync, size: sw * 0.035, color: kPrimary),
+                SizedBox(width: sw * 0.020),
+                Expanded(
+                  child: Text(
+                    'Live sync  •  ${apps.length} applications  •  Pull to refresh',
+                    style: TextStyle(
+                      fontSize: sw * 0.028,
+                      color: kPrimary,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ),
-                Padding(
-                  padding: EdgeInsets.all(sw * 0.040),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        width: sw * 0.12,
-                        height: sw * 0.12,
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              statusFg.withOpacity(0.15),
-                              statusFg.withOpacity(0.05),
-                            ],
-                          ),
-                          borderRadius: BorderRadius.circular(13),
-                          border: Border.all(color: statusFg.withOpacity(0.25)),
-                        ),
-                        child: Icon(
-                          isJob ? Icons.work_outline : Icons.school_outlined,
-                          color: statusFg,
-                          size: sw * 0.055,
-                        ),
+              ],
+            ),
+          ),
+          ...apps.asMap().entries.map((e) {
+            final i = e.key;
+            final app = e.value;
+            final status = app['status'] as String? ?? 'Applied';
+            Color statusBg, statusFg;
+            IconData statusIcon;
+            switch (status) {
+              case 'Shortlisted':
+                statusBg = const Color(0xFFF0FDF4);
+                statusFg = kSuccess;
+                statusIcon = Icons.check_circle;
+                break;
+              case 'Viewed':
+                statusBg = const Color(0xFFFFFBEB);
+                statusFg = kWarning;
+                statusIcon = Icons.visibility;
+                break;
+              default:
+                statusBg = kSelectedBg;
+                statusFg = kPrimary;
+                statusIcon = Icons.send;
+            }
+            final isJob = (app['type'] ?? 'Job') == 'Job';
+            return Container(
+              margin: EdgeInsets.only(bottom: sw * 0.030),
+              decoration: BoxDecoration(
+                color: kCardBg,
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: kBorder, width: 1.5),
+              ),
+              child: Column(
+                children: [
+                  Container(
+                    height: 3,
+                    decoration: BoxDecoration(
+                      color: statusFg.withOpacity(0.50),
+                      borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(18),
                       ),
-                      SizedBox(width: sw * 0.030),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              app['role'] as String? ?? '',
-                              style: TextStyle(
-                                fontSize: sw * 0.035,
-                                fontWeight: FontWeight.w800,
-                                color: kInk,
-                              ),
+                    ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.all(sw * 0.040),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          width: sw * 0.12,
+                          height: sw * 0.12,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                statusFg.withOpacity(0.15),
+                                statusFg.withOpacity(0.05),
+                              ],
                             ),
-                            SizedBox(height: sw * 0.005),
-                            Text(
-                              app['company'] as String? ?? '',
-                              style: TextStyle(
-                                fontSize: sw * 0.030,
-                                color: kMuted,
-                                fontWeight: FontWeight.w600,
-                              ),
+                            borderRadius: BorderRadius.circular(13),
+                            border: Border.all(
+                              color: statusFg.withOpacity(0.25),
                             ),
-                            SizedBox(height: sw * 0.010),
-                            Row(
-                              children: [
-                                Container(
-                                  padding: EdgeInsets.symmetric(
-                                    horizontal: sw * 0.018,
-                                    vertical: sw * 0.005,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: isJob
-                                        ? kSelectedBg
-                                        : const Color(0xFFF0FDF4),
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                  child: Text(
-                                    isJob ? 'Job' : 'Internship',
-                                    style: TextStyle(
-                                      fontSize: sw * 0.023,
-                                      fontWeight: FontWeight.w800,
-                                      color: isJob ? kPrimary : kSuccess,
+                          ),
+                          child: Icon(
+                            isJob ? Icons.work_outline : Icons.school_outlined,
+                            color: statusFg,
+                            size: sw * 0.055,
+                          ),
+                        ),
+                        SizedBox(width: sw * 0.030),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                app['role'] as String? ?? '',
+                                style: TextStyle(
+                                  fontSize: sw * 0.035,
+                                  fontWeight: FontWeight.w800,
+                                  color: kInk,
+                                ),
+                              ),
+                              SizedBox(height: sw * 0.005),
+                              Text(
+                                app['company'] as String? ?? '',
+                                style: TextStyle(
+                                  fontSize: sw * 0.030,
+                                  color: kMuted,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              SizedBox(height: sw * 0.010),
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: sw * 0.018,
+                                      vertical: sw * 0.005,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: isJob
+                                          ? kSelectedBg
+                                          : const Color(0xFFF0FDF4),
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    child: Text(
+                                      isJob ? 'Job' : 'Internship',
+                                      style: TextStyle(
+                                        fontSize: sw * 0.023,
+                                        fontWeight: FontWeight.w800,
+                                        color: isJob ? kPrimary : kSuccess,
+                                      ),
                                     ),
                                   ),
+                                  SizedBox(width: sw * 0.015),
+                                  Text(
+                                    app['date'] as String? ?? '',
+                                    style: TextStyle(
+                                      fontSize: sw * 0.028,
+                                      color: kHint,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(width: sw * 0.015),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: sw * 0.025,
+                                vertical: sw * 0.015,
+                              ),
+                              decoration: BoxDecoration(
+                                color: statusBg,
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    statusIcon,
+                                    size: sw * 0.030,
+                                    color: statusFg,
+                                  ),
+                                  SizedBox(width: sw * 0.010),
+                                  Text(
+                                    status,
+                                    style: TextStyle(
+                                      fontSize: sw * 0.028,
+                                      fontWeight: FontWeight.w800,
+                                      color: statusFg,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            SizedBox(height: sw * 0.015),
+                            GestureDetector(
+                              onTap: () => _withdrawApplication(app, i),
+                              child: Container(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: sw * 0.025,
+                                  vertical: sw * 0.013,
                                 ),
-                                SizedBox(width: sw * 0.015),
-                                Text(
-                                  app['date'] as String? ?? '',
-                                  style: TextStyle(
-                                    fontSize: sw * 0.028,
-                                    color: kHint,
+                                decoration: BoxDecoration(
+                                  color: Colors.red.withOpacity(0.08),
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(
+                                    color: Colors.red.withOpacity(0.55),
                                   ),
                                 ),
-                              ],
+                                child: Text(
+                                  'Withdraw',
+                                  style: TextStyle(
+                                    fontSize: sw * 0.028,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.red,
+                                  ),
+                                ),
+                              ),
                             ),
                           ],
                         ),
-                      ),
-                      SizedBox(width: sw * 0.015),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: sw * 0.025,
-                              vertical: sw * 0.015,
-                            ),
-                            decoration: BoxDecoration(
-                              color: statusBg,
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  statusIcon,
-                                  size: sw * 0.030,
-                                  color: statusFg,
-                                ),
-                                SizedBox(width: sw * 0.010),
-                                Text(
-                                  status,
-                                  style: TextStyle(
-                                    fontSize: sw * 0.028,
-                                    fontWeight: FontWeight.w800,
-                                    color: statusFg,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          SizedBox(height: sw * 0.015),
-                          GestureDetector(
-                            onTap: () => _withdrawApplication(app, i),
-                            child: Container(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: sw * 0.025,
-                                vertical: sw * 0.013,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.red.withOpacity(0.08),
-                                borderRadius: BorderRadius.circular(20),
-                                border: Border.all(
-                                  color: Colors.red.withOpacity(0.55),
-                                ),
-                              ),
-                              child: Text(
-                                'Withdraw',
-                                style: TextStyle(
-                                  fontSize: sw * 0.028,
-                                  fontWeight: FontWeight.w700,
-                                  color: Colors.red,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-              ],
-            ),
-          );
-        }),
-      ],
+                ],
+              ),
+            );
+          }),
+        ],
+      ),
     );
   }
 
@@ -2395,6 +2415,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     final dt = TextEditingController();
     const storage = FlutterSecureStorage();
     final userId = await storage.read(key: 'user_id');
+
     _sheet(
       title: 'Add Certification',
       icon: Icons.workspace_premium,
@@ -2404,8 +2425,40 @@ class _ProfileScreenState extends State<ProfileScreen>
         _FieldCfg(dt, 'Date  (e.g. Mar 2024)', Icons.calendar_today),
       ],
       onSave: () async {
-        if (nm.text.trim().isEmpty || is_.text.trim().isEmpty || userId == null)
+        if (nm.text.trim().isEmpty ||
+            is_.text.trim().isEmpty ||
+            userId == null) {
+          _showSnack('Please fill in name and issuer.', kWarning);
           return;
+        }
+
+        // Convert "Mar 2024" → "2024-03-01" for API
+        String? isoDate;
+        final rawDate = dt.text.trim();
+        if (rawDate.isNotEmpty) {
+          try {
+            const months = {
+              'jan': '01',
+              'feb': '02',
+              'mar': '03',
+              'apr': '04',
+              'may': '05',
+              'jun': '06',
+              'jul': '07',
+              'aug': '08',
+              'sep': '09',
+              'oct': '10',
+              'nov': '11',
+              'dec': '12',
+            };
+            final parts = rawDate.split(' ');
+            if (parts.length == 2) {
+              final month = months[parts[0].toLowerCase()] ?? '01';
+              isoDate = '${parts[1]}-$month-01';
+            }
+          } catch (_) {}
+        }
+
         try {
           final res = await http.post(
             Uri.parse(
@@ -2416,28 +2469,56 @@ class _ProfileScreenState extends State<ProfileScreen>
               'user_id': int.parse(userId),
               'title': nm.text.trim(),
               'issuer': is_.text.trim(),
-              'issue_date': dt.text.trim().isEmpty ? null : dt.text.trim(),
+              'issue_date': isoDate,
               'file_url': null,
             }),
           );
           if (res.statusCode == 201) {
             final data = jsonDecode(res.body)['data'];
-            // ✅ FIX 3 — store certificate_id from POST response
             profileState.set(
               () => profileState.certifications.add({
                 'certificate_id': (data['certificate_id'] ?? '').toString(),
                 'name': data['title'] ?? nm.text.trim(),
                 'issuer': data['issuer'] ?? is_.text.trim(),
-                'date': data['issue_date'] ?? '',
+                'date': _fmtDate(data['issue_date']).isNotEmpty
+                    ? _fmtDate(data['issue_date'])
+                    : rawDate,
               }),
             );
             _showSnack('Certificate added!', kSuccess);
+          } else {
+            final body = jsonDecode(res.body);
+            _showSnack(
+              'Failed: ${body['message'] ?? 'Status ${res.statusCode}'}',
+              Colors.red,
+            );
           }
         } catch (e) {
-          _showSnack('Error: $e', Colors.red); // ✅ FIX 4 — visible error
+          _showSnack('Error: $e', Colors.red);
         }
       },
     );
+  }
+
+  String _fmtDate(String? iso) {
+    if (iso == null) return '';
+    final dt = DateTime.tryParse(iso);
+    if (dt == null) return '';
+    const m = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    return '${m[dt.month - 1]} ${dt.year}';
   }
 
   void _addProjectDialog() {
@@ -2487,6 +2568,12 @@ class _ProfileScreenState extends State<ProfileScreen>
               }),
             );
             _showSnack('Project added!', kSuccess);
+          } else {
+            final body = jsonDecode(res.body);
+            _showSnack(
+              'Failed: ${body['message'] ?? 'Status ${res.statusCode}'}',
+              Colors.red,
+            );
           }
         } catch (e) {
           _showSnack('Error: $e', Colors.red);

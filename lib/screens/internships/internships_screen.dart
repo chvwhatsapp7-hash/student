@@ -6,9 +6,9 @@ import 'package:http/http.dart' as http;
 
 import '../../api_services/applications.dart';
 
-// ─────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════
 //  DESIGN TOKENS
-// ─────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════
 const kInk = Color(0xFF0F172A);
 const kSlate = Color(0xFF334155);
 const kMuted = Color(0xFF64748B);
@@ -21,11 +21,12 @@ const kAccent = Color(0xFF38BDF8);
 const kSuccess = Color(0xFF16A34A);
 const kWarning = Color(0xFFF59E0B);
 const kSelectedBg = Color(0xFFEFF6FF);
+
 const kTabs = ['All', 'Paid', 'Unpaid'];
 
-// ─────────────────────────────────────────────
-//  MODEL (unchanged)
-// ─────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════
+//  MODEL
+// ═══════════════════════════════════════════════════════
 class Internship {
   final int id;
   final String title, company, location, stipend, type, duration, logo, desc;
@@ -48,72 +49,70 @@ class Internship {
     required this.desc,
   });
 
-  factory Internship.fromJson(Map<String, dynamic> json) {
-    return Internship(
-      id: json['internship_id'] ?? 0,
-      title: json['title'] ?? 'No title',
-      company: 'Company ${json['company_id'] ?? 'Unknown'}',
-      location: json['location'] ?? 'Remote',
-      stipend: json['stipend'] != null ? '₹${json['stipend']}' : 'Unpaid',
-      type: json['internship_type'] ?? 'Paid',
-      duration: json['duration'] ?? '1 month',
-      match: 0,
-      logo: '🟢',
-      tags: [],
-      remote: (json['location']?.toString().toLowerCase() == 'remote'),
-      desc: json['description'] ?? 'No description',
-    );
-  }
+  factory Internship.fromJson(Map<String, dynamic> json) => Internship(
+    id: json['internship_id'] ?? 0,
+    title: json['title'] ?? 'No title',
+    company: 'Company ${json['company_id'] ?? 'Unknown'}',
+    location: json['location'] ?? 'Remote',
+    stipend: json['stipend'] != null ? '${json['stipend']}' : 'Unpaid',
+    type: json['internship_type'] ?? 'Paid',
+    duration: json['duration'] ?? '1 month',
+    match: 0,
+    logo: '',
+    tags: const [],
+    remote: json['location']?.toString().toLowerCase() == 'remote',
+    desc: json['description'] ?? 'No description',
+  );
 }
 
-// ─────────────────────────────────────────────
-//  ICON SYSTEM (unchanged)
-// ─────────────────────────────────────────────
-class _InternTheme {
+// ═══════════════════════════════════════════════════════
+//  ICON SYSTEM
+// ═══════════════════════════════════════════════════════
+class InternTheme {
   final IconData icon;
   final Color grad1, grad2;
-  const _InternTheme(this.icon, this.grad1, this.grad2);
+  const InternTheme(this.icon, this.grad1, this.grad2);
 }
 
-_InternTheme _resolveInternTheme(String title, String company) {
+InternTheme resolveInternTheme(String title, String company) {
   final t = title.toLowerCase();
   final c = company.toLowerCase();
   if (t.contains('software engineer') || t.contains('sde'))
-    return const _InternTheme(Icons.code, Color(0xFF1D4ED8), Color(0xFF3B82F6));
+    return const InternTheme(Icons.code, Color(0xFF1D4ED8), Color(0xFF3B82F6));
   if (t.contains('frontend') ||
       t.contains('front-end') ||
       t.contains('ui developer'))
-    return const _InternTheme(Icons.web, Color(0xFF0EA5E9), Color(0xFF38BDF8));
+    return const InternTheme(Icons.web, Color(0xFF0EA5E9), Color(0xFF38BDF8));
   if (t.contains('backend') || t.contains('back-end') || t.contains('server'))
-    return const _InternTheme(Icons.dns, Color(0xFF15803D), Color(0xFF22C55E));
+    return const InternTheme(Icons.dns, Color(0xFF15803D), Color(0xFF22C55E));
   if (t.contains('full stack') || t.contains('fullstack'))
-    return const _InternTheme(
+    return const InternTheme(
       Icons.layers,
       Color(0xFF1D4ED8),
       Color(0xFF7C3AED),
     );
   if (t.contains('mobile') || t.contains('android') || t.contains('flutter'))
-    return const _InternTheme(
+    return const InternTheme(
       Icons.phone_android,
       Color(0xFF0284C7),
       Color(0xFF38BDF8),
     );
-  if (t.contains('machine learning') || t.contains(' ml '))
-    return const _InternTheme(
+  if (t.contains('machine learning') || t.contains(' ml'))
+    return const InternTheme(
       Icons.psychology,
       Color(0xFF6366F1),
       Color(0xFF8B5CF6),
     );
   if (t.contains('data science') || t.contains('data analyst'))
-    return const _InternTheme(
+    return const InternTheme(
       Icons.analytics,
       Color(0xFF7C3AED),
       Color(0xFF6366F1),
     );
   if (t.contains('artificial intelligence') ||
-      t.contains(' ai') ||
+      t.contains(' ai ') ||
       t.contains('ai '))
-    return const _InternTheme(
+    return const InternTheme(
       Icons.smart_toy,
       Color(0xFF4F46E5),
       Color(0xFF6366F1),
@@ -122,19 +121,15 @@ _InternTheme _resolveInternTheme(String title, String company) {
       t.contains('aws') ||
       t.contains('azure') ||
       t.contains('gcp'))
-    return const _InternTheme(
-      Icons.cloud,
-      Color(0xFF0369A1),
-      Color(0xFF0EA5E9),
-    );
+    return const InternTheme(Icons.cloud, Color(0xFF0369A1), Color(0xFF0EA5E9));
   if (t.contains('devops') || t.contains('sre'))
-    return const _InternTheme(
+    return const InternTheme(
       Icons.sync_alt,
       Color(0xFF059669),
       Color(0xFF10B981),
     );
   if (t.contains('security') || t.contains('cyber') || t.contains('ethical'))
-    return const _InternTheme(
+    return const InternTheme(
       Icons.shield,
       Color(0xFFB91C1C),
       Color(0xFFDC2626),
@@ -143,55 +138,47 @@ _InternTheme _resolveInternTheme(String title, String company) {
       t.contains('ux') ||
       t.contains('design') ||
       t.contains('figma'))
-    return const _InternTheme(
-      Icons.brush,
-      Color(0xFFEC4899),
-      Color(0xFFF43F5E),
-    );
+    return const InternTheme(Icons.brush, Color(0xFFEC4899), Color(0xFFF43F5E));
   if (t.contains('marketing') || t.contains('growth') || t.contains('seo'))
-    return const _InternTheme(
+    return const InternTheme(
       Icons.trending_up,
       Color(0xFFD97706),
       Color(0xFFF59E0B),
     );
   if (t.contains('testing') || t.contains('qa') || t.contains('quality'))
-    return const _InternTheme(
+    return const InternTheme(
       Icons.bug_report,
       Color(0xFFB45309),
       Color(0xFFD97706),
     );
   if (c.contains('google'))
-    return const _InternTheme(
+    return const InternTheme(
       Icons.search,
       Color(0xFF1D4ED8),
       Color(0xFF0EA5E9),
     );
   if (c.contains('microsoft'))
-    return const _InternTheme(
+    return const InternTheme(
       Icons.window,
       Color(0xFF1D4ED8),
       Color(0xFF3B82F6),
     );
   if (c.contains('amazon') || c.contains('aws'))
-    return const _InternTheme(
-      Icons.cloud,
-      Color(0xFFD97706),
-      Color(0xFFF59E0B),
-    );
-  return const _InternTheme(
+    return const InternTheme(Icons.cloud, Color(0xFFD97706), Color(0xFFF59E0B));
+  return const InternTheme(
     Icons.work_outline,
     Color(0xFF1D4ED8),
     Color(0xFF6366F1),
   );
 }
 
-// ─────────────────────────────────────────────
-//  ICON TILE — already uses size param
-// ─────────────────────────────────────────────
-class _InternIconTile extends StatelessWidget {
+// ═══════════════════════════════════════════════════════
+//  ICON TILE
+// ═══════════════════════════════════════════════════════
+class InternIconTile extends StatelessWidget {
   final String title, company;
   final double size;
-  const _InternIconTile({
+  const InternIconTile({
     required this.title,
     required this.company,
     this.size = 50,
@@ -199,7 +186,7 @@ class _InternIconTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = _resolveInternTheme(title, company);
+    final theme = resolveInternTheme(title, company);
     return Container(
       width: size,
       height: size,
@@ -223,9 +210,9 @@ class _InternIconTile extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════
 //  SCREEN
-// ─────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════
 class InternshipsScreen extends StatefulWidget {
   const InternshipsScreen({super.key});
   @override
@@ -234,18 +221,18 @@ class InternshipsScreen extends StatefulWidget {
 
 class _InternshipsScreenState extends State<InternshipsScreen>
     with TickerProviderStateMixin {
-  List<Internship> _internships = [];
-  final Set<int> _saved = {};
-  final Set<int> _applied = {};
-  final Map<int, AnimationController> _cardAnims = {};
-  String _tab = 'All';
-  String _search = '';
-  late AnimationController _headerAnim;
+  List<Internship> internships = [];
+  final Set<int> saved = {};
+  final Set<int> applied = {};
+  final Map<int, AnimationController> cardAnims = {};
+  String tab = 'All';
+  String search = '';
+  late AnimationController headerAnim;
 
   @override
   void initState() {
     super.initState();
-    _headerAnim = AnimationController(
+    headerAnim = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 600),
     )..forward();
@@ -253,35 +240,42 @@ class _InternshipsScreenState extends State<InternshipsScreen>
     _fetchInternships();
   }
 
+  // ✅ FIX: clear() before addAll — removes withdrawn applications
   Future<void> _loadAppliedInternships() async {
     final appsData = await ApplicationsService.getApplications();
     if (appsData != null && appsData['success'] == true) {
       final dataList = appsData['data'] as List;
-      setState(() {
-        _applied.addAll(
-          dataList
-              .where((app) => app['internship_id'] != null)
-              .map<int>((app) => app['internship_id'] as int),
-        );
-      });
+      if (mounted) {
+        setState(() {
+          applied.clear();
+          applied.addAll(
+            dataList
+                .where((app) => app['internship_id'] != null)
+                .map<int>((app) => app['internship_id'] as int),
+          );
+        });
+      }
     }
   }
 
   Future<void> _handleApply(int internshipId, String company) async {
-    if (_applied.contains(internshipId)) return;
+    if (applied.contains(internshipId)) return;
     HapticFeedback.lightImpact();
     final result = await ApplicationsService.apply(internshipId: internshipId);
-    if (result == "Applied successfully") {
-      setState(() => _applied.add(internshipId));
+    if (result == 'Applied successfully') {
+      if (mounted) setState(() => applied.add(internshipId));
       _showAppliedSnack(company);
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result), backgroundColor: kWarning),
-      );
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(result), backgroundColor: kWarning),
+        );
     }
   }
 
+  // ✅ FIX: always clears internships first so list visually reloads
   Future<void> _fetchInternships() async {
+    if (mounted) setState(() => internships = []);
     try {
       final response = await http.get(
         Uri.parse('https://studenthub-backend-woad.vercel.app/api/internships'),
@@ -290,59 +284,63 @@ class _InternshipsScreenState extends State<InternshipsScreen>
         final Map<String, dynamic> jsonData = json.decode(response.body);
         if (jsonData['success'] == true) {
           final List<dynamic> dataList = jsonData['data'];
-          setState(() {
-            _internships = dataList.map((e) => Internship.fromJson(e)).toList();
-            for (int i = 0; i < _internships.length; i++) {
-              final ctrl = AnimationController(
-                vsync: this,
-                duration: const Duration(milliseconds: 460),
-              );
-              _cardAnims[_internships[i].id] = ctrl;
-              Future.delayed(Duration(milliseconds: 180 + i * 80), () {
-                if (mounted) ctrl.forward();
-              });
-            }
-          });
+
+          for (final c in cardAnims.values) c.dispose();
+          cardAnims.clear();
+
+          final newList = dataList.map((e) => Internship.fromJson(e)).toList();
+          for (int i = 0; i < newList.length; i++) {
+            final ctrl = AnimationController(
+              vsync: this,
+              duration: const Duration(milliseconds: 460),
+            );
+            cardAnims[newList[i].id] = ctrl;
+            Future.delayed(Duration(milliseconds: 60 + i * 60), () {
+              if (mounted) ctrl.forward();
+            });
+          }
+          if (mounted) setState(() => internships = newList);
         } else {
-          throw Exception('API returned success=false');
+          throw Exception('API returned success:false');
         }
       } else {
         throw Exception('Failed to load internships: ${response.statusCode}');
       }
     } catch (e) {
       debugPrint('Error fetching internships: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Icon(Icons.wifi_off, color: Colors.white, size: 16),
-              const SizedBox(width: 8),
-              Expanded(child: Text('Failed to load internships: $e')),
-            ],
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.wifi_off, color: Colors.white, size: 16),
+                const SizedBox(width: 8),
+                Expanded(child: Text('Failed to load internships: $e')),
+              ],
+            ),
+            backgroundColor: const Color(0xFFDC2626),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            margin: const EdgeInsets.all(16),
           ),
-          backgroundColor: const Color(0xFFDC2626),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          margin: const EdgeInsets.all(16),
-        ),
-      );
+        );
     }
   }
 
-  List<Internship> get _filtered {
-    var list = _tab == 'All'
-        ? _internships
-        : _internships.where((i) => i.type == _tab).toList();
-    if (_search.isNotEmpty) {
+  List<Internship> get filtered {
+    var list = tab == 'All'
+        ? internships
+        : internships.where((i) => i.type == tab).toList();
+    if (search.isNotEmpty) {
       list = list
           .where(
             (i) =>
-                i.title.toLowerCase().contains(_search.toLowerCase()) ||
-                i.company.toLowerCase().contains(_search.toLowerCase()) ||
+                i.title.toLowerCase().contains(search.toLowerCase()) ||
+                i.company.toLowerCase().contains(search.toLowerCase()) ||
                 i.tags.any(
-                  (t) => t.toLowerCase().contains(_search.toLowerCase()),
+                  (t) => t.toLowerCase().contains(search.toLowerCase()),
                 ),
           )
           .toList();
@@ -352,8 +350,8 @@ class _InternshipsScreenState extends State<InternshipsScreen>
 
   @override
   void dispose() {
-    _headerAnim.dispose();
-    for (final c in _cardAnims.values) c.dispose();
+    headerAnim.dispose();
+    for (final c in cardAnims.values) c.dispose();
     super.dispose();
   }
 
@@ -362,9 +360,8 @@ class _InternshipsScreenState extends State<InternshipsScreen>
   // ─────────────────────────────────────────────
   void _showDetailSheet(Internship intern) {
     final sw = MediaQuery.of(context).size.width;
-    final theme = _resolveInternTheme(intern.title, intern.company);
+    final theme = resolveInternTheme(intern.title, intern.company);
     final isPaid = intern.type == 'Paid';
-
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -382,7 +379,6 @@ class _InternshipsScreenState extends State<InternshipsScreen>
             controller: scrollCtrl,
             padding: EdgeInsets.fromLTRB(sw * 0.05, 0, sw * 0.05, sw * 0.08),
             children: [
-              // Drag handle
               Center(
                 child: Container(
                   margin: EdgeInsets.symmetric(vertical: sw * 0.030),
@@ -394,12 +390,10 @@ class _InternshipsScreenState extends State<InternshipsScreen>
                   ),
                 ),
               ),
-
-              // Title row
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _InternIconTile(
+                  InternIconTile(
                     title: intern.title,
                     company: intern.company,
                     size: sw * 0.14,
@@ -472,8 +466,6 @@ class _InternshipsScreenState extends State<InternshipsScreen>
                 ],
               ),
               SizedBox(height: sw * 0.05),
-
-              // Stat box
               Container(
                 padding: EdgeInsets.all(sw * 0.040),
                 decoration: BoxDecoration(
@@ -482,8 +474,6 @@ class _InternshipsScreenState extends State<InternshipsScreen>
                       theme.grad1.withOpacity(0.08),
                       theme.grad2.withOpacity(0.04),
                     ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
                   ),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
@@ -508,8 +498,6 @@ class _InternshipsScreenState extends State<InternshipsScreen>
                 ),
               ),
               SizedBox(height: sw * 0.05),
-
-              // Details section
               Text(
                 'Internship Details',
                 style: TextStyle(
@@ -549,17 +537,15 @@ class _InternshipsScreenState extends State<InternshipsScreen>
                       _detailRow(
                         Icons.wifi,
                         'Mode',
-                        'Remote — work from anywhere',
+                        'Remote – work from anywhere',
                         sw,
                       ),
                     ],
                   ],
                 ),
               ),
-              SizedBox(height: sw * 0.05),
-
-              // Skills
               if (intern.tags.isNotEmpty) ...[
+                SizedBox(height: sw * 0.05),
                 Text(
                   'Skills Required',
                   style: TextStyle(
@@ -603,10 +589,8 @@ class _InternshipsScreenState extends State<InternshipsScreen>
                       )
                       .toList(),
                 ),
-                SizedBox(height: sw * 0.05),
               ],
-
-              // About the role
+              SizedBox(height: sw * 0.05),
               Text(
                 'About the Role',
                 style: TextStyle(
@@ -634,8 +618,6 @@ class _InternshipsScreenState extends State<InternshipsScreen>
                 ),
               ),
               SizedBox(height: sw * 0.05),
-
-              // About the company
               Text(
                 'About the Company',
                 style: TextStyle(
@@ -656,7 +638,7 @@ class _InternshipsScreenState extends State<InternshipsScreen>
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _InternIconTile(
+                    InternIconTile(
                       title: intern.title,
                       company: intern.company,
                       size: sw * 0.10,
@@ -678,7 +660,7 @@ class _InternshipsScreenState extends State<InternshipsScreen>
                           Text(
                             'This internship is offered by ${intern.company}. '
                             'Location: ${intern.location}. '
-                            '${intern.remote ? "This is a fully remote opportunity." : ""}',
+                            '${intern.remote ? 'This is a fully remote opportunity.' : ''}',
                             style: TextStyle(
                               fontSize: sw * 0.030,
                               color: kMuted,
@@ -692,9 +674,7 @@ class _InternshipsScreenState extends State<InternshipsScreen>
                 ),
               ),
               SizedBox(height: sw * 0.06),
-
-              // Apply / Already Applied CTA
-              _applied.contains(intern.id)
+              applied.contains(intern.id)
                   ? Container(
                       width: double.infinity,
                       padding: EdgeInsets.symmetric(vertical: sw * 0.035),
@@ -778,84 +758,82 @@ class _InternshipsScreenState extends State<InternshipsScreen>
     );
   }
 
-  // ── Reusable sheet helpers ──────────────────
-
+  // ─────────────────────────────────────────────
+  //  SHEET HELPERS
+  // ─────────────────────────────────────────────
   Widget _statItem(
     IconData icon,
     String value,
     String label,
     double sw, {
     Color iconColor = kPrimary,
-  }) {
-    return Expanded(
-      child: Column(
-        children: [
-          Icon(icon, size: sw * 0.040, color: iconColor),
-          SizedBox(height: sw * 0.012),
-          Text(
-            value,
-            textAlign: TextAlign.center,
-            overflow: TextOverflow.ellipsis,
-            maxLines: 1,
-            style: TextStyle(
-              fontSize: sw * 0.030,
-              fontWeight: FontWeight.w800,
-              color: kInk,
-            ),
+  }) => Expanded(
+    child: Column(
+      children: [
+        Icon(icon, size: sw * 0.040, color: iconColor),
+        SizedBox(height: sw * 0.012),
+        Text(
+          value,
+          textAlign: TextAlign.center,
+          overflow: TextOverflow.ellipsis,
+          maxLines: 1,
+          style: TextStyle(
+            fontSize: sw * 0.030,
+            fontWeight: FontWeight.w800,
+            color: kInk,
           ),
-          Text(
-            label,
-            style: TextStyle(fontSize: sw * 0.025, color: kMuted),
-          ),
-        ],
-      ),
-    );
-  }
+        ),
+        Text(
+          label,
+          style: TextStyle(fontSize: sw * 0.025, color: kMuted),
+        ),
+      ],
+    ),
+  );
 
   Widget _vDivider() => Container(width: 1, height: 36, color: kBorder);
 
-  Widget _detailRow(IconData icon, String label, String value, double sw) {
-    return Padding(
-      padding: EdgeInsets.symmetric(
-        horizontal: sw * 0.035,
-        vertical: sw * 0.028,
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: sw * 0.070,
-            height: sw * 0.070,
-            decoration: BoxDecoration(
-              color: kSelectedBg,
-              borderRadius: BorderRadius.circular(8),
+  Widget _detailRow(IconData icon, String label, String value, double sw) =>
+      Padding(
+        padding: EdgeInsets.symmetric(
+          horizontal: sw * 0.035,
+          vertical: sw * 0.028,
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: sw * 0.070,
+              height: sw * 0.070,
+              decoration: BoxDecoration(
+                color: kSelectedBg,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, size: sw * 0.035, color: kPrimary),
             ),
-            child: Icon(icon, size: sw * 0.035, color: kPrimary),
-          ),
-          SizedBox(width: sw * 0.025),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: sw * 0.030,
-              color: kMuted,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const Spacer(),
-          Flexible(
-            child: Text(
-              value,
-              textAlign: TextAlign.right,
+            SizedBox(width: sw * 0.025),
+            Text(
+              label,
               style: TextStyle(
-                fontSize: sw * 0.033,
-                fontWeight: FontWeight.w800,
-                color: kInk,
+                fontSize: sw * 0.030,
+                color: kMuted,
+                fontWeight: FontWeight.w600,
               ),
             ),
-          ),
-        ],
-      ),
-    );
-  }
+            const Spacer(),
+            Flexible(
+              child: Text(
+                value,
+                textAlign: TextAlign.right,
+                style: TextStyle(
+                  fontSize: sw * 0.033,
+                  fontWeight: FontWeight.w800,
+                  color: kInk,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
 
   Widget _dividerLine() => Container(
     height: 1,
@@ -868,8 +846,7 @@ class _InternshipsScreenState extends State<InternshipsScreen>
   // ─────────────────────────────────────────────
   void _showApplyDialog(Internship intern) {
     final sw = MediaQuery.of(context).size.width;
-    final theme = _resolveInternTheme(intern.title, intern.company);
-
+    final theme = resolveInternTheme(intern.title, intern.company);
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -943,7 +920,7 @@ class _InternshipsScreenState extends State<InternshipsScreen>
                 _dialogRow(
                   Icons.wifi,
                   'Mode',
-                  'Remote — work from anywhere',
+                  'Remote – work from anywhere',
                   sw,
                 ),
               SizedBox(height: sw * 0.035),
@@ -1047,44 +1024,43 @@ class _InternshipsScreenState extends State<InternshipsScreen>
     );
   }
 
-  Widget _dialogRow(IconData icon, String label, String value, double sw) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: sw * 0.025),
-      child: Row(
-        children: [
-          Container(
-            width: sw * 0.075,
-            height: sw * 0.075,
-            decoration: BoxDecoration(
-              color: kSelectedBg,
-              borderRadius: BorderRadius.circular(8),
+  Widget _dialogRow(IconData icon, String label, String value, double sw) =>
+      Padding(
+        padding: EdgeInsets.only(bottom: sw * 0.025),
+        child: Row(
+          children: [
+            Container(
+              width: sw * 0.075,
+              height: sw * 0.075,
+              decoration: BoxDecoration(
+                color: kSelectedBg,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, color: kPrimary, size: sw * 0.038),
             ),
-            child: Icon(icon, color: kPrimary, size: sw * 0.038),
-          ),
-          SizedBox(width: sw * 0.025),
-          Text(
-            '$label  ',
-            style: TextStyle(
-              fontSize: sw * 0.030,
-              color: kMuted,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              overflow: TextOverflow.ellipsis,
+            SizedBox(width: sw * 0.025),
+            Text(
+              '$label  ',
               style: TextStyle(
                 fontSize: sw * 0.030,
-                fontWeight: FontWeight.w800,
-                color: kInk,
+                color: kMuted,
+                fontWeight: FontWeight.w600,
               ),
             ),
-          ),
-        ],
-      ),
-    );
-  }
+            Expanded(
+              child: Text(
+                value,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: sw * 0.030,
+                  fontWeight: FontWeight.w800,
+                  color: kInk,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
 
   void _showAppliedSnack(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -1111,18 +1087,18 @@ class _InternshipsScreenState extends State<InternshipsScreen>
   @override
   Widget build(BuildContext context) {
     final sw = MediaQuery.of(context).size.width;
-    final paidCount = _internships.where((i) => i.type == 'Paid').length;
-    final unpaidCount = _internships.where((i) => i.type == 'Unpaid').length;
+    final paidCount = internships.where((i) => i.type == 'Paid').length;
+    final unpaidCount = internships.where((i) => i.type == 'Unpaid').length;
 
     return Scaffold(
       backgroundColor: kBgPage,
       body: Column(
         children: [
-          // ── HEADER ───────────────────────────
+          // ── HEADER ──
           AnimatedBuilder(
-            animation: _headerAnim,
+            animation: headerAnim,
             builder: (_, child) =>
-                Opacity(opacity: _headerAnim.value, child: child),
+                Opacity(opacity: headerAnim.value, child: child),
             child: Container(
               color: kInk,
               child: SafeArea(
@@ -1179,7 +1155,7 @@ class _InternshipsScreenState extends State<InternshipsScreen>
                               ],
                             ),
                           ),
-                          if (_saved.isNotEmpty)
+                          if (saved.isNotEmpty)
                             AnimatedContainer(
                               duration: const Duration(milliseconds: 300),
                               padding: EdgeInsets.symmetric(
@@ -1200,7 +1176,7 @@ class _InternshipsScreenState extends State<InternshipsScreen>
                                   ),
                                   SizedBox(width: sw * 0.010),
                                   Text(
-                                    '${_saved.length} Saved',
+                                    '${saved.length} Saved',
                                     style: TextStyle(
                                       fontSize: sw * 0.030,
                                       fontWeight: FontWeight.w700,
@@ -1219,7 +1195,7 @@ class _InternshipsScreenState extends State<InternshipsScreen>
                         children: [
                           _statPill(
                             Icons.work_outline,
-                            '${_internships.length}',
+                            '${internships.length}',
                             'Total',
                             sw,
                           ),
@@ -1237,9 +1213,9 @@ class _InternshipsScreenState extends State<InternshipsScreen>
                           ),
                           _statPill(
                             Icons.trending_up,
-                            _internships.isEmpty
-                                ? '₹0'
-                                : '₹${_internships.map((e) => int.tryParse(e.stipend.replaceAll('₹', '')) ?? 0).reduce((a, b) => a > b ? a : b)}',
+                            internships.isEmpty
+                                ? '0'
+                                : '${internships.map((e) => int.tryParse(e.stipend.replaceAll(',', '')) ?? 0).reduce((a, b) => a > b ? a : b)}',
                             'Max',
                             sw,
                           ),
@@ -1252,19 +1228,19 @@ class _InternshipsScreenState extends State<InternshipsScreen>
             ),
           ),
 
-          // ── SEARCH ───────────────────────────
+          // ── SEARCH ──
           Container(
             color: kCardBg,
             padding: EdgeInsets.fromLTRB(sw * 0.04, sw * 0.030, sw * 0.04, 0),
             child: TextField(
-              onChanged: (v) => setState(() => _search = v),
+              onChanged: (v) => setState(() => search = v),
               style: TextStyle(
                 fontSize: sw * 0.035,
                 fontWeight: FontWeight.w600,
                 color: kInk,
               ),
               decoration: InputDecoration(
-                hintText: 'Search by role, company or skill…',
+                hintText: 'Search by role, company or skill',
                 hintStyle: TextStyle(fontSize: sw * 0.033, color: kHint),
                 prefixIcon: Icon(Icons.search, color: kMuted, size: sw * 0.050),
                 filled: true,
@@ -1289,7 +1265,7 @@ class _InternshipsScreenState extends State<InternshipsScreen>
             ),
           ),
 
-          // ── TAB SWITCHER ─────────────────────
+          // ── TAB SWITCHER ──
           Container(
             color: kCardBg,
             padding: EdgeInsets.fromLTRB(
@@ -1310,11 +1286,11 @@ class _InternshipsScreenState extends State<InternshipsScreen>
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: kTabs.map((t) {
-                      final active = _tab == t;
+                      final active = tab == t;
                       return GestureDetector(
                         onTap: () {
                           HapticFeedback.selectionClick();
-                          setState(() => _tab = t);
+                          setState(() => tab = t);
                         },
                         child: AnimatedContainer(
                           duration: const Duration(milliseconds: 240),
@@ -1351,7 +1327,7 @@ class _InternshipsScreenState extends State<InternshipsScreen>
                     border: Border.all(color: kBorder),
                   ),
                   child: Text(
-                    '${_filtered.length} results',
+                    '${filtered.length} results',
                     style: TextStyle(
                       fontSize: sw * 0.030,
                       fontWeight: FontWeight.w700,
@@ -1363,151 +1339,167 @@ class _InternshipsScreenState extends State<InternshipsScreen>
             ),
           ),
 
-          // ── LIST ─────────────────────────────
+          // ── LIST ──
           Expanded(
-            child: _filtered.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
+            child: RefreshIndicator(
+              color: kPrimary,
+              onRefresh: () async {
+                await _fetchInternships();
+                await _loadAppliedInternships();
+              },
+              child: filtered.isEmpty
+                  ? ListView(
+                      physics: const AlwaysScrollableScrollPhysics(),
                       children: [
-                        Container(
-                          width: sw * 0.18,
-                          height: sw * 0.18,
-                          decoration: const BoxDecoration(
-                            color: kSelectedBg,
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            Icons.search_off,
-                            color: kPrimary,
-                            size: sw * 0.08,
-                          ),
+                        SizedBox(
+                          height: MediaQuery.of(context).size.height * 0.20,
                         ),
-                        SizedBox(height: sw * 0.04),
-                        Text(
-                          'No internships found',
-                          style: TextStyle(
-                            fontSize: sw * 0.038,
-                            fontWeight: FontWeight.w700,
-                            color: kSlate,
-                          ),
-                        ),
-                        SizedBox(height: sw * 0.015),
-                        Text(
-                          'Try a different filter or keyword',
-                          style: TextStyle(fontSize: sw * 0.030, color: kMuted),
-                        ),
-                        SizedBox(height: sw * 0.04),
-                        GestureDetector(
-                          onTap: () => setState(() {
-                            _tab = 'All';
-                            _search = '';
-                          }),
-                          child: Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: sw * 0.05,
-                              vertical: sw * 0.025,
-                            ),
-                            decoration: BoxDecoration(
-                              color: kPrimary,
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Text(
-                              'Clear filters',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w700,
-                                fontSize: sw * 0.033,
+                        Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                width: sw * 0.18,
+                                height: sw * 0.18,
+                                decoration: const BoxDecoration(
+                                  color: kSelectedBg,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  Icons.search_off,
+                                  color: kPrimary,
+                                  size: sw * 0.08,
+                                ),
                               ),
-                            ),
+                              SizedBox(height: sw * 0.04),
+                              Text(
+                                'No internships found',
+                                style: TextStyle(
+                                  fontSize: sw * 0.038,
+                                  fontWeight: FontWeight.w700,
+                                  color: kSlate,
+                                ),
+                              ),
+                              SizedBox(height: sw * 0.015),
+                              Text(
+                                'Pull down to refresh or clear filters',
+                                style: TextStyle(
+                                  fontSize: sw * 0.030,
+                                  color: kMuted,
+                                ),
+                              ),
+                              SizedBox(height: sw * 0.04),
+                              GestureDetector(
+                                onTap: () => setState(() {
+                                  tab = 'All';
+                                  search = '';
+                                }),
+                                child: Container(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: sw * 0.05,
+                                    vertical: sw * 0.025,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: kPrimary,
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: Text(
+                                    'Clear filters',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: sw * 0.033,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],
+                    )
+                  : ListView.builder(
+                      padding: EdgeInsets.fromLTRB(
+                        sw * 0.04,
+                        sw * 0.035,
+                        sw * 0.04,
+                        sw * 0.06,
+                      ),
+                      itemCount: filtered.length,
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      itemBuilder: (_, i) => InternshipCard(
+                        internship: filtered[i],
+                        sw: sw,
+                        isSaved: saved.contains(filtered[i].id),
+                        isApplied: applied.contains(filtered[i].id),
+                        ctrl: cardAnims[filtered[i].id],
+                        onTap: () => _showDetailSheet(filtered[i]),
+                        onSave: () {
+                          HapticFeedback.selectionClick();
+                          setState(
+                            () => saved.contains(filtered[i].id)
+                                ? saved.remove(filtered[i].id)
+                                : saved.add(filtered[i].id),
+                          );
+                        },
+                        onApply: () =>
+                            _handleApply(filtered[i].id, filtered[i].company),
+                      ),
                     ),
-                  )
-                : ListView.builder(
-                    padding: EdgeInsets.fromLTRB(
-                      sw * 0.04,
-                      sw * 0.035,
-                      sw * 0.04,
-                      sw * 0.06,
-                    ),
-                    itemCount: _filtered.length,
-                    physics: const BouncingScrollPhysics(),
-                    itemBuilder: (_, i) => _InternshipCard(
-                      internship: _filtered[i],
-                      sw: sw,
-                      isSaved: _saved.contains(_filtered[i].id),
-                      isApplied: _applied.contains(_filtered[i].id),
-                      ctrl: _cardAnims[_filtered[i].id],
-                      onTap: () => _showDetailSheet(_filtered[i]),
-                      onSave: () {
-                        HapticFeedback.selectionClick();
-                        setState(() {
-                          _saved.contains(_filtered[i].id)
-                              ? _saved.remove(_filtered[i].id)
-                              : _saved.add(_filtered[i].id);
-                        });
-                      },
-                      onApply: () =>
-                          _handleApply(_filtered[i].id, _filtered[i].company),
-                    ),
-                  ),
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _statPill(IconData icon, String num, String label, double sw) {
-    return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: sw * 0.025,
-        vertical: sw * 0.013,
-      ),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.10),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: sw * 0.030, color: kAccent),
-          SizedBox(width: sw * 0.010),
-          Text(
-            num,
-            style: TextStyle(
-              fontSize: sw * 0.030,
-              fontWeight: FontWeight.w800,
-              color: kAccent,
+  Widget _statPill(IconData icon, String num, String label, double sw) =>
+      Container(
+        padding: EdgeInsets.symmetric(
+          horizontal: sw * 0.025,
+          vertical: sw * 0.013,
+        ),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.10),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: sw * 0.030, color: kAccent),
+            SizedBox(width: sw * 0.010),
+            Text(
+              num,
+              style: TextStyle(
+                fontSize: sw * 0.030,
+                fontWeight: FontWeight.w800,
+                color: kAccent,
+              ),
             ),
-          ),
-          SizedBox(width: sw * 0.008),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: sw * 0.028,
-              fontWeight: FontWeight.w600,
-              color: Colors.white.withOpacity(0.55),
+            SizedBox(width: sw * 0.008),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: sw * 0.028,
+                fontWeight: FontWeight.w600,
+                color: Colors.white.withOpacity(0.55),
+              ),
             ),
-          ),
-        ],
-      ),
-    );
-  }
+          ],
+        ),
+      );
 }
 
-// ─────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════
 //  INTERNSHIP CARD
-// ─────────────────────────────────────────────
-class _InternshipCard extends StatefulWidget {
+// ═══════════════════════════════════════════════════════
+class InternshipCard extends StatefulWidget {
   final Internship internship;
   final double sw;
   final bool isSaved, isApplied;
   final AnimationController? ctrl;
   final VoidCallback onSave, onApply, onTap;
-
-  const _InternshipCard({
+  const InternshipCard({
     required this.internship,
     required this.sw,
     required this.isSaved,
@@ -1517,33 +1509,32 @@ class _InternshipCard extends StatefulWidget {
     required this.onTap,
     this.ctrl,
   });
-
   @override
-  State<_InternshipCard> createState() => _InternshipCardState();
+  State<InternshipCard> createState() => _InternshipCardState();
 }
 
-class _InternshipCardState extends State<_InternshipCard>
+class _InternshipCardState extends State<InternshipCard>
     with SingleTickerProviderStateMixin {
-  bool _btnPressed = false;
-  late AnimationController _btnCtrl;
-  late Animation<double> _btnScale;
+  bool btnPressed = false;
+  late AnimationController btnCtrl;
+  late Animation<double> btnScale;
 
   @override
   void initState() {
     super.initState();
-    _btnCtrl = AnimationController(
+    btnCtrl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 140),
     );
-    _btnScale = Tween<double>(
+    btnScale = Tween<double>(
       begin: 1.0,
       end: 0.95,
-    ).animate(CurvedAnimation(parent: _btnCtrl, curve: Curves.easeInOut));
+    ).animate(CurvedAnimation(parent: btnCtrl, curve: Curves.easeInOut));
   }
 
   @override
   void dispose() {
-    _btnCtrl.dispose();
+    btnCtrl.dispose();
     super.dispose();
   }
 
@@ -1552,7 +1543,7 @@ class _InternshipCardState extends State<_InternshipCard>
     final intern = widget.internship;
     final sw = widget.sw;
     final ctrl = widget.ctrl;
-    final theme = _resolveInternTheme(intern.title, intern.company);
+    final theme = resolveInternTheme(intern.title, intern.company);
     final isPaid = intern.type == 'Paid';
 
     final fade = ctrl != null
@@ -1621,11 +1612,10 @@ class _InternshipCardState extends State<_InternshipCard>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Title row
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _InternIconTile(
+                          InternIconTile(
                             title: intern.title,
                             company: intern.company,
                             size: sw * 0.125,
@@ -1696,7 +1686,6 @@ class _InternshipCardState extends State<_InternshipCard>
                               ],
                             ),
                           ),
-                          // Bookmark
                           GestureDetector(
                             onTap: widget.onSave,
                             behavior: HitTestBehavior.opaque,
@@ -1723,8 +1712,6 @@ class _InternshipCardState extends State<_InternshipCard>
                         ],
                       ),
                       SizedBox(height: sw * 0.030),
-
-                      // Description preview
                       Text(
                         intern.desc,
                         maxLines: 2,
@@ -1755,8 +1742,6 @@ class _InternshipCardState extends State<_InternshipCard>
                         ],
                       ),
                       SizedBox(height: sw * 0.030),
-
-                      // Chips
                       Wrap(
                         spacing: sw * 0.018,
                         runSpacing: sw * 0.015,
@@ -1826,15 +1811,11 @@ class _InternshipCardState extends State<_InternshipCard>
                             ),
                         ],
                       ),
-
-                      // Divider
                       Container(
                         margin: EdgeInsets.symmetric(vertical: sw * 0.030),
                         height: 1,
                         color: const Color(0xFFF1F5F9),
                       ),
-
-                      // Bottom row: badge + apply button
                       Row(
                         children: [
                           if (widget.isApplied)
@@ -1876,23 +1857,23 @@ class _InternshipCardState extends State<_InternshipCard>
                             onTapDown: widget.isApplied
                                 ? null
                                 : (_) {
-                                    _btnCtrl.forward();
-                                    setState(() => _btnPressed = true);
+                                    btnCtrl.forward();
+                                    setState(() => btnPressed = true);
                                   },
                             onTapUp: widget.isApplied
                                 ? null
                                 : (_) {
-                                    _btnCtrl.reverse();
-                                    setState(() => _btnPressed = false);
+                                    btnCtrl.reverse();
+                                    setState(() => btnPressed = false);
                                     widget.onApply();
                                   },
                             onTapCancel: () {
-                              _btnCtrl.reverse();
-                              setState(() => _btnPressed = false);
+                              btnCtrl.reverse();
+                              setState(() => btnPressed = false);
                             },
                             behavior: HitTestBehavior.opaque,
                             child: ScaleTransition(
-                              scale: _btnScale,
+                              scale: btnScale,
                               child: AnimatedContainer(
                                 duration: const Duration(milliseconds: 300),
                                 padding: EdgeInsets.symmetric(
@@ -1917,7 +1898,7 @@ class _InternshipCardState extends State<_InternshipCard>
                                           width: 1.5,
                                         )
                                       : null,
-                                  boxShadow: widget.isApplied || _btnPressed
+                                  boxShadow: widget.isApplied || btnPressed
                                       ? null
                                       : [
                                           BoxShadow(
@@ -1930,7 +1911,7 @@ class _InternshipCardState extends State<_InternshipCard>
                                         ],
                                 ),
                                 child: Text(
-                                  widget.isApplied ? 'Applied ✓' : 'Apply Now',
+                                  widget.isApplied ? 'Applied' : 'Apply Now',
                                   style: TextStyle(
                                     color: widget.isApplied
                                         ? kSuccess
@@ -1956,34 +1937,29 @@ class _InternshipCardState extends State<_InternshipCard>
     );
   }
 
-  Widget _chip(IconData icon, String label, double sw) {
-    return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: sw * 0.020,
-        vertical: sw * 0.013,
-      ),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: kBorder),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: sw * 0.030, color: kHint),
-          SizedBox(width: sw * 0.010),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: sw * 0.028,
-              fontWeight: FontWeight.w700,
-              color: kMuted,
-            ),
+  Widget _chip(IconData icon, String label, double sw) => Container(
+    padding: EdgeInsets.symmetric(horizontal: sw * 0.020, vertical: sw * 0.013),
+    decoration: BoxDecoration(
+      color: const Color(0xFFF8FAFC),
+      borderRadius: BorderRadius.circular(8),
+      border: Border.all(color: kBorder),
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: sw * 0.030, color: kHint),
+        SizedBox(width: sw * 0.010),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: sw * 0.028,
+            fontWeight: FontWeight.w700,
+            color: kMuted,
           ),
-        ],
-      ),
-    );
-  }
+        ),
+      ],
+    ),
+  );
 
   Widget _matchBadge(int match, double sw) {
     final color = match >= 90

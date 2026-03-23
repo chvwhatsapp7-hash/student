@@ -1,4 +1,5 @@
 import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -7,107 +8,159 @@ import 'package:go_router/go_router.dart';
 //  DESIGN TOKENS
 // ─────────────────────────────────────────────
 
-const kInk        = Color(0xFF0A0F1E);
-const kPrimary    = Color(0xFF1D4ED8);
-const kAccent     = Color(0xFF38BDF8);
-const kViolet     = Color(0xFF7C3AED);
-const kTeal       = Color(0xFF0D9488);
-const kAmber      = Color(0xFFF59E0B);
-const kRose       = Color(0xFFF43F5E);
-const kCardBg     = Color(0xFFFFFFFF);
-const kBorder     = Color(0xFFE2E8F0);
-const kMuted      = Color(0xFF64748B);
-const kHint       = Color(0xFF94A3B8);
+const kInk = Color(0xFF0A0F1E);
+const kPrimary = Color(0xFF1D4ED8);
+const kAccent = Color(0xFF38BDF8);
+const kViolet = Color(0xFF7C3AED);
+const kTeal = Color(0xFF0D9488);
+const kAmber = Color(0xFFF59E0B);
+const kRose = Color(0xFFF43F5E);
+const kCardBg = Color(0xFFFFFFFF);
+const kBorder = Color(0xFFE2E8F0);
+const kMuted = Color(0xFF64748B);
+const kHint = Color(0xFF94A3B8);
 
 // ─────────────────────────────────────────────
-//  FLOATING ORBS MODEL
+//  MODELS (unchanged)
 // ─────────────────────────────────────────────
 
 class _Orb {
-  final double x;
-  final double y;
-  final double size;
-  final Color  color;
-  final double phase;
-  final double speed;
+  final double x, y, size, phase, speed;
+  final Color color;
   const _Orb({
-    required this.x, required this.y, required this.size,
-    required this.color, required this.phase, required this.speed,
+    required this.x,
+    required this.y,
+    required this.size,
+    required this.color,
+    required this.phase,
+    required this.speed,
   });
 }
 
 const _orbs = [
-  _Orb(x: 0.08, y: 0.10, size: 180, color: Color(0xFF1D4ED8), phase: 0.0,  speed: 0.6),
-  _Orb(x: 0.75, y: 0.06, size: 140, color: Color(0xFF7C3AED), phase: 1.2,  speed: 0.8),
-  _Orb(x: 0.85, y: 0.40, size: 100, color: Color(0xFF0D9488), phase: 2.4,  speed: 0.5),
-  _Orb(x: 0.05, y: 0.55, size: 120, color: Color(0xFF38BDF8), phase: 0.7,  speed: 0.7),
-  _Orb(x: 0.60, y: 0.75, size: 90,  color: Color(0xFFF43F5E), phase: 1.9,  speed: 0.9),
-  _Orb(x: 0.20, y: 0.85, size: 110, color: Color(0xFFF59E0B), phase: 3.1,  speed: 0.6),
+  _Orb(
+    x: 0.08,
+    y: 0.10,
+    size: 180,
+    color: Color(0xFF1D4ED8),
+    phase: 0.0,
+    speed: 0.6,
+  ),
+  _Orb(
+    x: 0.75,
+    y: 0.06,
+    size: 140,
+    color: Color(0xFF7C3AED),
+    phase: 1.2,
+    speed: 0.8,
+  ),
+  _Orb(
+    x: 0.85,
+    y: 0.40,
+    size: 100,
+    color: Color(0xFF0D9488),
+    phase: 2.4,
+    speed: 0.5,
+  ),
+  _Orb(
+    x: 0.05,
+    y: 0.55,
+    size: 120,
+    color: Color(0xFF38BDF8),
+    phase: 0.7,
+    speed: 0.7,
+  ),
+  _Orb(
+    x: 0.60,
+    y: 0.75,
+    size: 90,
+    color: Color(0xFFF43F5E),
+    phase: 1.9,
+    speed: 0.9,
+  ),
+  _Orb(
+    x: 0.20,
+    y: 0.85,
+    size: 110,
+    color: Color(0xFFF59E0B),
+    phase: 3.1,
+    speed: 0.6,
+  ),
 ];
 
-// ─────────────────────────────────────────────
-//  FEATURE CARD MODEL
-// ─────────────────────────────────────────────
-
 class _Feature {
-  final String emoji;
-  final String title;
-  final String desc;
-  final Color  accent;
-  final Color  bg;
+  final String emoji, title, desc;
+  final Color accent, bg;
   const _Feature({
-    required this.emoji, required this.title,
-    required this.desc,  required this.accent, required this.bg,
+    required this.emoji,
+    required this.title,
+    required this.desc,
+    required this.accent,
+    required this.bg,
   });
 }
 
 const _features = [
   _Feature(
-    emoji: '💼', title: 'Jobs & Internships',
-    desc: 'Paid & unpaid internships + full-time roles from 180+ companies across India.',
-    accent: kPrimary, bg: Color(0xFFEFF6FF),
+    emoji: '💼',
+    title: 'Jobs & Internships',
+    desc:
+        'Paid & unpaid internships + full-time roles from 180+ companies across India.',
+    accent: kPrimary,
+    bg: Color(0xFFEFF6FF),
   ),
   _Feature(
-    emoji: '🏢', title: 'Explore Companies',
-    desc: 'View company profiles, live locations, hiring requirements & culture insights.',
-    accent: kTeal, bg: Color(0xFFEFFCF9),
+    emoji: '🏢',
+    title: 'Explore Companies',
+    desc:
+        'View company profiles, live locations, hiring requirements & culture insights.',
+    accent: kTeal,
+    bg: Color(0xFFEFFCF9),
   ),
   _Feature(
-    emoji: '⚡', title: 'Hackathons',
-    desc: 'Compete in top hackathons across India — win prizes, PPOs & recognition.',
-    accent: kAmber, bg: Color(0xFFFFFBEB),
+    emoji: '⚡',
+    title: 'Hackathons',
+    desc:
+        'Compete in top hackathons across India — win prizes, PPOs & recognition.',
+    accent: kAmber,
+    bg: Color(0xFFFFFBEB),
   ),
   _Feature(
-    emoji: '📚', title: 'Specialisation Courses',
-    desc: 'Industry-led courses to skill up for your dream job or internship fast.',
-    accent: kViolet, bg: Color(0xFFF5F3FF),
+    emoji: '📚',
+    title: 'Specialisation Courses',
+    desc:
+        'Industry-led courses to skill up for your dream job or internship fast.',
+    accent: kViolet,
+    bg: Color(0xFFF5F3FF),
   ),
   _Feature(
-    emoji: '🚀', title: 'School Tech Programmes',
-    desc: 'Python, AI, Robotics & more — online/offline summer classes for grades 5-12.',
-    accent: kRose, bg: Color(0xFFFFF1F2),
+    emoji: '🚀',
+    title: 'School Tech Programmes',
+    desc:
+        'Python, AI, Robotics & more — online/offline summer classes for grades 5-12.',
+    accent: kRose,
+    bg: Color(0xFFFFF1F2),
   ),
   _Feature(
-    emoji: '🗺️', title: 'Company Map',
-    desc: 'Discover tech companies near you with live location and hiring status.',
-    accent: kTeal, bg: Color(0xFFEFFCF9),
+    emoji: '🗺️',
+    title: 'Company Map',
+    desc:
+        'Discover tech companies near you with live location and hiring status.',
+    accent: kTeal,
+    bg: Color(0xFFEFFCF9),
   ),
 ];
 
-// ─────────────────────────────────────────────
-//  FLOATING EMOJI PARTICLE MODEL
-// ─────────────────────────────────────────────
-
 class _Particle {
   final String emoji;
-  final double x;
-  final double y;
-  final double size;
-  final double phase;
-  final double amplitude;
+  final double x, y, size, phase, amplitude;
   const _Particle({
-    required this.emoji, required this.x, required this.y,
-    required this.size,  required this.phase, required this.amplitude,
+    required this.emoji,
+    required this.x,
+    required this.y,
+    required this.size,
+    required this.phase,
+    required this.amplitude,
   });
 }
 
@@ -128,121 +181,126 @@ const _particles = [
 
 class LandingScreen extends StatefulWidget {
   const LandingScreen({super.key});
-
   @override
   State<LandingScreen> createState() => _LandingScreenState();
 }
 
 class _LandingScreenState extends State<LandingScreen>
     with TickerProviderStateMixin {
+  late AnimationController _orbCtrl,
+      _particleCtrl,
+      _pulseCtrl,
+      _heroCtrl,
+      _btnCtrl,
+      _cardsCtrl,
+      _statsCtrl,
+      _footerCtrl;
 
-  // ── Animation controllers ──────────────────
-  late AnimationController _orbCtrl;      // infinite orb float
-  late AnimationController _particleCtrl; // infinite particle float
-  late AnimationController _pulseCtrl;    // hero badge pulse
-  late AnimationController _heroCtrl;     // hero text entrance
-  late AnimationController _btnCtrl;      // button scale
-  late AnimationController _cardsCtrl;    // feature cards stagger
-  late AnimationController _statsCtrl;    // stats counter
-  late AnimationController _footerCtrl;   // footer entrance
-
-  // ── Hero animations ────────────────────────
-  late Animation<double> _heroFade;
-  late Animation<Offset>  _heroSlide;
-  late Animation<double>  _badgeFade;
-  late Animation<double>  _pulse;
-
-  // ── Button ─────────────────────────────────
-  late Animation<double>  _btnScale;
-  bool _btnPressed = false;
-
-  // ── Cards stagger ──────────────────────────
+  late Animation<double> _heroFade,
+      _badgeFade,
+      _pulse,
+      _btnScale,
+      _statsFade,
+      _statsSlide,
+      _footerFade;
+  late Animation<Offset> _heroSlide;
   late List<Animation<double>> _cardFades;
-  late List<Animation<Offset>>  _cardSlides;
-
-  // ── Stats ──────────────────────────────────
-  late Animation<double> _statsFade;
-  late Animation<double> _statsSlide;
-
-  // ── Footer ─────────────────────────────────
-  late Animation<double> _footerFade;
+  late List<Animation<Offset>> _cardSlides;
+  bool _btnPressed = false;
 
   @override
   void initState() {
     super.initState();
 
-    // ── Infinite float controllers ─────────────
     _orbCtrl = AnimationController(
-      vsync: this, duration: const Duration(seconds: 7),
+      vsync: this,
+      duration: const Duration(seconds: 7),
     )..repeat();
-
     _particleCtrl = AnimationController(
-      vsync: this, duration: const Duration(seconds: 5),
+      vsync: this,
+      duration: const Duration(seconds: 5),
     )..repeat();
 
-    // ── Badge pulse ────────────────────────────
     _pulseCtrl = AnimationController(
-      vsync: this, duration: const Duration(milliseconds: 1200),
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
     )..repeat(reverse: true);
-    _pulse = Tween<double>(begin: 0.85, end: 1.15).animate(
-      CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOut),
-    );
+    _pulse = Tween<double>(
+      begin: 0.85,
+      end: 1.15,
+    ).animate(CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOut));
 
-    // ── Hero entrance ──────────────────────────
     _heroCtrl = AnimationController(
-      vsync: this, duration: const Duration(milliseconds: 900),
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
     );
-    _heroFade  = CurvedAnimation(parent: _heroCtrl, curve: Curves.easeOut);
+    _heroFade = CurvedAnimation(parent: _heroCtrl, curve: Curves.easeOut);
     _heroSlide = Tween<Offset>(
-      begin: const Offset(0, 0.16), end: Offset.zero,
+      begin: const Offset(0, 0.16),
+      end: Offset.zero,
     ).animate(CurvedAnimation(parent: _heroCtrl, curve: Curves.easeOut));
     _badgeFade = CurvedAnimation(
       parent: _heroCtrl,
       curve: const Interval(0.0, 0.6, curve: Curves.easeOut),
     );
 
-    // ── Button ─────────────────────────────────
-    _btnCtrl  = AnimationController(
-      vsync: this, duration: const Duration(milliseconds: 150),
+    _btnCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 150),
     );
-    _btnScale = Tween<double>(begin: 1.0, end: 0.96).animate(
-      CurvedAnimation(parent: _btnCtrl, curve: Curves.easeInOut),
-    );
+    _btnScale = Tween<double>(
+      begin: 1.0,
+      end: 0.96,
+    ).animate(CurvedAnimation(parent: _btnCtrl, curve: Curves.easeInOut));
 
-    // ── Cards stagger ──────────────────────────
     _cardsCtrl = AnimationController(
-      vsync: this, duration: const Duration(milliseconds: 1200),
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
     );
-    _cardFades  = List.generate(_features.length, (i) =>
-        Tween<double>(begin: 0, end: 1).animate(CurvedAnimation(
+    _cardFades = List.generate(
+      _features.length,
+      (i) => Tween<double>(begin: 0, end: 1).animate(
+        CurvedAnimation(
           parent: _cardsCtrl,
-          curve: Interval(i * 0.12, min(i * 0.12 + 0.4, 1.0),
-              curve: Curves.easeOut),
-        )));
-    _cardSlides = List.generate(_features.length, (i) =>
-        Tween<Offset>(begin: const Offset(0, 0.18), end: Offset.zero)
-            .animate(CurvedAnimation(
-          parent: _cardsCtrl,
-          curve: Interval(i * 0.12, min(i * 0.12 + 0.4, 1.0),
-              curve: Curves.easeOut),
-        )));
+          curve: Interval(
+            i * 0.12,
+            min(i * 0.12 + 0.4, 1.0),
+            curve: Curves.easeOut,
+          ),
+        ),
+      ),
+    );
+    _cardSlides = List.generate(
+      _features.length,
+      (i) =>
+          Tween<Offset>(begin: const Offset(0, 0.18), end: Offset.zero).animate(
+            CurvedAnimation(
+              parent: _cardsCtrl,
+              curve: Interval(
+                i * 0.12,
+                min(i * 0.12 + 0.4, 1.0),
+                curve: Curves.easeOut,
+              ),
+            ),
+          ),
+    );
 
-    // ── Stats ──────────────────────────────────
     _statsCtrl = AnimationController(
-      vsync: this, duration: const Duration(milliseconds: 700),
+      vsync: this,
+      duration: const Duration(milliseconds: 700),
     );
-    _statsFade  = CurvedAnimation(parent: _statsCtrl, curve: Curves.easeOut);
-    _statsSlide = Tween<double>(begin: 30, end: 0).animate(
-      CurvedAnimation(parent: _statsCtrl, curve: Curves.easeOut),
-    );
+    _statsFade = CurvedAnimation(parent: _statsCtrl, curve: Curves.easeOut);
+    _statsSlide = Tween<double>(
+      begin: 30,
+      end: 0,
+    ).animate(CurvedAnimation(parent: _statsCtrl, curve: Curves.easeOut));
 
-    // ── Footer ─────────────────────────────────
     _footerCtrl = AnimationController(
-      vsync: this, duration: const Duration(milliseconds: 600),
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
     );
     _footerFade = CurvedAnimation(parent: _footerCtrl, curve: Curves.easeOut);
 
-    // ── Staggered play ─────────────────────────
     Future.delayed(const Duration(milliseconds: 80), () {
       if (mounted) _heroCtrl.forward();
     });
@@ -270,12 +328,13 @@ class _LandingScreenState extends State<LandingScreen>
     super.dispose();
   }
 
-  // ── build ──────────────────────────────────
+  // ─────────────────────────────────────────────
+  //  BUILD
+  // ─────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.light,
       child: Scaffold(
@@ -285,9 +344,9 @@ class _LandingScreenState extends State<LandingScreen>
           child: Column(
             children: [
               _buildHeroSection(size),
-              _buildFeaturesSection(),
-              _buildStatsSection(),
-              _buildFooter(),
+              _buildFeaturesSection(size),
+              _buildStatsSection(size),
+              _buildFooter(size),
             ],
           ),
         ),
@@ -300,17 +359,16 @@ class _LandingScreenState extends State<LandingScreen>
   // ─────────────────────────────────────────────
 
   Widget _buildHeroSection(Size size) {
+    final sw = size.width;
+    final sh = size.height;
+
     return SizedBox(
-      height: size.height * 0.92,
+      height: sh * 0.92,
       child: Stack(
         children: [
-          // ── Animated colour orbs ──────────────
           ..._orbs.map((orb) => _buildOrb(orb, size)),
-
-          // ── Floating emoji particles ──────────
           ..._particles.map((p) => _buildParticle(p, size)),
 
-          // ── Gradient overlay ──────────────────
           Positioned.fill(
             child: Container(
               decoration: BoxDecoration(
@@ -329,16 +387,11 @@ class _LandingScreenState extends State<LandingScreen>
             ),
           ),
 
-          // ── Top nav bar ───────────────────────
-          Positioned(
-            top: 0, left: 0, right: 0,
-            child: _buildNavBar(),
-          ),
+          Positioned(top: 0, left: 0, right: 0, child: _buildNavBar(sw)),
 
-          // ── Hero content ──────────────────────
           Positioned.fill(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
+              padding: EdgeInsets.symmetric(horizontal: sw * 0.06),
               child: FadeTransition(
                 opacity: _heroFade,
                 child: SlideTransition(
@@ -346,37 +399,33 @@ class _LandingScreenState extends State<LandingScreen>
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const SizedBox(height: 60),
+                      SizedBox(height: sh * 0.07),
 
-                      // ── Animated badge ─────────
                       FadeTransition(
                         opacity: _badgeFade,
-                        child: _buildBadge(),
+                        child: _buildBadge(sw),
                       ),
-                      const SizedBox(height: 28),
+                      SizedBox(height: sh * 0.035),
 
-                      // ── Headline ───────────────
-                      _buildHeadline(),
-                      const SizedBox(height: 20),
+                      _buildHeadline(sw),
+                      SizedBox(height: sh * 0.025),
 
-                      // ── Subtext ────────────────
                       Text(
                         'From internships to AI courses —\nNextStep powers every stage of your journey.',
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          fontSize: 15, height: 1.65,
+                          fontSize: sw * 0.037,
+                          height: 1.65,
                           color: Colors.white.withOpacity(0.62),
                           letterSpacing: 0.1,
                         ),
                       ),
-                      const SizedBox(height: 36),
+                      SizedBox(height: sh * 0.045),
 
-                      // ── Single CTA button ──────
-                      _buildCTAButton(),
-                      const SizedBox(height: 32),
+                      _buildCTAButton(sw),
+                      SizedBox(height: sh * 0.04),
 
-                      // ── Social proof ───────────
-                      _buildSocialProof(),
+                      _buildSocialProof(sw),
                     ],
                   ),
                 ),
@@ -384,21 +433,25 @@ class _LandingScreenState extends State<LandingScreen>
             ),
           ),
 
-          // ── Scroll hint ───────────────────────
           Positioned(
-            bottom: 16, left: 0, right: 0,
+            bottom: sh * 0.018,
+            left: 0,
+            right: 0,
             child: FadeTransition(
               opacity: _heroFade,
               child: Column(
                 children: [
-                  Text('Scroll to explore',
-                      style: TextStyle(
-                        fontSize: 11, fontWeight: FontWeight.w600,
-                        color: Colors.white.withOpacity(0.30),
-                        letterSpacing: 0.5,
-                      )),
-                  const SizedBox(height: 6),
-                  _buildScrollArrow(),
+                  Text(
+                    'Scroll to explore',
+                    style: TextStyle(
+                      fontSize: sw * 0.028,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white.withOpacity(0.30),
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                  SizedBox(height: sh * 0.007),
+                  _buildScrollArrow(sw),
                 ],
               ),
             ),
@@ -408,8 +461,6 @@ class _LandingScreenState extends State<LandingScreen>
     );
   }
 
-  // ── Orb ────────────────────────────────────
-
   Widget _buildOrb(_Orb orb, Size size) {
     return AnimatedBuilder(
       animation: _orbCtrl,
@@ -417,10 +468,11 @@ class _LandingScreenState extends State<LandingScreen>
         final dy = sin(_orbCtrl.value * 2 * pi + orb.phase) * 28 * orb.speed;
         final dx = cos(_orbCtrl.value * 2 * pi * 0.4 + orb.phase) * 14;
         return Positioned(
-          left: size.width  * orb.x + dx - orb.size / 2,
-          top:  size.height * 0.92 * orb.y + dy - orb.size / 2,
+          left: size.width * orb.x + dx - orb.size / 2,
+          top: size.height * 0.92 * orb.y + dy - orb.size / 2,
           child: Container(
-            width: orb.size, height: orb.size,
+            width: orb.size,
+            height: orb.size,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: orb.color.withOpacity(0.18),
@@ -431,20 +483,17 @@ class _LandingScreenState extends State<LandingScreen>
     );
   }
 
-  // ── Floating particle ──────────────────────
-
   Widget _buildParticle(_Particle p, Size size) {
     return AnimatedBuilder(
       animation: _particleCtrl,
       builder: (_, __) {
         final dy = sin(_particleCtrl.value * 2 * pi + p.phase) * p.amplitude;
         return Positioned(
-          left: size.width  * p.x,
-          top:  size.height * 0.92 * p.y + dy,
+          left: size.width * p.x,
+          top: size.height * 0.92 * p.y + dy,
           child: Opacity(
             opacity: 0.50,
-            child: Text(p.emoji,
-                style: TextStyle(fontSize: p.size)),
+            child: Text(p.emoji, style: TextStyle(fontSize: p.size)),
           ),
         );
       },
@@ -453,58 +502,78 @@ class _LandingScreenState extends State<LandingScreen>
 
   // ── Nav bar ────────────────────────────────
 
-  Widget _buildNavBar() {
+  Widget _buildNavBar(double sw) {
     return SafeArea(
       bottom: false,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+        padding: EdgeInsets.symmetric(
+          horizontal: sw * 0.05,
+          vertical: sw * 0.035,
+        ),
         child: Row(
           children: [
             Container(
-              width: 38, height: 38,
+              width: sw * 0.095,
+              height: sw * 0.095,
               decoration: BoxDecoration(
                 color: Colors.white.withOpacity(0.12),
                 borderRadius: BorderRadius.circular(11),
                 border: Border.all(
-                    color: Colors.white.withOpacity(0.15), width: 1),
+                  color: Colors.white.withOpacity(0.15),
+                  width: 1,
+                ),
               ),
-              child: const Center(
-                child: Text('⚡', style: TextStyle(fontSize: 18)),
+              child: Center(
+                child: Text('⚡', style: TextStyle(fontSize: sw * 0.045)),
               ),
             ),
-            const SizedBox(width: 10),
-            const Column(
+            SizedBox(width: sw * 0.025),
+            Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('NextStep',
-                    style: TextStyle(
-                      fontSize: 16, fontWeight: FontWeight.w800,
-                      color: Colors.white, letterSpacing: -0.3,
-                    )),
-                Text('by TechPath',
-                    style: TextStyle(
-                        fontSize: 10, color: kAccent,
-                        fontWeight: FontWeight.w600)),
+                Text(
+                  'NextStep',
+                  style: TextStyle(
+                    fontSize: sw * 0.040,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                    letterSpacing: -0.3,
+                  ),
+                ),
+                Text(
+                  'by TechPath',
+                  style: TextStyle(
+                    fontSize: sw * 0.025,
+                    color: kAccent,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ],
             ),
             const Spacer(),
-            // Sign in — subtle text button only
             GestureDetector(
               onTap: () => context.go('/login'),
               child: Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 14, vertical: 8),
+                padding: EdgeInsets.symmetric(
+                  horizontal: sw * 0.035,
+                  vertical: sw * 0.020,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(0.10),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                      color: Colors.white.withOpacity(0.18), width: 1),
+                    color: Colors.white.withOpacity(0.18),
+                    width: 1,
+                  ),
                 ),
-                child: const Text('Sign In',
-                    style: TextStyle(
-                      fontSize: 13, fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                    )),
+                child: Text(
+                  'Sign In',
+                  style: TextStyle(
+                    fontSize: sw * 0.033,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
+                ),
               ),
             ),
           ],
@@ -513,11 +582,14 @@ class _LandingScreenState extends State<LandingScreen>
     );
   }
 
-  // ── Animated badge ─────────────────────────
+  // ── Badge ──────────────────────────────────
 
-  Widget _buildBadge() {
+  Widget _buildBadge(double sw) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+      padding: EdgeInsets.symmetric(
+        horizontal: sw * 0.035,
+        vertical: sw * 0.018,
+      ),
       decoration: BoxDecoration(
         color: kPrimary.withOpacity(0.22),
         borderRadius: BorderRadius.circular(30),
@@ -529,17 +601,24 @@ class _LandingScreenState extends State<LandingScreen>
           ScaleTransition(
             scale: _pulse,
             child: Container(
-              width: 7, height: 7,
+              width: sw * 0.018,
+              height: sw * 0.018,
               decoration: const BoxDecoration(
-                  color: kAccent, shape: BoxShape.circle),
+                color: kAccent,
+                shape: BoxShape.circle,
+              ),
             ),
           ),
-          const SizedBox(width: 8),
-          const Text(
-            'India\'s #1 Campus-to-Career Platform',
-            style: TextStyle(
-              fontSize: 11, fontWeight: FontWeight.w700,
-              color: kAccent, letterSpacing: 0.2,
+          SizedBox(width: sw * 0.02),
+          Flexible(
+            child: Text(
+              'India\'s #1 Campus-to-Career Platform',
+              style: TextStyle(
+                fontSize: sw * 0.028,
+                fontWeight: FontWeight.w700,
+                color: kAccent,
+                letterSpacing: 0.2,
+              ),
             ),
           ),
         ],
@@ -549,13 +628,15 @@ class _LandingScreenState extends State<LandingScreen>
 
   // ── Headline ───────────────────────────────
 
-  Widget _buildHeadline() {
+  Widget _buildHeadline(double sw) {
     return RichText(
       textAlign: TextAlign.center,
       text: TextSpan(
-        style: const TextStyle(
-          fontSize: 36, fontWeight: FontWeight.w800,
-          height: 1.18, letterSpacing: -1.0,
+        style: TextStyle(
+          fontSize: sw * 0.090, // ~36px on 400px screen
+          fontWeight: FontWeight.w800,
+          height: 1.18,
+          letterSpacing: -1.0,
           color: Colors.white,
         ),
         children: [
@@ -565,11 +646,13 @@ class _LandingScreenState extends State<LandingScreen>
               shaderCallback: (bounds) => const LinearGradient(
                 colors: [kAccent, kViolet, kRose],
               ).createShader(bounds),
-              child: const Text(
+              child: Text(
                 'Journey',
                 style: TextStyle(
-                  fontSize: 36, fontWeight: FontWeight.w800,
-                  height: 1.18, letterSpacing: -1.0,
+                  fontSize: sw * 0.090,
+                  fontWeight: FontWeight.w800,
+                  height: 1.18,
+                  letterSpacing: -1.0,
                   color: Colors.white,
                 ),
               ),
@@ -583,7 +666,7 @@ class _LandingScreenState extends State<LandingScreen>
 
   // ── CTA Button ─────────────────────────────
 
-  Widget _buildCTAButton() {
+  Widget _buildCTAButton(double sw) {
     return GestureDetector(
       onTapDown: (_) {
         _btnCtrl.forward();
@@ -602,8 +685,10 @@ class _LandingScreenState extends State<LandingScreen>
       child: ScaleTransition(
         scale: _btnScale,
         child: Container(
-          padding: const EdgeInsets.symmetric(
-              horizontal: 36, vertical: 18),
+          padding: EdgeInsets.symmetric(
+            horizontal: sw * 0.09,
+            vertical: sw * 0.045,
+          ),
           decoration: BoxDecoration(
             gradient: const LinearGradient(
               colors: [kPrimary, kViolet],
@@ -614,27 +699,36 @@ class _LandingScreenState extends State<LandingScreen>
             boxShadow: _btnPressed
                 ? []
                 : [
-              BoxShadow(
-                color: kPrimary.withOpacity(0.50),
-                blurRadius: 28, offset: const Offset(0, 10),
-              ),
-              BoxShadow(
-                color: kViolet.withOpacity(0.30),
-                blurRadius: 40, offset: const Offset(0, 16),
-              ),
-            ],
+                    BoxShadow(
+                      color: kPrimary.withOpacity(0.50),
+                      blurRadius: 28,
+                      offset: const Offset(0, 10),
+                    ),
+                    BoxShadow(
+                      color: kViolet.withOpacity(0.30),
+                      blurRadius: 40,
+                      offset: const Offset(0, 16),
+                    ),
+                  ],
           ),
-          child: const Row(
+          child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('Get Started',
-                  style: TextStyle(
-                    fontSize: 17, fontWeight: FontWeight.w800,
-                    color: Colors.white, letterSpacing: 0.2,
-                  )),
-              SizedBox(width: 10),
-              Icon(Icons.arrow_forward_rounded,
-                  color: Colors.white, size: 20),
+              Text(
+                'Get Started',
+                style: TextStyle(
+                  fontSize: sw * 0.043,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white,
+                  letterSpacing: 0.2,
+                ),
+              ),
+              SizedBox(width: sw * 0.025),
+              Icon(
+                Icons.arrow_forward_rounded,
+                color: Colors.white,
+                size: sw * 0.050,
+              ),
             ],
           ),
         ),
@@ -644,60 +738,64 @@ class _LandingScreenState extends State<LandingScreen>
 
   // ── Social proof ───────────────────────────
 
-  Widget _buildSocialProof() {
+  Widget _buildSocialProof(double sw) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        // Stacked avatars
         SizedBox(
-          width: 80, height: 32,
+          width: sw * 0.20,
+          height: sw * 0.08,
           child: Stack(
             children: [
-              _miniAvatar('👨‍💻', 0),
-              _miniAvatar('👩‍💻', 22),
-              _miniAvatar('👨‍🎓', 44),
+              _miniAvatar('👨‍💻', 0, sw),
+              _miniAvatar('👩‍💻', sw * 0.055, sw),
+              _miniAvatar('👨‍🎓', sw * 0.11, sw),
             ],
           ),
         ),
-        const SizedBox(width: 10),
-        Text(
-          '2,400+ students already on NextStep',
-          style: TextStyle(
-            fontSize: 12, fontWeight: FontWeight.w600,
-            color: Colors.white.withOpacity(0.50),
+        SizedBox(width: sw * 0.025),
+        Flexible(
+          child: Text(
+            '2,400+ students already on NextStep',
+            style: TextStyle(
+              fontSize: sw * 0.030,
+              fontWeight: FontWeight.w600,
+              color: Colors.white.withOpacity(0.50),
+            ),
           ),
         ),
       ],
     );
   }
 
-  Widget _miniAvatar(String emoji, double left) {
+  Widget _miniAvatar(String emoji, double left, double sw) {
     return Positioned(
       left: left,
       child: Container(
-        width: 30, height: 30,
+        width: sw * 0.075,
+        height: sw * 0.075,
         decoration: BoxDecoration(
           color: Colors.white.withOpacity(0.14),
           shape: BoxShape.circle,
-          border: Border.all(
-              color: Colors.white.withOpacity(0.30), width: 2),
+          border: Border.all(color: Colors.white.withOpacity(0.30), width: 2),
         ),
         child: Center(
-          child: Text(emoji, style: const TextStyle(fontSize: 14)),
+          child: Text(emoji, style: TextStyle(fontSize: sw * 0.035)),
         ),
       ),
     );
   }
 
-  // ── Scroll arrow ───────────────────────────
-
-  Widget _buildScrollArrow() {
+  Widget _buildScrollArrow(double sw) {
     return AnimatedBuilder(
       animation: _pulseCtrl,
       builder: (_, __) => Transform.translate(
         offset: Offset(0, _pulse.value * 2 - 1),
-        child: Icon(Icons.keyboard_arrow_down_rounded,
-            color: Colors.white.withOpacity(0.30), size: 22),
+        child: Icon(
+          Icons.keyboard_arrow_down_rounded,
+          color: Colors.white.withOpacity(0.30),
+          size: sw * 0.055,
+        ),
       ),
     );
   }
@@ -706,53 +804,60 @@ class _LandingScreenState extends State<LandingScreen>
   //  FEATURES SECTION
   // ─────────────────────────────────────────────
 
-  Widget _buildFeaturesSection() {
+  Widget _buildFeaturesSection(Size size) {
+    final sw = size.width;
+    final sh = size.height;
+
     return Container(
       color: const Color(0xFFF0F4F8),
-      padding: const EdgeInsets.fromLTRB(20, 40, 20, 40),
+      padding: EdgeInsets.fromLTRB(sw * 0.05, sh * 0.05, sw * 0.05, sh * 0.05),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Section header
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+            padding: EdgeInsets.symmetric(
+              horizontal: sw * 0.03,
+              vertical: sw * 0.012,
+            ),
             decoration: BoxDecoration(
               color: kPrimary.withOpacity(0.10),
               borderRadius: BorderRadius.circular(20),
             ),
-            child: const Text(
+            child: Text(
               'EVERYTHING YOU NEED',
               style: TextStyle(
-                fontSize: 10, fontWeight: FontWeight.w800,
-                color: kPrimary, letterSpacing: 1.0,
+                fontSize: sw * 0.025,
+                fontWeight: FontWeight.w800,
+                color: kPrimary,
+                letterSpacing: 1.0,
               ),
             ),
           ),
-          const SizedBox(height: 14),
-          const Text(
+          SizedBox(height: sw * 0.035),
+          Text(
             'One app.\nAll your career tools.',
             style: TextStyle(
-              fontSize: 26, fontWeight: FontWeight.w800,
-              color: kInk, height: 1.2, letterSpacing: -0.5,
+              fontSize: sw * 0.065,
+              fontWeight: FontWeight.w800,
+              color: kInk,
+              height: 1.2,
+              letterSpacing: -0.5,
             ),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: sw * 0.02),
           Text(
             'Built for engineering students, graduates,\npostgrads and school learners.',
-            style: const TextStyle(
-              fontSize: 13, color: kMuted, height: 1.6,
-            ),
+            style: TextStyle(fontSize: sw * 0.033, color: kMuted, height: 1.6),
           ),
-          const SizedBox(height: 28),
+          SizedBox(height: sw * 0.07),
 
-          // Feature cards — staggered
           ...List.generate(_features.length, (i) {
             final f = _features[i];
             return FadeTransition(
               opacity: _cardFades[i],
               child: SlideTransition(
                 position: _cardSlides[i],
-                child: _buildFeatureCard(f),
+                child: _buildFeatureCard(f, sw),
               ),
             );
           }),
@@ -761,10 +866,10 @@ class _LandingScreenState extends State<LandingScreen>
     );
   }
 
-  Widget _buildFeatureCard(_Feature f) {
+  Widget _buildFeatureCard(_Feature f, double sw) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 14),
-      padding: const EdgeInsets.all(18),
+      margin: EdgeInsets.only(bottom: sw * 0.035),
+      padding: EdgeInsets.all(sw * 0.045),
       decoration: BoxDecoration(
         color: kCardBg,
         borderRadius: BorderRadius.circular(20),
@@ -772,54 +877,64 @@ class _LandingScreenState extends State<LandingScreen>
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.04),
-            blurRadius: 12, offset: const Offset(0, 4),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Emoji tile
           Container(
-            width: 52, height: 52,
+            width: sw * 0.13,
+            height: sw * 0.13,
             decoration: BoxDecoration(
               color: f.bg,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                  color: f.accent.withOpacity(0.20), width: 1.5),
+              border: Border.all(color: f.accent.withOpacity(0.20), width: 1.5),
             ),
             child: Center(
-              child: Text(f.emoji,
-                  style: const TextStyle(fontSize: 24)),
+              child: Text(f.emoji, style: TextStyle(fontSize: sw * 0.060)),
             ),
           ),
-          const SizedBox(width: 16),
+          SizedBox(width: sw * 0.04),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(f.title,
-                    style: const TextStyle(
-                      fontSize: 15, fontWeight: FontWeight.w800,
-                      color: kInk,
-                    )),
-                const SizedBox(height: 5),
-                Text(f.desc,
-                    style: const TextStyle(
-                      fontSize: 12, color: kMuted, height: 1.55,
-                    )),
+                Text(
+                  f.title,
+                  style: TextStyle(
+                    fontSize: sw * 0.038,
+                    fontWeight: FontWeight.w800,
+                    color: kInk,
+                  ),
+                ),
+                SizedBox(height: sw * 0.012),
+                Text(
+                  f.desc,
+                  style: TextStyle(
+                    fontSize: sw * 0.030,
+                    color: kMuted,
+                    height: 1.55,
+                  ),
+                ),
               ],
             ),
           ),
-          const SizedBox(width: 10),
+          SizedBox(width: sw * 0.025),
           Container(
-            width: 30, height: 30,
+            width: sw * 0.075,
+            height: sw * 0.075,
             decoration: BoxDecoration(
               color: f.bg,
               borderRadius: BorderRadius.circular(9),
             ),
-            child: Icon(Icons.arrow_forward_ios_rounded,
-                color: f.accent, size: 13),
+            child: Icon(
+              Icons.arrow_forward_ios_rounded,
+              color: f.accent,
+              size: sw * 0.033,
+            ),
           ),
         ],
       ),
@@ -830,12 +945,15 @@ class _LandingScreenState extends State<LandingScreen>
   //  STATS SECTION
   // ─────────────────────────────────────────────
 
-  Widget _buildStatsSection() {
+  Widget _buildStatsSection(Size size) {
+    final sw = size.width;
+    final sh = size.height;
+
     const stats = [
-      {'value': '2,400+', 'label': 'Students',  'emoji': '🎓'},
-      {'value': '180+',   'label': 'Companies', 'emoji': '🏢'},
-      {'value': '50+',    'label': 'Courses',   'emoji': '📚'},
-      {'value': '95%',    'label': 'Placement', 'emoji': '🏆'},
+      {'value': '2,400+', 'label': 'Students', 'emoji': '🎓'},
+      {'value': '180+', 'label': 'Companies', 'emoji': '🏢'},
+      {'value': '50+', 'label': 'Courses', 'emoji': '📚'},
+      {'value': '95%', 'label': 'Placement', 'emoji': '🏆'},
     ];
 
     return AnimatedBuilder(
@@ -855,37 +973,46 @@ class _LandingScreenState extends State<LandingScreen>
             end: Alignment.bottomRight,
           ),
         ),
-        padding: const EdgeInsets.symmetric(
-            vertical: 36, horizontal: 20),
+        padding: EdgeInsets.symmetric(
+          vertical: sh * 0.045,
+          horizontal: sw * 0.05,
+        ),
         child: Column(
           children: [
-            const Text(
+            Text(
               'Trusted by students across India',
               style: TextStyle(
-                fontSize: 13, fontWeight: FontWeight.w700,
+                fontSize: sw * 0.033,
+                fontWeight: FontWeight.w700,
                 color: Colors.white70,
               ),
             ),
-            const SizedBox(height: 28),
+            SizedBox(height: sh * 0.035),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: stats.map((s) {
                 return Column(
                   children: [
-                    Text(s['emoji']!,
-                        style: const TextStyle(fontSize: 26)),
-                    const SizedBox(height: 8),
-                    Text(s['value']!,
-                        style: const TextStyle(
-                          fontSize: 22, fontWeight: FontWeight.w800,
-                          color: Colors.white, letterSpacing: -0.5,
-                        )),
-                    const SizedBox(height: 4),
-                    Text(s['label']!,
-                        style: TextStyle(
-                          fontSize: 11, fontWeight: FontWeight.w600,
-                          color: Colors.white.withOpacity(0.65),
-                        )),
+                    Text(s['emoji']!, style: TextStyle(fontSize: sw * 0.065)),
+                    SizedBox(height: sh * 0.010),
+                    Text(
+                      s['value']!,
+                      style: TextStyle(
+                        fontSize: sw * 0.055,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                        letterSpacing: -0.5,
+                      ),
+                    ),
+                    SizedBox(height: sh * 0.005),
+                    Text(
+                      s['label']!,
+                      style: TextStyle(
+                        fontSize: sw * 0.028,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white.withOpacity(0.65),
+                      ),
+                    ),
                   ],
                 );
               }).toList(),
@@ -900,69 +1027,94 @@ class _LandingScreenState extends State<LandingScreen>
   //  FOOTER
   // ─────────────────────────────────────────────
 
-  Widget _buildFooter() {
+  Widget _buildFooter(Size size) {
+    final sw = size.width;
+    final sh = size.height;
+
     return FadeTransition(
       opacity: _footerFade,
       child: Container(
         color: kInk,
-        padding: const EdgeInsets.fromLTRB(24, 32, 24, 48),
+        padding: EdgeInsets.fromLTRB(
+          sw * 0.06,
+          sh * 0.04,
+          sw * 0.06,
+          sh * 0.06,
+        ),
         child: Column(
           children: [
-            // Logo row
             Row(
               children: [
                 Container(
-                  width: 36, height: 36,
+                  width: sw * 0.09,
+                  height: sw * 0.09,
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.10),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: const Center(
-                    child: Text('⚡', style: TextStyle(fontSize: 18)),
+                  child: Center(
+                    child: Text('⚡', style: TextStyle(fontSize: sw * 0.045)),
                   ),
                 ),
-                const SizedBox(width: 10),
-                const Column(
+                SizedBox(width: sw * 0.025),
+                Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('NextStep',
-                        style: TextStyle(
-                          fontSize: 15, fontWeight: FontWeight.w800,
-                          color: Colors.white,
-                        )),
-                    Text('by TechPath',
-                        style: TextStyle(
-                            fontSize: 10, color: kAccent,
-                            fontWeight: FontWeight.w600)),
+                    Text(
+                      'NextStep',
+                      style: TextStyle(
+                        fontSize: sw * 0.038,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                      ),
+                    ),
+                    Text(
+                      'by TechPath',
+                      style: TextStyle(
+                        fontSize: sw * 0.025,
+                        color: kAccent,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ],
                 ),
               ],
             ),
-            const SizedBox(height: 20),
-            Container(height: 1,
-                color: Colors.white.withOpacity(0.08)),
-            const SizedBox(height: 20),
+            SizedBox(height: sh * 0.025),
+            Container(height: 1, color: Colors.white.withOpacity(0.08)),
+            SizedBox(height: sh * 0.025),
 
-            // Feature quick links
             Wrap(
-              spacing: 20, runSpacing: 10,
-              children: [
-                'Jobs', 'Internships', 'Companies',
-                'Hackathons', 'Courses', 'School Portal',
-              ].map((l) => Text(l,
-                  style: TextStyle(
-                    fontSize: 12, fontWeight: FontWeight.w600,
-                    color: Colors.white.withOpacity(0.45),
-                  ))).toList(),
+              spacing: sw * 0.05,
+              runSpacing: sw * 0.025,
+              children:
+                  [
+                        'Jobs',
+                        'Internships',
+                        'Companies',
+                        'Hackathons',
+                        'Courses',
+                        'School Portal',
+                      ]
+                      .map(
+                        (l) => Text(
+                          l,
+                          style: TextStyle(
+                            fontSize: sw * 0.030,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white.withOpacity(0.45),
+                          ),
+                        ),
+                      )
+                      .toList(),
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: sh * 0.030),
 
-            // Bottom CTA
             GestureDetector(
               onTap: () => context.go('/login'),
               child: Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 16),
+                padding: EdgeInsets.symmetric(vertical: sw * 0.040),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
                     colors: [kPrimary, kViolet],
@@ -971,22 +1123,25 @@ class _LandingScreenState extends State<LandingScreen>
                   ),
                   borderRadius: BorderRadius.circular(18),
                 ),
-                child: const Center(
-                  child: Text('Get Started — It\'s Free',
-                      style: TextStyle(
-                        fontSize: 15, fontWeight: FontWeight.w800,
-                        color: Colors.white,
-                      )),
+                child: Center(
+                  child: Text(
+                    'Get Started — It\'s Free',
+                    style: TextStyle(
+                      fontSize: sw * 0.038,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                    ),
+                  ),
                 ),
               ),
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: sh * 0.030),
 
             Text(
               '© 2025 TechPath. Built for India\'s next generation of tech innovators.',
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: 11,
+                fontSize: sw * 0.028,
                 color: Colors.white.withOpacity(0.30),
                 height: 1.6,
               ),

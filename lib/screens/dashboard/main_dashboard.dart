@@ -10,7 +10,7 @@ import '../jobs/jobs_screen.dart';
 import '../profile/profile_screen.dart';
 
 // ─────────────────────────────────────────────
-//  DESIGN TOKENS — Engineering Theme
+//  DESIGN TOKENS
 // ─────────────────────────────────────────────
 
 const kInk = Color(0xFF0F172A);
@@ -33,7 +33,6 @@ class _NavItem {
   final IconData inactiveIcon;
   final String label;
   final bool hasBadge;
-
   const _NavItem({
     required this.activeIcon,
     required this.inactiveIcon,
@@ -81,10 +80,6 @@ const _navItems = [
   ),
 ];
 
-// ─────────────────────────────────────────────
-//  PAGE TITLES
-// ─────────────────────────────────────────────
-
 const _pageTitles = [
   'Dashboard',
   'Jobs',
@@ -101,7 +96,6 @@ const _pageTitles = [
 
 class MainDashboard extends StatefulWidget {
   const MainDashboard({super.key});
-
   @override
   State<MainDashboard> createState() => _MainDashboardState();
 }
@@ -110,15 +104,10 @@ class _MainDashboardState extends State<MainDashboard>
     with TickerProviderStateMixin {
   int _currentIndex = 0;
 
-  // Top bar entrance
   late AnimationController _topBarAnim;
-
-  // Page transition
   late AnimationController _pageAnim;
   late Animation<double> _pageFade;
   late Animation<Offset> _pageSlide;
-
-  // Per-tab nav scale
   late List<AnimationController> _navAnims;
   late List<Animation<double>> _navScales;
 
@@ -177,8 +166,6 @@ class _MainDashboardState extends State<MainDashboard>
     super.dispose();
   }
 
-  // ── Tab switch ─────────────────────────────
-
   void _onTap(int index) {
     if (index == _currentIndex) return;
     HapticFeedback.lightImpact();
@@ -188,8 +175,6 @@ class _MainDashboardState extends State<MainDashboard>
     _pageAnim.forward();
     setState(() => _currentIndex = index);
   }
-
-  // ── build ──────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
@@ -219,6 +204,8 @@ class _MainDashboardState extends State<MainDashboard>
   // ── TOP BAR ────────────────────────────────
 
   Widget _buildTopBar() {
+    final sw = MediaQuery.of(context).size.width;
+
     return AnimatedBuilder(
       animation: _topBarAnim,
       builder: (_, child) => Opacity(
@@ -233,32 +220,37 @@ class _MainDashboardState extends State<MainDashboard>
         child: SafeArea(
           bottom: false,
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 12, 20, 14),
+            padding: EdgeInsets.fromLTRB(
+              sw * 0.05,
+              sw * 0.03,
+              sw * 0.05,
+              sw * 0.035,
+            ),
             child: Row(
               children: [
                 // Logo tile
                 Container(
-                  width: 40,
-                  height: 40,
+                  width: sw * 0.10,
+                  height: sw * 0.10,
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.12),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Center(
-                    child: Text('⚡', style: TextStyle(fontSize: 20)),
+                  child: Center(
+                    child: Text('⚡', style: TextStyle(fontSize: sw * 0.050)),
                   ),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: sw * 0.03),
 
-                // Brand + live page subtitle
+                // Brand + page subtitle
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'NextStep',
                         style: TextStyle(
-                          fontSize: 17,
+                          fontSize: sw * 0.043,
                           fontWeight: FontWeight.w800,
                           color: Colors.white,
                           letterSpacing: -0.3,
@@ -271,8 +263,8 @@ class _MainDashboardState extends State<MainDashboard>
                         child: Text(
                           _pageTitles[_currentIndex],
                           key: ValueKey(_currentIndex),
-                          style: const TextStyle(
-                            fontSize: 11,
+                          style: TextStyle(
+                            fontSize: sw * 0.028,
                             fontWeight: FontWeight.w600,
                             color: kAccent,
                           ),
@@ -282,28 +274,28 @@ class _MainDashboardState extends State<MainDashboard>
                   ),
                 ),
 
-                // Notification bell with dot
+                // Notification bell
                 Stack(
                   children: [
                     Container(
-                      width: 36,
-                      height: 36,
+                      width: sw * 0.09,
+                      height: sw * 0.09,
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.10),
                         borderRadius: BorderRadius.circular(11),
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.notifications_none_rounded,
                         color: Colors.white,
-                        size: 19,
+                        size: sw * 0.048,
                       ),
                     ),
                     Positioned(
-                      top: 7,
-                      right: 7,
+                      top: sw * 0.018,
+                      right: sw * 0.018,
                       child: Container(
-                        width: 7,
-                        height: 7,
+                        width: sw * 0.018,
+                        height: sw * 0.018,
                         decoration: const BoxDecoration(
                           color: kAccent,
                           shape: BoxShape.circle,
@@ -312,12 +304,12 @@ class _MainDashboardState extends State<MainDashboard>
                     ),
                   ],
                 ),
-                const SizedBox(width: 10),
+                SizedBox(width: sw * 0.025),
 
                 // Avatar
                 Container(
-                  width: 36,
-                  height: 36,
+                  width: sw * 0.09,
+                  height: sw * 0.09,
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.14),
                     shape: BoxShape.circle,
@@ -326,8 +318,11 @@ class _MainDashboardState extends State<MainDashboard>
                       width: 1.5,
                     ),
                   ),
-                  child: const Center(
-                    child: Text('👨‍💻', style: TextStyle(fontSize: 17)),
+                  child: Center(
+                    child: Text(
+                      '👨‍💻',
+                      style: TextStyle(fontSize: sw * 0.043),
+                    ),
                   ),
                 ),
               ],
@@ -341,6 +336,8 @@ class _MainDashboardState extends State<MainDashboard>
   // ── BOTTOM NAV ─────────────────────────────
 
   Widget _buildBottomNav() {
+    final sw = MediaQuery.of(context).size.width;
+
     return Container(
       decoration: const BoxDecoration(
         color: kCardBg,
@@ -349,17 +346,23 @@ class _MainDashboardState extends State<MainDashboard>
       child: SafeArea(
         top: false,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
+          padding: EdgeInsets.symmetric(
+            horizontal: sw * 0.015,
+            vertical: sw * 0.025,
+          ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: List.generate(_navItems.length, _buildNavItem),
+            children: List.generate(
+              _navItems.length,
+              (i) => _buildNavItem(i, sw),
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildNavItem(int index) {
+  Widget _buildNavItem(int index, double sw) {
     final item = _navItems[index];
     final isSelected = _currentIndex == index;
 
@@ -372,8 +375,8 @@ class _MainDashboardState extends State<MainDashboard>
           duration: const Duration(milliseconds: 280),
           curve: Curves.easeOut,
           padding: EdgeInsets.symmetric(
-            horizontal: isSelected ? 14 : 10,
-            vertical: 8,
+            horizontal: isSelected ? sw * 0.035 : sw * 0.025,
+            vertical: sw * 0.020,
           ),
           decoration: BoxDecoration(
             color: isSelected ? kSelectedBg : Colors.transparent,
@@ -383,7 +386,7 @@ class _MainDashboardState extends State<MainDashboard>
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Icon with optional badge dot
+              // Icon + optional badge dot
               Stack(
                 clipBehavior: Clip.none,
                 children: [
@@ -392,17 +395,17 @@ class _MainDashboardState extends State<MainDashboard>
                     child: Icon(
                       isSelected ? item.activeIcon : item.inactiveIcon,
                       key: ValueKey(isSelected),
-                      size: 20,
+                      size: sw * 0.050, // ~20px on 400px screen
                       color: isSelected ? kPrimary : kMuted,
                     ),
                   ),
                   if (item.hasBadge && !isSelected)
                     Positioned(
-                      top: -3,
-                      right: -3,
+                      top: -sw * 0.008,
+                      right: -sw * 0.008,
                       child: Container(
-                        width: 7,
-                        height: 7,
+                        width: sw * 0.018,
+                        height: sw * 0.018,
                         decoration: const BoxDecoration(
                           color: kAccent,
                           shape: BoxShape.circle,
@@ -411,18 +414,18 @@ class _MainDashboardState extends State<MainDashboard>
                     ),
                 ],
               ),
-              // Animated label — only visible when selected
+              // Label — only when selected
               AnimatedSize(
                 duration: const Duration(milliseconds: 260),
                 curve: Curves.easeOut,
                 child: isSelected
                     ? Row(
                         children: [
-                          const SizedBox(width: 6),
+                          SizedBox(width: sw * 0.015),
                           Text(
                             item.label,
-                            style: const TextStyle(
-                              fontSize: 12,
+                            style: TextStyle(
+                              fontSize: sw * 0.030,
                               fontWeight: FontWeight.w800,
                               color: kPrimary,
                             ),

@@ -104,6 +104,7 @@ class ProfileState extends ChangeNotifier {
       _mapApplications(data['applications'] as List<dynamic>);
       _mapCertificates(data['certificates'] as List<dynamic>);
       _mapProjects(data['projects'] as List<dynamic>);
+      _mapSkills(data['skills'] as List<dynamic>);
     } catch (e) {
       errorMessage = e.toString();
     } finally {
@@ -123,8 +124,10 @@ class ProfileState extends ChangeNotifier {
         body: jsonEncode(body),
       );
       if (res.statusCode == 200) {
-        final data = jsonDecode(res.body)['data'] as Map<String, dynamic>;
-        _mapUser(data);
+        final resBody = jsonDecode(res.body);
+        if (resBody['data']?['user'] != null) {
+          _mapUser(resBody['data']['user'] as Map<String, dynamic>);
+        }
         notifyListeners();
         return true;
       }
@@ -191,6 +194,18 @@ class ProfileState extends ChangeNotifier {
             'desc': (p['description'] ?? '') as String,
             'tech': <String>[],
             'link': '',
+          },
+        )
+        .toList();
+  }
+
+  void _mapSkills(List<dynamic> list) {
+    skills = list
+        .map(
+          (s) => <String, dynamic>{
+            'skill_id': s['skill_id'],
+            'name': (s['skill_name'] ?? '') as String,
+            'level': ((s['proficiency'] as num) / 100.0).clamp(0.0, 1.0),
           },
         )
         .toList();
@@ -399,9 +414,7 @@ class _ProfileScreenState extends State<ProfileScreen>
         if (!isJob) 'internship_id': app['internship_id'],
       };
       final res = await http.delete(
-        Uri.parse(
-          'https://studenthub-backend-woad.vercel.app/api/applications',
-        ),
+        Uri.parse('${ProfileState._baseUrl}/api/applications'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(body),
       );
@@ -432,7 +445,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     }
     try {
       final res = await http.delete(
-        Uri.parse('https://studenthub-backend-woad.vercel.app/api/projects'),
+        Uri.parse('${ProfileState._baseUrl}/api/projects'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'project_id': projectId}),
       );
@@ -463,9 +476,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     }
     try {
       final res = await http.delete(
-        Uri.parse(
-          'https://studenthub-backend-woad.vercel.app/api/certificates',
-        ),
+        Uri.parse('${ProfileState._baseUrl}/api/certificates'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'certificate_id': int.parse(certId)}),
       );
@@ -480,6 +491,457 @@ class _ProfileScreenState extends State<ProfileScreen>
     } catch (e) {
       _showSnack('Error: $e', Colors.red);
     }
+  }
+
+  // ─────────────────────────────────────────────
+  //  DELETE SKILL
+  // ─────────────────────────────────────────────
+  Future<void> _deleteSkill(int index) async {
+    if (index < 0 || index >= profileState.skills.length) return;
+    final sk = profileState.skills[index];
+    final skillId = sk['skill_id'] as int?;
+    if (skillId == null) {
+      profileState.set(() => profileState.skills.removeAt(index));
+      _showSnack('Skill removed', kSuccess);
+      return;
+    }
+    try {
+      final userId = await const FlutterSecureStorage().read(key: 'user_id');
+      final res = await http.delete(
+        Uri.parse('${ProfileState._baseUrl}/api/user-skills'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'user_id': int.parse(userId!), 'skill_id': skillId}),
+      );
+      if (res.statusCode == 200) {
+        if (index < profileState.skills.length)
+          profileState.set(() => profileState.skills.removeAt(index));
+        _showSnack('Skill removed', kSuccess);
+      } else {
+        final data = jsonDecode(res.body);
+        throw Exception(data['message'] ?? 'Failed');
+      }
+    } catch (e) {
+      _showSnack('Error: $e', Colors.red);
+    }
+  }
+
+  // ─────────────────────────────────────────────
+  //  ADD SKILL DIALOG
+  //  GET /api/skills        — master skill list
+  //  POST /api/user-skills  — add to user profile
+  // ─────────────────────────────────────────────
+  void _addSkillDialog() {
+    final sw = MediaQuery.of(context).size.width;
+
+    final Future<List<Map<String, dynamic>>> skillsFuture = http
+        .get(Uri.parse('${ProfileState._baseUrl}/api/skills'))
+        .then((res) {
+          if (res.statusCode == 200) {
+            final body = jsonDecode(res.body);
+            List<dynamic> list = [];
+            if (body is List) {
+              list = body;
+            } else if (body['data'] is List) {
+              list = body['data'];
+            } else if (body['skills'] is List) {
+              list = body['skills'];
+            }
+            return list
+                .map(
+                  (s) => <String, dynamic>{
+                    'skill_id': s['skill_id'] ?? s['id'],
+                    'name': (s['name'] ?? s['skill_name'] ?? '').toString(),
+                  },
+                )
+                .where(
+                  (s) =>
+                      s['skill_id'] != null && (s['name'] as String).isNotEmpty,
+                )
+                .toList();
+          }
+          return <Map<String, dynamic>>[];
+        })
+        .catchError((e) {
+          debugPrint('Skills fetch error: $e');
+          return <Map<String, dynamic>>[];
+        });
+
+    double level = 0.70;
+    int? selectedSkillId;
+    String? selectedSkillName;
+    bool isOther = false; // ✅ tracks if "Other" is selected
+    final otherCtrl = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (_) => StatefulBuilder(
+        builder: (ctx, sst) => Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Padding(
+            padding: EdgeInsets.all(sw * 0.06),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // ── Title ──
+                Center(
+                  child: Text(
+                    'Add Skill',
+                    style: TextStyle(
+                      fontSize: sw * 0.040,
+                      fontWeight: FontWeight.w800,
+                      color: kInk,
+                    ),
+                  ),
+                ),
+                SizedBox(height: sw * 0.040),
+
+                // ── Dropdown ──
+                Text(
+                  'Select Skill',
+                  style: TextStyle(
+                    fontSize: sw * 0.030,
+                    color: kMuted,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                SizedBox(height: sw * 0.015),
+                FutureBuilder<List<Map<String, dynamic>>>(
+                  future: skillsFuture,
+                  builder: (_, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(vertical: 16),
+                          child: CircularProgressIndicator(color: kPrimary),
+                        ),
+                      );
+                    }
+                    if (snapshot.hasError ||
+                        !snapshot.hasData ||
+                        snapshot.data!.isEmpty) {
+                      return Container(
+                        padding: EdgeInsets.all(sw * 0.030),
+                        decoration: BoxDecoration(
+                          color: Colors.red.shade50,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.red.shade200),
+                        ),
+                        child: Text(
+                          'Failed to load skills.',
+                          style: TextStyle(
+                            color: Colors.red.shade700,
+                            fontSize: sw * 0.030,
+                          ),
+                        ),
+                      );
+                    }
+
+                    final allSkills = snapshot.data!;
+
+                    // ✅ Append "Other" option at end
+                    const int otherSentinel = -1;
+
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          padding: EdgeInsets.symmetric(horizontal: sw * 0.030),
+                          decoration: BoxDecoration(
+                            color: kBgPage,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: kBorder),
+                          ),
+                          child: DropdownButtonHideUnderline(
+                            child: DropdownButton<int>(
+                              isExpanded: true,
+                              hint: Text(
+                                'Choose a skill...',
+                                style: TextStyle(
+                                  color: kHint,
+                                  fontSize: sw * 0.033,
+                                ),
+                              ),
+                              value: isOther ? otherSentinel : selectedSkillId,
+                              dropdownColor: kCardBg,
+                              style: TextStyle(
+                                fontSize: sw * 0.033,
+                                color: kInk,
+                              ),
+                              items: [
+                                // ✅ All skills from API
+                                ...allSkills.map(
+                                  (s) => DropdownMenuItem<int>(
+                                    value: s['skill_id'] as int,
+                                    child: Text(s['name'] as String),
+                                  ),
+                                ),
+                                // ✅ Other option
+                                DropdownMenuItem<int>(
+                                  value: otherSentinel,
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.add_circle_outline,
+                                        size: sw * 0.040,
+                                        color: kPrimary,
+                                      ),
+                                      SizedBox(width: sw * 0.020),
+                                      Text(
+                                        'Other (type your own)',
+                                        style: TextStyle(
+                                          color: kPrimary,
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: sw * 0.033,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                              onChanged: (val) {
+                                sst(() {
+                                  if (val == otherSentinel) {
+                                    isOther = true;
+                                    selectedSkillId = null;
+                                    selectedSkillName = null;
+                                  } else {
+                                    isOther = false;
+                                    selectedSkillId = val;
+                                    selectedSkillName =
+                                        allSkills.firstWhere(
+                                              (s) => s['skill_id'] == val,
+                                            )['name']
+                                            as String;
+                                  }
+                                });
+                              },
+                            ),
+                          ),
+                        ),
+
+                        // ✅ Show text field when "Other" is selected
+                        if (isOther) ...[
+                          SizedBox(height: sw * 0.025),
+                          TextField(
+                            controller: otherCtrl,
+                            autofocus: true,
+                            style: TextStyle(fontSize: sw * 0.033, color: kInk),
+                            decoration: InputDecoration(
+                              hintText: 'Type skill name...',
+                              hintStyle: TextStyle(
+                                color: kHint,
+                                fontSize: sw * 0.033,
+                              ),
+                              filled: true,
+                              fillColor: kBgPage,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(color: kBorder),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(
+                                  color: kPrimary,
+                                  width: 2,
+                                ),
+                              ),
+                              prefixIcon: Icon(
+                                Icons.edit,
+                                color: kPrimary,
+                                size: sw * 0.040,
+                              ),
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: sw * 0.040,
+                                vertical: sw * 0.030,
+                              ),
+                            ),
+                            onChanged: (v) => sst(() {}),
+                          ),
+                        ],
+                      ],
+                    );
+                  },
+                ),
+
+                SizedBox(height: sw * 0.040),
+
+                // ── Proficiency Slider ──
+                Row(
+                  children: [
+                    Text(
+                      'Proficiency',
+                      style: TextStyle(
+                        fontSize: sw * 0.030,
+                        color: kMuted,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const Spacer(),
+                    Text(
+                      '${(level * 100).toInt()}%',
+                      style: TextStyle(
+                        fontSize: sw * 0.033,
+                        color: kPrimary,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ],
+                ),
+                Slider(
+                  value: level,
+                  onChanged: (v) => sst(() => level = v),
+                  activeColor: kPrimary,
+                  inactiveColor: kBorder,
+                ),
+
+                SizedBox(height: sw * 0.020),
+
+                // ── Buttons ──
+                Row(
+                  children: [
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () => Navigator.pop(context),
+                        child: Container(
+                          padding: EdgeInsets.symmetric(vertical: sw * 0.030),
+                          decoration: BoxDecoration(
+                            color: kBgPage,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Center(
+                            child: Text(
+                              'Cancel',
+                              style: TextStyle(
+                                color: kMuted,
+                                fontWeight: FontWeight.w700,
+                                fontSize: sw * 0.033,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: sw * 0.030),
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () async {
+                          // ✅ Resolve final skill name
+                          final String? finalSkillName = isOther
+                              ? (otherCtrl.text.trim().isEmpty
+                                    ? null
+                                    : otherCtrl.text.trim())
+                              : selectedSkillName;
+
+                          if (finalSkillName == null ||
+                              finalSkillName.isEmpty) {
+                            _showSnack(
+                              isOther
+                                  ? 'Please type a skill name'
+                                  : 'Please select a skill',
+                              kWarning,
+                            );
+                            return;
+                          }
+
+                          Navigator.pop(context);
+                          try {
+                            final userId = await const FlutterSecureStorage()
+                                .read(key: 'user_id');
+                            final proficiency = (level * 100).round().clamp(
+                              1,
+                              100,
+                            );
+
+                            // ✅ Backend handles both:
+                            //    - existing skill lookup by name
+                            //    - new skill creation if not found
+                            //    - insert into UserSkill
+                            final postBody = {
+                              'user_id': int.parse(userId!),
+                              'skill_name': finalSkillName,
+                              'proficiency': proficiency,
+                            };
+                            debugPrint('POST /api/user-skills body: $postBody');
+
+                            final res = await http.post(
+                              Uri.parse(
+                                '${ProfileState._baseUrl}/api/user-skills',
+                              ),
+                              headers: {'Content-Type': 'application/json'},
+                              body: jsonEncode(postBody),
+                            );
+
+                            debugPrint(
+                              'POST /api/user-skills status: ${res.statusCode}',
+                            );
+                            debugPrint(
+                              'POST /api/user-skills response: ${res.body}',
+                            );
+
+                            if (res.statusCode == 200 ||
+                                res.statusCode == 201) {
+                              final resData = jsonDecode(res.body);
+                              final newSkillId = resData['data']?['skill_id'];
+                              profileState.set(() {
+                                final existingIndex = profileState.skills
+                                    .indexWhere(
+                                      (s) =>
+                                          (s['name'] as String).toLowerCase() ==
+                                          finalSkillName.toLowerCase(),
+                                    );
+                                if (existingIndex != -1) {
+                                  profileState.skills[existingIndex]['level'] =
+                                      level;
+                                } else {
+                                  profileState.skills.add({
+                                    'skill_id': newSkillId,
+                                    'name': finalSkillName,
+                                    'level': level,
+                                  });
+                                }
+                              });
+                              _showSnack('Skill added! ✅', kSuccess);
+                            } else {
+                              final data = jsonDecode(res.body);
+                              _showSnack(
+                                data['message'] ?? 'Failed to save skill',
+                                Colors.red,
+                              );
+                            }
+                          } catch (e) {
+                            _showSnack('Error: $e', Colors.red);
+                          }
+                        },
+                        child: Container(
+                          padding: EdgeInsets.symmetric(vertical: sw * 0.030),
+                          decoration: BoxDecoration(
+                            color: kPrimary,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Center(
+                            child: Text(
+                              'Add',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w800,
+                                fontSize: sw * 0.033,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   // ─────────────────────────────────────────────
@@ -1194,20 +1656,18 @@ class _ProfileScreenState extends State<ProfileScreen>
                                   '${(_skillAnims[i].value * pct).toInt()}%',
                                   style: TextStyle(
                                     fontSize: sw * 0.030,
-                                    fontWeight: FontWeight.w800,
+                                    fontWeight: FontWeight.w700,
                                     color: barCol,
                                   ),
                                 ),
                               ),
                               SizedBox(width: sw * 0.020),
                               GestureDetector(
-                                onTap: () => profileState.set(
-                                  () => p.skills.removeAt(i),
-                                ),
+                                onTap: () => _deleteSkill(i),
                                 child: Icon(
                                   Icons.remove_circle_outline,
-                                  size: sw * 0.040,
-                                  color: kHint,
+                                  size: sw * 0.045,
+                                  color: Colors.red.shade300,
                                 ),
                               ),
                             ],
@@ -1219,7 +1679,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                               animation: _skillAnims[i],
                               builder: (_, __) => LinearProgressIndicator(
                                 value: _skillAnims[i].value * target,
-                                minHeight: 9,
+                                minHeight: 8,
                                 backgroundColor: const Color(0xFFE2E8F0),
                                 valueColor: AlwaysStoppedAnimation<Color>(
                                   barCol,
@@ -1233,622 +1693,385 @@ class _ProfileScreenState extends State<ProfileScreen>
                   }),
                 ),
         ),
-        SizedBox(height: sw * 0.035),
-        _addCta(Icons.add_circle, 'Add a Skill', _addSkillDialog, sw),
-      ],
-    );
-  }
-
-  // ─────────────────────────────────────────────
-  //  TAB 3 — CERTS  ✅ pull-to-refresh
-  // ─────────────────────────────────────────────
-  Widget _certs(double sw) {
-    final p = profileState;
-    return RefreshIndicator(
-      color: kPrimary,
-      onRefresh: () => profileState.fetchProfile(),
-      child: ListView(
-        padding: EdgeInsets.all(sw * 0.040),
-        children: [
-          ...p.certifications.asMap().entries.map((e) {
-            final i = e.key;
-            final c = e.value;
-            final ct = _certTheme(c['name']!);
-            return Container(
-              margin: EdgeInsets.only(bottom: sw * 0.030),
-              decoration: BoxDecoration(
-                color: kCardBg,
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: kBorder, width: 1.5),
-              ),
-              child: Column(
-                children: [
-                  Container(
-                    height: 3,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(colors: [ct.g1, ct.g2]),
-                      borderRadius: const BorderRadius.vertical(
-                        top: Radius.circular(18),
-                      ),
-                    ),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.all(sw * 0.040),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: sw * 0.125,
-                          height: sw * 0.125,
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [ct.g1, ct.g2],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            borderRadius: BorderRadius.circular(14),
-                            boxShadow: [
-                              BoxShadow(
-                                color: ct.g1.withOpacity(0.28),
-                                blurRadius: 8,
-                                offset: const Offset(0, 3),
-                              ),
-                            ],
-                          ),
-                          child: Icon(
-                            ct.icon,
-                            color: Colors.white,
-                            size: sw * 0.055,
-                          ),
-                        ),
-                        SizedBox(width: sw * 0.035),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                c['name']!,
-                                style: TextStyle(
-                                  fontSize: sw * 0.035,
-                                  fontWeight: FontWeight.w800,
-                                  color: kInk,
-                                ),
-                              ),
-                              SizedBox(height: sw * 0.008),
-                              Text(
-                                c['issuer']!,
-                                style: TextStyle(
-                                  fontSize: sw * 0.030,
-                                  color: kMuted,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Container(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: sw * 0.023,
-                                vertical: sw * 0.010,
-                              ),
-                              decoration: BoxDecoration(
-                                color: ct.bg,
-                                borderRadius: BorderRadius.circular(20),
-                                border: Border.all(
-                                  color: ct.g1.withOpacity(0.30),
-                                ),
-                              ),
-                              child: Text(
-                                c['date']!,
-                                style: TextStyle(
-                                  fontSize: sw * 0.025,
-                                  fontWeight: FontWeight.w700,
-                                  color: ct.g1,
-                                ),
-                              ),
-                            ),
-                            SizedBox(height: sw * 0.020),
-                            GestureDetector(
-                              onTap: () => _deleteCertificate(i),
-                              child: Icon(
-                                Icons.delete_outline,
-                                size: sw * 0.038,
-                                color: kHint,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }),
-          SizedBox(height: sw * 0.010),
-          _addCta(
-            Icons.upload_file,
-            'Add / Upload Certificate',
-            _addCertDialog,
-            sw,
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ─────────────────────────────────────────────
-  //  TAB 4 — PROJECTS  ✅ pull-to-refresh
-  // ─────────────────────────────────────────────
-  Widget _projectsTab(double sw) {
-    final p = profileState;
-    return RefreshIndicator(
-      color: kPrimary,
-      onRefresh: () => profileState.fetchProfile(),
-      child: ListView(
-        padding: EdgeInsets.all(sw * 0.040),
-        children: [
-          ...p.projects.asMap().entries.map((e) {
-            final i = e.key;
-            final proj = e.value;
-            return Container(
-              margin: EdgeInsets.only(bottom: sw * 0.035),
-              decoration: BoxDecoration(
-                color: kCardBg,
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: kBorder, width: 1.5),
-              ),
-              child: Column(
-                children: [
-                  Container(
-                    height: 3,
-                    decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [kPrimary, Color(0xFF4F46E5)],
-                      ),
-                      borderRadius: BorderRadius.vertical(
-                        top: Radius.circular(18),
-                      ),
-                    ),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.all(sw * 0.040),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              width: sw * 0.105,
-                              height: sw * 0.105,
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [
-                                    kPrimary.withOpacity(0.14),
-                                    const Color(0xFF4F46E5).withOpacity(0.07),
-                                  ],
-                                ),
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: kPrimary.withOpacity(0.25),
-                                ),
-                              ),
-                              child: Icon(
-                                Icons.folder,
-                                color: kPrimary,
-                                size: sw * 0.050,
-                              ),
-                            ),
-                            SizedBox(width: sw * 0.030),
-                            Expanded(
-                              child: Text(
-                                proj['title'] as String,
-                                style: TextStyle(
-                                  fontSize: sw * 0.035,
-                                  fontWeight: FontWeight.w800,
-                                  color: kInk,
-                                ),
-                              ),
-                            ),
-                            GestureDetector(
-                              onTap: () => _editProjectDialog(i),
-                              child: Container(
-                                padding: EdgeInsets.all(sw * 0.015),
-                                decoration: BoxDecoration(
-                                  color: kSelectedBg,
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Icon(
-                                  Icons.edit,
-                                  size: sw * 0.035,
-                                  color: kPrimary,
-                                ),
-                              ),
-                            ),
-                            SizedBox(width: sw * 0.015),
-                            GestureDetector(
-                              onTap: () => _deleteProject(i),
-                              child: Container(
-                                padding: EdgeInsets.all(sw * 0.015),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFFFF1F2),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Icon(
-                                  Icons.delete_outline,
-                                  size: sw * 0.035,
-                                  color: const Color(0xFFDC2626),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: sw * 0.025),
-                        Text(
-                          proj['desc'] as String,
-                          style: TextStyle(
-                            fontSize: sw * 0.030,
-                            color: kMuted,
-                            height: 1.5,
-                          ),
-                        ),
-                        SizedBox(height: sw * 0.020),
-                        Row(
-                          children: [
-                            Icon(Icons.link, size: sw * 0.030, color: kHint),
-                            SizedBox(width: sw * 0.010),
-                            Flexible(
-                              child: Text(
-                                (proj['link'] as String).isNotEmpty
-                                    ? proj['link'] as String
-                                    : 'No link added',
-                                style: TextStyle(
-                                  fontSize: sw * 0.028,
-                                  color: kPrimary,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: sw * 0.025),
-                        Wrap(
-                          spacing: sw * 0.018,
-                          runSpacing: sw * 0.015,
-                          children: (proj['tech'] as List<String>)
-                              .map(
-                                (t) => Container(
-                                  padding: EdgeInsets.symmetric(
-                                    horizontal: sw * 0.025,
-                                    vertical: sw * 0.010,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: kSelectedBg,
-                                    borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(color: kBorder),
-                                  ),
-                                  child: Text(
-                                    t,
-                                    style: TextStyle(
-                                      fontSize: sw * 0.028,
-                                      fontWeight: FontWeight.w700,
-                                      color: kPrimary,
-                                    ),
-                                  ),
-                                ),
-                              )
-                              .toList(),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }),
-          _addCta(Icons.add_circle, 'Add a Project', _addProjectDialog, sw),
-        ],
-      ),
-    );
-  }
-
-  // ─────────────────────────────────────────────
-  //  TAB 5 — APPLICATIONS  ✅ pull-to-refresh
-  // ─────────────────────────────────────────────
-  Widget _applicationsTab(double sw) {
-    final apps = profileState.applications;
-    if (apps.isEmpty) {
-      return RefreshIndicator(
-        color: kPrimary,
-        onRefresh: () => profileState.fetchProfile(),
-        child: ListView(
-          children: [
-            SizedBox(height: MediaQuery.of(context).size.height * 0.25),
-            Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: sw * 0.18,
-                    height: sw * 0.18,
-                    decoration: const BoxDecoration(
-                      color: kSelectedBg,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      Icons.work_off_outlined,
-                      color: kPrimary,
-                      size: sw * 0.08,
-                    ),
-                  ),
-                  SizedBox(height: sw * 0.040),
-                  Text(
-                    'No applications yet',
-                    style: TextStyle(
-                      fontSize: sw * 0.038,
-                      fontWeight: FontWeight.w700,
-                      color: kSlate,
-                    ),
-                  ),
-                  SizedBox(height: sw * 0.015),
-                  Text(
-                    'Pull down to refresh',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: sw * 0.030, color: kMuted),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-    return RefreshIndicator(
-      color: kPrimary,
-      onRefresh: () => profileState.fetchProfile(),
-      child: ListView(
-        padding: EdgeInsets.all(sw * 0.040),
-        children: [
-          Container(
-            margin: EdgeInsets.only(bottom: sw * 0.035),
-            padding: EdgeInsets.symmetric(
-              horizontal: sw * 0.035,
-              vertical: sw * 0.025,
-            ),
+        SizedBox(height: sw * 0.030),
+        GestureDetector(
+          onTap: _addSkillDialog,
+          child: Container(
+            padding: EdgeInsets.symmetric(vertical: sw * 0.040),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  kPrimary.withOpacity(0.08),
-                  const Color(0xFF4F46E5).withOpacity(0.04),
-                ],
-              ),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: kPrimary.withOpacity(0.20)),
+              color: kPrimary,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: kPrimary.withOpacity(0.35),
+                  blurRadius: 14,
+                  offset: const Offset(0, 5),
+                ),
+              ],
             ),
             child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.sync, size: sw * 0.035, color: kPrimary),
+                Icon(
+                  Icons.add_circle_outline,
+                  color: Colors.white,
+                  size: sw * 0.050,
+                ),
                 SizedBox(width: sw * 0.020),
-                Expanded(
-                  child: Text(
-                    'Live sync  •  ${apps.length} applications  •  Pull to refresh',
-                    style: TextStyle(
-                      fontSize: sw * 0.028,
-                      color: kPrimary,
-                      fontWeight: FontWeight.w700,
-                    ),
+                Text(
+                  'Add New Skill',
+                  style: TextStyle(
+                    fontSize: sw * 0.035,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
                   ),
                 ),
               ],
             ),
           ),
-          ...apps.asMap().entries.map((e) {
-            final i = e.key;
-            final app = e.value;
-            final status = app['status'] as String? ?? 'Applied';
-            Color statusBg, statusFg;
-            IconData statusIcon;
-            switch (status) {
-              case 'Shortlisted':
-                statusBg = const Color(0xFFF0FDF4);
-                statusFg = kSuccess;
-                statusIcon = Icons.check_circle;
-                break;
-              case 'Viewed':
-                statusBg = const Color(0xFFFFFBEB);
-                statusFg = kWarning;
-                statusIcon = Icons.visibility;
-                break;
-              default:
-                statusBg = kSelectedBg;
-                statusFg = kPrimary;
-                statusIcon = Icons.send;
-            }
-            final isJob = (app['type'] ?? 'Job') == 'Job';
-            return Container(
-              margin: EdgeInsets.only(bottom: sw * 0.030),
+        ),
+      ],
+    );
+  }
+
+  // ─────────────────────────────────────────────
+  //  TAB 3 — CERTS
+  // ─────────────────────────────────────────────
+  Widget _certs(double sw) {
+    final p = profileState;
+    return ListView(
+      padding: EdgeInsets.all(sw * 0.040),
+      children: [
+        ...List.generate(p.certifications.length, (i) {
+          final c = p.certifications[i];
+          final theme = _certTheme(c['name'] ?? '');
+          return Padding(
+            padding: EdgeInsets.only(bottom: sw * 0.030),
+            child: Container(
+              padding: EdgeInsets.all(sw * 0.040),
+              decoration: BoxDecoration(
+                color: theme.bg,
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(
+                  color: theme.g1.withOpacity(0.20),
+                  width: 1.5,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: sw * 0.115,
+                    height: sw * 0.115,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(colors: [theme.g1, theme.g2]),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Icon(
+                      theme.icon,
+                      color: Colors.white,
+                      size: sw * 0.055,
+                    ),
+                  ),
+                  SizedBox(width: sw * 0.030),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          c['name'] ?? '',
+                          style: TextStyle(
+                            fontSize: sw * 0.033,
+                            fontWeight: FontWeight.w800,
+                            color: kInk,
+                          ),
+                        ),
+                        SizedBox(height: sw * 0.008),
+                        Text(
+                          c['issuer'] ?? '',
+                          style: TextStyle(
+                            fontSize: sw * 0.028,
+                            color: kMuted,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        SizedBox(height: sw * 0.005),
+                        Text(
+                          c['date'] ?? '',
+                          style: TextStyle(fontSize: sw * 0.025, color: kHint),
+                        ),
+                      ],
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () => _deleteCertificate(i),
+                    child: Icon(
+                      Icons.delete_outline,
+                      color: Colors.red.shade300,
+                      size: sw * 0.050,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }),
+        SizedBox(height: sw * 0.010),
+        GestureDetector(
+          onTap: _addCertDialog,
+          child: Container(
+            padding: EdgeInsets.symmetric(vertical: sw * 0.040),
+            decoration: BoxDecoration(
+              color: kPrimary,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: kPrimary.withOpacity(0.35),
+                  blurRadius: 14,
+                  offset: const Offset(0, 5),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.add_circle_outline,
+                  color: Colors.white,
+                  size: sw * 0.050,
+                ),
+                SizedBox(width: sw * 0.020),
+                Text(
+                  'Add Certificate',
+                  style: TextStyle(
+                    fontSize: sw * 0.035,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ─────────────────────────────────────────────
+  //  TAB 4 — PROJECTS
+  // ─────────────────────────────────────────────
+  Widget _projectsTab(double sw) {
+    final p = profileState;
+    return ListView(
+      padding: EdgeInsets.all(sw * 0.040),
+      children: [
+        ...List.generate(p.projects.length, (i) {
+          final proj = p.projects[i];
+          return Padding(
+            padding: EdgeInsets.only(bottom: sw * 0.030),
+            child: Container(
+              padding: EdgeInsets.all(sw * 0.040),
               decoration: BoxDecoration(
                 color: kCardBg,
                 borderRadius: BorderRadius.circular(18),
                 border: Border.all(color: kBorder, width: 1.5),
               ),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    height: 3,
-                    decoration: BoxDecoration(
-                      color: statusFg.withOpacity(0.50),
-                      borderRadius: const BorderRadius.vertical(
-                        top: Radius.circular(18),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          proj['title'] as String,
+                          style: TextStyle(
+                            fontSize: sw * 0.035,
+                            fontWeight: FontWeight.w800,
+                            color: kInk,
+                          ),
+                        ),
                       ),
-                    ),
+                      GestureDetector(
+                        onTap: () => _deleteProject(i),
+                        child: Icon(
+                          Icons.delete_outline,
+                          color: Colors.red.shade300,
+                          size: sw * 0.050,
+                        ),
+                      ),
+                    ],
                   ),
-                  Padding(
-                    padding: EdgeInsets.all(sw * 0.040),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          width: sw * 0.12,
-                          height: sw * 0.12,
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                statusFg.withOpacity(0.15),
-                                statusFg.withOpacity(0.05),
-                              ],
-                            ),
-                            borderRadius: BorderRadius.circular(13),
-                            border: Border.all(
-                              color: statusFg.withOpacity(0.25),
-                            ),
-                          ),
-                          child: Icon(
-                            isJob ? Icons.work_outline : Icons.school_outlined,
-                            color: statusFg,
-                            size: sw * 0.055,
-                          ),
-                        ),
-                        SizedBox(width: sw * 0.030),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                app['role'] as String? ?? '',
-                                style: TextStyle(
-                                  fontSize: sw * 0.035,
-                                  fontWeight: FontWeight.w800,
-                                  color: kInk,
-                                ),
-                              ),
-                              SizedBox(height: sw * 0.005),
-                              Text(
-                                app['company'] as String? ?? '',
-                                style: TextStyle(
-                                  fontSize: sw * 0.030,
-                                  color: kMuted,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              SizedBox(height: sw * 0.010),
-                              Row(
-                                children: [
-                                  Container(
-                                    padding: EdgeInsets.symmetric(
-                                      horizontal: sw * 0.018,
-                                      vertical: sw * 0.005,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: isJob
-                                          ? kSelectedBg
-                                          : const Color(0xFFF0FDF4),
-                                      borderRadius: BorderRadius.circular(20),
-                                    ),
-                                    child: Text(
-                                      isJob ? 'Job' : 'Internship',
-                                      style: TextStyle(
-                                        fontSize: sw * 0.023,
-                                        fontWeight: FontWeight.w800,
-                                        color: isJob ? kPrimary : kSuccess,
-                                      ),
-                                    ),
-                                  ),
-                                  SizedBox(width: sw * 0.015),
-                                  Text(
-                                    app['date'] as String? ?? '',
-                                    style: TextStyle(
-                                      fontSize: sw * 0.028,
-                                      color: kHint,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                        SizedBox(width: sw * 0.015),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Container(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: sw * 0.025,
-                                vertical: sw * 0.015,
-                              ),
-                              decoration: BoxDecoration(
-                                color: statusBg,
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    statusIcon,
-                                    size: sw * 0.030,
-                                    color: statusFg,
-                                  ),
-                                  SizedBox(width: sw * 0.010),
-                                  Text(
-                                    status,
-                                    style: TextStyle(
-                                      fontSize: sw * 0.028,
-                                      fontWeight: FontWeight.w800,
-                                      color: statusFg,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            SizedBox(height: sw * 0.015),
-                            GestureDetector(
-                              onTap: () => _withdrawApplication(app, i),
-                              child: Container(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: sw * 0.025,
-                                  vertical: sw * 0.013,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.red.withOpacity(0.08),
-                                  borderRadius: BorderRadius.circular(20),
-                                  border: Border.all(
-                                    color: Colors.red.withOpacity(0.55),
-                                  ),
-                                ),
-                                child: Text(
-                                  'Withdraw',
-                                  style: TextStyle(
-                                    fontSize: sw * 0.028,
-                                    fontWeight: FontWeight.w700,
-                                    color: Colors.red,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
+                  SizedBox(height: sw * 0.015),
+                  Text(
+                    proj['desc'] as String,
+                    style: TextStyle(
+                      fontSize: sw * 0.030,
+                      color: kMuted,
+                      height: 1.5,
                     ),
                   ),
                 ],
               ),
-            );
-          }),
-        ],
-      ),
+            ),
+          );
+        }),
+        SizedBox(height: sw * 0.010),
+        GestureDetector(
+          onTap: _addProjectDialog,
+          child: Container(
+            padding: EdgeInsets.symmetric(vertical: sw * 0.040),
+            decoration: BoxDecoration(
+              color: kPrimary,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: kPrimary.withOpacity(0.35),
+                  blurRadius: 14,
+                  offset: const Offset(0, 5),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.add_circle_outline,
+                  color: Colors.white,
+                  size: sw * 0.050,
+                ),
+                SizedBox(width: sw * 0.020),
+                Text(
+                  'Add Project',
+                  style: TextStyle(
+                    fontSize: sw * 0.035,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 
   // ─────────────────────────────────────────────
-  //  SHARED WIDGETS
+  //  TAB 5 — APPLICATIONS
+  // ─────────────────────────────────────────────
+  Widget _applicationsTab(double sw) {
+    final p = profileState;
+    if (p.applications.isEmpty)
+      return Center(
+        child: Text(
+          'No applications yet.',
+          style: TextStyle(color: kMuted, fontSize: sw * 0.035),
+        ),
+      );
+    return ListView.separated(
+      padding: EdgeInsets.all(sw * 0.040),
+      itemCount: p.applications.length,
+      separatorBuilder: (_, __) => SizedBox(height: sw * 0.025),
+      itemBuilder: (_, i) {
+        final app = p.applications[i] as Map;
+        final statusColor = app['status'] == 'Applied'
+            ? kPrimary
+            : app['status'] == 'Accepted'
+            ? kSuccess
+            : kWarning;
+        return Container(
+          padding: EdgeInsets.all(sw * 0.040),
+          decoration: BoxDecoration(
+            color: kCardBg,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: kBorder, width: 1.5),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: sw * 0.115,
+                height: sw * 0.115,
+                decoration: BoxDecoration(
+                  color: kSelectedBg,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Icon(
+                  app['type'] == 'Internship' ? Icons.school : Icons.work,
+                  color: kPrimary,
+                  size: sw * 0.055,
+                ),
+              ),
+              SizedBox(width: sw * 0.030),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      app['role'] as String,
+                      style: TextStyle(
+                        fontSize: sw * 0.033,
+                        fontWeight: FontWeight.w800,
+                        color: kInk,
+                      ),
+                    ),
+                    SizedBox(height: sw * 0.005),
+                    Text(
+                      app['company'] as String,
+                      style: TextStyle(fontSize: sw * 0.028, color: kMuted),
+                    ),
+                    SizedBox(height: sw * 0.010),
+                    Row(
+                      children: [
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: sw * 0.020,
+                            vertical: sw * 0.008,
+                          ),
+                          decoration: BoxDecoration(
+                            color: statusColor.withOpacity(0.10),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            app['status'] as String,
+                            style: TextStyle(
+                              fontSize: sw * 0.025,
+                              fontWeight: FontWeight.w700,
+                              color: statusColor,
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: sw * 0.015),
+                        Text(
+                          app['date'] as String,
+                          style: TextStyle(fontSize: sw * 0.025, color: kHint),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              GestureDetector(
+                onTap: () => _withdrawApplication(app, i),
+                child: Icon(
+                  Icons.cancel_outlined,
+                  color: Colors.red.shade300,
+                  size: sw * 0.055,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // ─────────────────────────────────────────────
+  //  HELPERS
   // ─────────────────────────────────────────────
   Widget _card({
     required String title,
     required IconData icon,
-    required Widget child,
     required double sw,
+    required Widget child,
     VoidCallback? onEdit,
   }) {
     return Container(
@@ -1863,20 +2086,8 @@ class _ProfileScreenState extends State<ProfileScreen>
         children: [
           Row(
             children: [
-              Container(
-                width: sw * 0.075,
-                height: sw * 0.075,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [kPrimary, Color(0xFF4F46E5)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(9),
-                ),
-                child: Icon(icon, color: Colors.white, size: sw * 0.038),
-              ),
-              SizedBox(width: sw * 0.025),
+              Icon(icon, size: sw * 0.040, color: kPrimary),
+              SizedBox(width: sw * 0.020),
               Text(
                 title,
                 style: TextStyle(
@@ -1892,217 +2103,44 @@ class _ProfileScreenState extends State<ProfileScreen>
                   child: Container(
                     padding: EdgeInsets.symmetric(
                       horizontal: sw * 0.025,
-                      vertical: sw * 0.013,
+                      vertical: sw * 0.012,
                     ),
                     decoration: BoxDecoration(
                       color: kSelectedBg,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: kBorder),
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.edit, size: sw * 0.030, color: kPrimary),
-                        SizedBox(width: sw * 0.010),
-                        Text(
-                          'Edit',
-                          style: TextStyle(
-                            fontSize: sw * 0.028,
-                            fontWeight: FontWeight.w700,
-                            color: kPrimary,
-                          ),
-                        ),
-                      ],
+                    child: Text(
+                      'Edit',
+                      style: TextStyle(
+                        fontSize: sw * 0.028,
+                        color: kPrimary,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
                 ),
             ],
           ),
-          SizedBox(height: sw * 0.035),
+          SizedBox(height: sw * 0.030),
           child,
         ],
       ),
     );
   }
 
-  Widget _addCta(IconData icon, String label, VoidCallback onTap, double sw) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: EdgeInsets.symmetric(vertical: sw * 0.035),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              kPrimary.withOpacity(0.07),
-              const Color(0xFF4F46E5).withOpacity(0.03),
-            ],
-          ),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: kPrimary.withOpacity(0.35), width: 1.5),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: kPrimary, size: sw * 0.045),
-            SizedBox(width: sw * 0.020),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: sw * 0.033,
-                fontWeight: FontWeight.w800,
-                color: kPrimary,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // ─────────────────────────────────────────────
-  //  EDIT FLOWS
-  // ─────────────────────────────────────────────
-  void _sheet({
-    required String title,
-    required IconData icon,
-    required List<_FieldCfg> fields,
-    required Future<void> Function() onSave,
-  }) {
-    final sw = MediaQuery.of(context).size.width;
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom,
-        ),
-        child: Container(
-          decoration: const BoxDecoration(
-            color: kCardBg,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-          ),
-          padding: EdgeInsets.fromLTRB(sw * 0.06, 0, sw * 0.06, sw * 0.08),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Center(
-                child: Container(
-                  margin: EdgeInsets.symmetric(vertical: sw * 0.030),
-                  width: sw * 0.10,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: kBorder,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                ),
-              ),
-              Row(
-                children: [
-                  Container(
-                    width: sw * 0.09,
-                    height: sw * 0.09,
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [kPrimary, Color(0xFF4F46E5)],
-                      ),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Icon(icon, color: Colors.white, size: sw * 0.045),
-                  ),
-                  SizedBox(width: sw * 0.030),
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: sw * 0.040,
-                      fontWeight: FontWeight.w800,
-                      color: kInk,
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: sw * 0.045),
-              ...fields.map(
-                (f) => Padding(
-                  padding: EdgeInsets.only(bottom: sw * 0.030),
-                  child: TextField(
-                    controller: f.ctrl,
-                    maxLines: f.maxLines,
-                    style: TextStyle(fontSize: sw * 0.033, color: kInk),
-                    decoration: InputDecoration(
-                      labelText: f.label,
-                      labelStyle: TextStyle(
-                        color: kMuted,
-                        fontSize: sw * 0.033,
-                      ),
-                      prefixIcon: Icon(f.icon, color: kMuted, size: sw * 0.045),
-                      filled: true,
-                      fillColor: kBgPage,
-                      contentPadding: EdgeInsets.symmetric(
-                        horizontal: sw * 0.040,
-                        vertical: sw * 0.033,
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(14),
-                        borderSide: const BorderSide(
-                          color: kBorder,
-                          width: 1.5,
-                        ),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(14),
-                        borderSide: const BorderSide(
-                          color: kBorder,
-                          width: 1.5,
-                        ),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(14),
-                        borderSide: const BorderSide(color: kPrimary, width: 2),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              SizedBox(height: sw * 0.010),
-              GestureDetector(
-                onTap: () async {
-                  Navigator.pop(context);
-                  await onSave();
-                },
-                child: Container(
-                  width: double.infinity,
-                  padding: EdgeInsets.symmetric(vertical: sw * 0.035),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [kPrimary, Color(0xFF4F46E5)],
-                      begin: Alignment.centerLeft,
-                      end: Alignment.centerRight,
-                    ),
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: kPrimary.withOpacity(0.28),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Center(
-                    child: Text(
-                      'Save Changes',
-                      style: TextStyle(
-                        fontSize: sw * 0.038,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
+  void _showSnack(String msg, Color color) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          msg,
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w700,
           ),
         ),
+        backgroundColor: color,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
   }
@@ -2113,8 +2151,8 @@ class _ProfileScreenState extends State<ProfileScreen>
     int maxLines,
     Future<void> Function(String) onSave,
   ) {
-    final sw = MediaQuery.of(context).size.width;
     final ctrl = TextEditingController(text: initial);
+    final sw = MediaQuery.of(context).size.width;
     showDialog(
       context: context,
       builder: (_) => Dialog(
@@ -2125,7 +2163,7 @@ class _ProfileScreenState extends State<ProfileScreen>
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                'Edit $title',
+                title,
                 style: TextStyle(
                   fontSize: sw * 0.040,
                   fontWeight: FontWeight.w800,
@@ -2178,9 +2216,9 @@ class _ProfileScreenState extends State<ProfileScreen>
                   SizedBox(width: sw * 0.030),
                   Expanded(
                     child: GestureDetector(
-                      onTap: () async {
+                      onTap: () {
                         Navigator.pop(context);
-                        await onSave(ctrl.text.trim());
+                        onSave(ctrl.text.trim());
                       },
                       child: Container(
                         padding: EdgeInsets.symmetric(vertical: sw * 0.030),
@@ -2211,449 +2249,391 @@ class _ProfileScreenState extends State<ProfileScreen>
   }
 
   void _editBasicInfo() {
+    final sw = MediaQuery.of(context).size.width;
     final p = profileState;
-    final n = TextEditingController(text: p.name);
-    final dg = TextEditingController(text: p.degree);
-    final co = TextEditingController(text: p.college);
-    _sheet(
-      title: 'Edit Profile',
-      icon: Icons.person,
-      fields: [
-        _FieldCfg(n, 'Full Name', Icons.badge),
-        _FieldCfg(dg, 'Degree & Year', Icons.school),
-        _FieldCfg(co, 'College / University', Icons.account_balance),
-      ],
-      onSave: () async {
-        final ok = await profileState.updateProfile({
-          'full_name': n.text.trim(),
-          'degree': dg.text.trim(),
-          'university': co.text.trim(),
-        });
-        _showSnack(
-          ok ? 'Profile updated!' : 'Failed to update. Try again.',
-          ok ? kSuccess : Colors.red,
-        );
-      },
+    final nameCtrl = TextEditingController(text: p.name);
+    final degCtrl = TextEditingController(text: p.college);
+    final yearCtrl = TextEditingController();
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (_) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
+        child: Padding(
+          padding: EdgeInsets.all(sw * 0.05),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Basic Info',
+                style: TextStyle(
+                  fontSize: sw * 0.040,
+                  fontWeight: FontWeight.w800,
+                  color: kInk,
+                ),
+              ),
+              SizedBox(height: sw * 0.040),
+              _field(nameCtrl, 'Full Name', sw),
+              SizedBox(height: sw * 0.025),
+              _field(degCtrl, 'University', sw),
+              SizedBox(height: sw * 0.025),
+              _field(
+                yearCtrl,
+                'Graduation Year',
+                sw,
+                type: TextInputType.number,
+              ),
+              SizedBox(height: sw * 0.040),
+              GestureDetector(
+                onTap: () async {
+                  Navigator.pop(context);
+                  final ok = await profileState.updateProfile({
+                    'full_name': nameCtrl.text.trim(),
+                    'university': degCtrl.text.trim(),
+                    if (yearCtrl.text.trim().isNotEmpty)
+                      'graduation_year': int.tryParse(yearCtrl.text.trim()),
+                  });
+                  _showSnack(
+                    ok ? 'Profile updated!' : 'Failed to update',
+                    ok ? kSuccess : Colors.red,
+                  );
+                },
+                child: Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.symmetric(vertical: sw * 0.040),
+                  decoration: BoxDecoration(
+                    color: kPrimary,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Center(
+                    child: Text(
+                      'Save Changes',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                        fontSize: sw * 0.035,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
   void _editContactSheet() {
-    final p = profileState;
-    final em = TextEditingController(text: p.email);
-    final ph = TextEditingController(text: p.phone);
-    final lo = TextEditingController(text: p.location);
-    final li = TextEditingController(text: p.linkedin);
-    final gh = TextEditingController(text: p.github);
-    _sheet(
-      title: 'Contact & Links',
-      icon: Icons.contact_page,
-      fields: [
-        _FieldCfg(em, 'Email', Icons.email),
-        _FieldCfg(ph, 'Phone', Icons.phone),
-        _FieldCfg(lo, 'Location / Address', Icons.location_on),
-        _FieldCfg(li, 'LinkedIn URL', Icons.link),
-        _FieldCfg(gh, 'GitHub URL', Icons.code),
-      ],
-      onSave: () async {
-        final ok = await profileState.updateProfile({
-          'email': em.text.trim(),
-          'phone': ph.text.trim(),
-          'address': lo.text.trim(),
-          'linkedin_url': li.text.trim(),
-          'github_url': gh.text.trim(),
-        });
-        _showSnack(
-          ok ? 'Contact info updated!' : 'Failed to update. Try again.',
-          ok ? kSuccess : Colors.red,
-        );
-      },
-    );
-  }
-
-  void _addSkillDialog() {
     final sw = MediaQuery.of(context).size.width;
-    final nameCtrl = TextEditingController();
-    double level = 0.70;
-    showDialog(
+    final p = profileState;
+    final phoneCtrl = TextEditingController(text: p.phone);
+    final locCtrl = TextEditingController(text: p.location);
+    final liCtrl = TextEditingController(text: p.linkedin);
+    final ghCtrl = TextEditingController(text: p.github);
+    showModalBottomSheet(
       context: context,
-      builder: (_) => StatefulBuilder(
-        builder: (ctx, sst) => Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Padding(
-            padding: EdgeInsets.all(sw * 0.06),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'Add Skill',
-                  style: TextStyle(
-                    fontSize: sw * 0.040,
-                    fontWeight: FontWeight.w800,
-                    color: kInk,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (_) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
+        child: Padding(
+          padding: EdgeInsets.all(sw * 0.05),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Contact & Links',
+                style: TextStyle(
+                  fontSize: sw * 0.040,
+                  fontWeight: FontWeight.w800,
+                  color: kInk,
+                ),
+              ),
+              SizedBox(height: sw * 0.040),
+              _field(phoneCtrl, 'Phone', sw, type: TextInputType.phone),
+              SizedBox(height: sw * 0.025),
+              _field(locCtrl, 'Address / Location', sw),
+              SizedBox(height: sw * 0.025),
+              _field(liCtrl, 'LinkedIn URL', sw),
+              SizedBox(height: sw * 0.025),
+              _field(ghCtrl, 'GitHub URL', sw),
+              SizedBox(height: sw * 0.040),
+              GestureDetector(
+                onTap: () async {
+                  Navigator.pop(context);
+                  final ok = await profileState.updateProfile({
+                    'phone': phoneCtrl.text.trim(),
+                    'address': locCtrl.text.trim(),
+                    'linkedin_url': liCtrl.text.trim(),
+                    'github_url': ghCtrl.text.trim(),
+                  });
+                  _showSnack(
+                    ok ? 'Contact updated!' : 'Failed to update',
+                    ok ? kSuccess : Colors.red,
+                  );
+                },
+                child: Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.symmetric(vertical: sw * 0.040),
+                  decoration: BoxDecoration(
+                    color: kPrimary,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Center(
+                    child: Text(
+                      'Save Changes',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                        fontSize: sw * 0.035,
+                      ),
+                    ),
                   ),
                 ),
-                SizedBox(height: sw * 0.040),
-                TextField(
-                  controller: nameCtrl,
-                  style: TextStyle(fontSize: sw * 0.033, color: kInk),
-                  decoration: InputDecoration(
-                    hintText: 'e.g. Flutter, Figma, AWS',
-                    hintStyle: TextStyle(color: kHint, fontSize: sw * 0.033),
-                    filled: true,
-                    fillColor: kBgPage,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: kBorder),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: kPrimary, width: 2),
-                    ),
-                  ),
-                ),
-                SizedBox(height: sw * 0.040),
-                Row(
-                  children: [
-                    Text(
-                      'Proficiency',
-                      style: TextStyle(
-                        fontSize: sw * 0.030,
-                        color: kMuted,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const Spacer(),
-                    Text(
-                      '${(level * 100).toInt()}%',
-                      style: TextStyle(
-                        fontSize: sw * 0.033,
-                        color: kPrimary,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                  ],
-                ),
-                Slider(
-                  value: level,
-                  onChanged: (v) => sst(() => level = v),
-                  activeColor: kPrimary,
-                  inactiveColor: kBorder,
-                ),
-                SizedBox(height: sw * 0.020),
-                Row(
-                  children: [
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () => Navigator.pop(context),
-                        child: Container(
-                          padding: EdgeInsets.symmetric(vertical: sw * 0.030),
-                          decoration: BoxDecoration(
-                            color: kBgPage,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Center(
-                            child: Text(
-                              'Cancel',
-                              style: TextStyle(
-                                color: kMuted,
-                                fontWeight: FontWeight.w700,
-                                fontSize: sw * 0.033,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: sw * 0.030),
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () {
-                          if (nameCtrl.text.trim().isNotEmpty) {
-                            profileState.set(
-                              () => profileState.skills.add({
-                                'name': nameCtrl.text.trim(),
-                                'level': level,
-                              }),
-                            );
-                            Navigator.pop(context);
-                          }
-                        },
-                        child: Container(
-                          padding: EdgeInsets.symmetric(vertical: sw * 0.030),
-                          decoration: BoxDecoration(
-                            color: kPrimary,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Center(
-                            child: Text(
-                              'Add',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w800,
-                                fontSize: sw * 0.033,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
     );
   }
 
-  Future<void> _addCertDialog() async {
-    final nm = TextEditingController();
-    final is_ = TextEditingController();
-    final dt = TextEditingController();
-    const storage = FlutterSecureStorage();
-    final userId = await storage.read(key: 'user_id');
-
-    _sheet(
-      title: 'Add Certification',
-      icon: Icons.workspace_premium,
-      fields: [
-        _FieldCfg(nm, 'Certificate Name', Icons.workspace_premium),
-        _FieldCfg(is_, 'Issuer', Icons.business),
-        _FieldCfg(dt, 'Date  (e.g. Mar 2024)', Icons.calendar_today),
-      ],
-      onSave: () async {
-        if (nm.text.trim().isEmpty ||
-            is_.text.trim().isEmpty ||
-            userId == null) {
-          _showSnack('Please fill in name and issuer.', kWarning);
-          return;
-        }
-
-        // Convert "Mar 2024" → "2024-03-01" for API
-        String? isoDate;
-        final rawDate = dt.text.trim();
-        if (rawDate.isNotEmpty) {
-          try {
-            const months = {
-              'jan': '01',
-              'feb': '02',
-              'mar': '03',
-              'apr': '04',
-              'may': '05',
-              'jun': '06',
-              'jul': '07',
-              'aug': '08',
-              'sep': '09',
-              'oct': '10',
-              'nov': '11',
-              'dec': '12',
-            };
-            final parts = rawDate.split(' ');
-            if (parts.length == 2) {
-              final month = months[parts[0].toLowerCase()] ?? '01';
-              isoDate = '${parts[1]}-$month-01';
-            }
-          } catch (_) {}
-        }
-
-        try {
-          final res = await http.post(
-            Uri.parse(
-              'https://studenthub-backend-woad.vercel.app/api/certificates',
-            ),
-            headers: {'Content-Type': 'application/json'},
-            body: jsonEncode({
-              'user_id': int.parse(userId),
-              'title': nm.text.trim(),
-              'issuer': is_.text.trim(),
-              'issue_date': isoDate,
-              'file_url': null,
-            }),
-          );
-          if (res.statusCode == 201) {
-            final data = jsonDecode(res.body)['data'];
-            profileState.set(
-              () => profileState.certifications.add({
-                'certificate_id': (data['certificate_id'] ?? '').toString(),
-                'name': data['title'] ?? nm.text.trim(),
-                'issuer': data['issuer'] ?? is_.text.trim(),
-                'date': _fmtDate(data['issue_date']).isNotEmpty
-                    ? _fmtDate(data['issue_date'])
-                    : rawDate,
-              }),
-            );
-            _showSnack('Certificate added!', kSuccess);
-          } else {
-            final body = jsonDecode(res.body);
-            _showSnack(
-              'Failed: ${body['message'] ?? 'Status ${res.statusCode}'}',
-              Colors.red,
-            );
-          }
-        } catch (e) {
-          _showSnack('Error: $e', Colors.red);
-        }
-      },
+  void _addCertDialog() {
+    final sw = MediaQuery.of(context).size.width;
+    final nameCtrl = TextEditingController();
+    final issuerCtrl = TextEditingController();
+    final dateCtrl = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (_) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        child: Padding(
+          padding: EdgeInsets.all(sw * 0.06),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Add Certificate',
+                style: TextStyle(
+                  fontSize: sw * 0.040,
+                  fontWeight: FontWeight.w800,
+                  color: kInk,
+                ),
+              ),
+              SizedBox(height: sw * 0.040),
+              _field(nameCtrl, 'Certificate Name', sw),
+              SizedBox(height: sw * 0.025),
+              _field(issuerCtrl, 'Issuer', sw),
+              SizedBox(height: sw * 0.025),
+              _field(dateCtrl, 'Date (e.g. Jan 2024)', sw),
+              SizedBox(height: sw * 0.040),
+              Row(
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => Navigator.pop(context),
+                      child: Container(
+                        padding: EdgeInsets.symmetric(vertical: sw * 0.030),
+                        decoration: BoxDecoration(
+                          color: kBgPage,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Center(
+                          child: Text(
+                            'Cancel',
+                            style: TextStyle(
+                              color: kMuted,
+                              fontWeight: FontWeight.w700,
+                              fontSize: sw * 0.033,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: sw * 0.030),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () {
+                        if (nameCtrl.text.trim().isEmpty) return;
+                        Navigator.pop(context);
+                        profileState.set(
+                          () => profileState.certifications.add({
+                            'certificate_id': '',
+                            'name': nameCtrl.text.trim(),
+                            'issuer': issuerCtrl.text.trim(),
+                            'date': dateCtrl.text.trim(),
+                          }),
+                        );
+                        _showSnack('Certificate added!', kSuccess);
+                      },
+                      child: Container(
+                        padding: EdgeInsets.symmetric(vertical: sw * 0.030),
+                        decoration: BoxDecoration(
+                          color: kPrimary,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Center(
+                          child: Text(
+                            'Add',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w800,
+                              fontSize: sw * 0.033,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
     );
-  }
-
-  String _fmtDate(String? iso) {
-    if (iso == null) return '';
-    final dt = DateTime.tryParse(iso);
-    if (dt == null) return '';
-    const m = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-    ];
-    return '${m[dt.month - 1]} ${dt.year}';
   }
 
   void _addProjectDialog() {
-    final ti = TextEditingController();
-    final de = TextEditingController();
-    final li = TextEditingController();
-    final te = TextEditingController();
-    _sheet(
-      title: 'Add Project',
-      icon: Icons.folder,
-      fields: [
-        _FieldCfg(ti, 'Project Title', Icons.title),
-        _FieldCfg(de, 'Description', Icons.description, maxLines: 3),
-        _FieldCfg(li, 'GitHub / Live Link', Icons.link),
-        _FieldCfg(te, 'Tech Stack (comma-sep)', Icons.code),
-      ],
-      onSave: () async {
-        if (ti.text.trim().isEmpty) return;
-        try {
-          final userId = await const FlutterSecureStorage().read(
-            key: 'user_id',
-          );
-          final res = await http.post(
-            Uri.parse(
-              'https://studenthub-backend-woad.vercel.app/api/projects',
-            ),
-            headers: {'Content-Type': 'application/json'},
-            body: jsonEncode({
-              'user_id': int.tryParse(userId ?? '0') ?? 0,
-              'title': ti.text.trim(),
-              'description': de.text.trim(),
-            }),
-          );
-          if (res.statusCode == 201) {
-            final data = jsonDecode(res.body)['data'];
-            profileState.set(
-              () => profileState.projects.insert(0, {
-                'project_id': data['project_id'],
-                'title': data['title'] ?? ti.text.trim(),
-                'desc': data['description'] ?? de.text.trim(),
-                'link': li.text.trim(),
-                'tech': te.text
-                    .split(',')
-                    .map((s) => s.trim())
-                    .where((s) => s.isNotEmpty)
-                    .toList(),
-              }),
-            );
-            _showSnack('Project added!', kSuccess);
-          } else {
-            final body = jsonDecode(res.body);
-            _showSnack(
-              'Failed: ${body['message'] ?? 'Status ${res.statusCode}'}',
-              Colors.red,
-            );
-          }
-        } catch (e) {
-          _showSnack('Error: $e', Colors.red);
-        }
-      },
-    );
-  }
-
-  void _editProjectDialog(int idx) {
-    if (idx < 0 || idx >= profileState.projects.length) return;
-    final proj = profileState.projects[idx];
-    final ti = TextEditingController(text: proj['title'] as String);
-    final de = TextEditingController(text: proj['desc'] as String);
-    final li = TextEditingController(text: proj['link'] as String);
-    final te = TextEditingController(
-      text: (proj['tech'] as List<String>).join(', '),
-    );
-    _sheet(
-      title: 'Edit Project',
-      icon: Icons.folder,
-      fields: [
-        _FieldCfg(ti, 'Project Title', Icons.title),
-        _FieldCfg(de, 'Description', Icons.description, maxLines: 3),
-        _FieldCfg(li, 'GitHub / Live Link', Icons.link),
-        _FieldCfg(te, 'Tech Stack (comma-sep)', Icons.code),
-      ],
-      onSave: () async {
-        profileState.set(() {
-          profileState.projects[idx] = {
-            'project_id': proj['project_id'],
-            'title': ti.text.trim(),
-            'desc': de.text.trim(),
-            'link': li.text.trim(),
-            'tech': te.text
-                .split(',')
-                .map((s) => s.trim())
-                .where((s) => s.isNotEmpty)
-                .toList(),
-          };
-        });
-      },
-    );
-  }
-
-  void _uploadResume() async {
-    final ok = await profileState.updateProfile({'resume_url': 'Resume.pdf'});
-    if (!ok) profileState.set(() => profileState.resumeName = 'Resume.pdf');
-    _showSnack('Resume uploaded! Profile strength updated.', kSuccess);
-  }
-
-  void _showSnack(String msg, Color color) {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const Icon(Icons.check_circle, color: Colors.white, size: 16),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                msg,
-                style: const TextStyle(fontWeight: FontWeight.w700),
+    final sw = MediaQuery.of(context).size.width;
+    final titleCtrl = TextEditingController();
+    final descCtrl = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (_) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        child: Padding(
+          padding: EdgeInsets.all(sw * 0.06),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Add Project',
+                style: TextStyle(
+                  fontSize: sw * 0.040,
+                  fontWeight: FontWeight.w800,
+                  color: kInk,
+                ),
               ),
-            ),
-          ],
+              SizedBox(height: sw * 0.040),
+              _field(titleCtrl, 'Project Title', sw),
+              SizedBox(height: sw * 0.025),
+              _field(descCtrl, 'Description', sw, maxLines: 3),
+              SizedBox(height: sw * 0.040),
+              Row(
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => Navigator.pop(context),
+                      child: Container(
+                        padding: EdgeInsets.symmetric(vertical: sw * 0.030),
+                        decoration: BoxDecoration(
+                          color: kBgPage,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Center(
+                          child: Text(
+                            'Cancel',
+                            style: TextStyle(
+                              color: kMuted,
+                              fontWeight: FontWeight.w700,
+                              fontSize: sw * 0.033,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: sw * 0.030),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () {
+                        if (titleCtrl.text.trim().isEmpty) return;
+                        Navigator.pop(context);
+                        profileState.set(
+                          () => profileState.projects.add({
+                            'project_id': null,
+                            'title': titleCtrl.text.trim(),
+                            'desc': descCtrl.text.trim(),
+                            'tech': <String>[],
+                            'link': '',
+                          }),
+                        );
+                        _showSnack('Project added!', kSuccess);
+                      },
+                      child: Container(
+                        padding: EdgeInsets.symmetric(vertical: sw * 0.030),
+                        decoration: BoxDecoration(
+                          color: kPrimary,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Center(
+                          child: Text(
+                            'Add',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w800,
+                              fontSize: sw * 0.033,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
-        backgroundColor: color,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        margin: const EdgeInsets.all(16),
-        duration: const Duration(seconds: 3),
       ),
     );
   }
-}
 
-class _FieldCfg {
-  final TextEditingController ctrl;
-  final String label;
-  final IconData icon;
-  final int maxLines;
-  const _FieldCfg(this.ctrl, this.label, this.icon, {this.maxLines = 1});
+  void _uploadResume() {
+    _showSnack('Resume upload coming soon!', kWarning);
+  }
+
+  Widget _field(
+    TextEditingController ctrl,
+    String hint,
+    double sw, {
+    TextInputType type = TextInputType.text,
+    int maxLines = 1,
+  }) {
+    return TextField(
+      controller: ctrl,
+      keyboardType: type,
+      maxLines: maxLines,
+      style: TextStyle(fontSize: sw * 0.033, color: kInk),
+      decoration: InputDecoration(
+        hintText: hint,
+        hintStyle: TextStyle(color: kHint, fontSize: sw * 0.033),
+        filled: true,
+        fillColor: kBgPage,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: kBorder),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: kPrimary, width: 2),
+        ),
+        contentPadding: EdgeInsets.symmetric(
+          horizontal: sw * 0.040,
+          vertical: sw * 0.030,
+        ),
+      ),
+    );
+  }
 }

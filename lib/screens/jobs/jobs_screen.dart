@@ -6,9 +6,9 @@ import 'package:http/http.dart' as http;
 
 import '../../api_services/applications.dart';
 
-// ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════════
 //  DESIGN TOKENS
-// ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════════
 const kInk = Color(0xFF0F172A);
 const kSlate = Color(0xFF334155);
 const kMuted = Color(0xFF64748B);
@@ -21,7 +21,6 @@ const kAccent = Color(0xFF38BDF8);
 const kSuccess = Color(0xFF16A34A);
 const kWarning = Color(0xFFF59E0B);
 const kSelectedBg = Color(0xFFEFF6FF);
-
 const List<String> kFilters = [
   'All',
   'Full Time',
@@ -30,9 +29,9 @@ const List<String> kFilters = [
   'Bengaluru',
 ];
 
-// ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════════
 //  JOB MODEL
-// ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════════
 class Job {
   final int id;
   final String title, company, location, salary, type, logo, exp, posted, desc;
@@ -60,21 +59,24 @@ class Job {
     company: 'Company ${json['company_id'] ?? 0}',
     location: json['location'] ?? 'Remote',
     salary: json['salary_min'] != null && json['salary_max'] != null
-        ? '${json['salary_min']}–${json['salary_max']}'
+        ? '${json['salary_min']}-${json['salary_max']}'
         : 'Negotiable',
     type: json['job_type'] ?? 'Full Time',
     match: 80,
     logo: '',
-    tags: const ['Tech', 'Developer'],
+    // ✅ reads skills array returned by GET /api/jobs
+    tags: (json['skills'] as List<dynamic>? ?? [])
+        .map<String>((t) => t.toString())
+        .toList(),
     exp: json['experience_level'] ?? 'Fresher',
     posted: 'Recently',
     desc: json['description'] ?? '',
   );
 }
 
-// ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════════
 //  JOB THEME SYSTEM
-// ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════════
 class JobTheme {
   final IconData icon;
   final Color grad1, grad2;
@@ -127,7 +129,7 @@ JobTheme resolveJobTheme(String title, String company) {
       Color(0xFF0284C7),
     );
   if (t.contains('artificial intelligence') ||
-      t.contains(' ai ') ||
+      t.contains(' ai') ||
       t.contains('ai '))
     return const JobTheme(
       Icons.smart_toy,
@@ -214,9 +216,9 @@ List<String> resolveResponsibilities(String title) {
   ];
 }
 
-// ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════════
 //  JOB ICON TILE
-// ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════════
 class JobIconTile extends StatelessWidget {
   final String title, company;
   final double size;
@@ -224,6 +226,7 @@ class JobIconTile extends StatelessWidget {
     required this.title,
     required this.company,
     this.size = 48,
+    super.key,
   });
 
   @override
@@ -252,9 +255,9 @@ class JobIconTile extends StatelessWidget {
   }
 }
 
-// ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════════
 //  JOBS SCREEN
-// ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════════
 class JobsScreen extends StatefulWidget {
   const JobsScreen({super.key});
   @override
@@ -280,30 +283,30 @@ class _JobsScreenState extends State<JobsScreen> with TickerProviderStateMixin {
       vsync: this,
       duration: const Duration(milliseconds: 600),
     )..forward();
-    _fetchJobs();
-    _loadAppliedJobs();
+    fetchJobs();
+    loadAppliedJobs();
   }
 
-  Future<void> _loadAppliedJobs() async {
+  Future<void> loadAppliedJobs() async {
     setState(() => appliedLoading = true);
     try {
       final appsData = await ApplicationsService.getApplications();
       if (appsData != null && appsData['data'] != null) {
         final data = appsData['data'] as List;
         final jobIds = ApplicationsService.extractJobIds(data);
-        if (mounted)
+        if (mounted) {
           setState(() {
             applied.clear();
             applied.addAll(jobIds);
           });
+        }
       }
     } finally {
       if (mounted) setState(() => appliedLoading = false);
     }
   }
 
-  Future<void> _fetchJobs() async {
-    // Only show full-screen loading on first load (not pull-to-refresh)
+  Future<void> fetchJobs() async {
     if (jobs.isEmpty)
       setState(() {
         loading = true;
@@ -317,11 +320,8 @@ class _JobsScreenState extends State<JobsScreen> with TickerProviderStateMixin {
         final data = jsonDecode(res.body);
         final List jobsData = data['data'] ?? [];
         final newJobs = jobsData.map((j) => Job.fromJson(j)).toList();
-
-        // Dispose old card anims, create new ones
         for (final c in cardAnims.values) c.dispose();
         cardAnims.clear();
-
         for (int i = 0; i < newJobs.length; i++) {
           final c = AnimationController(
             vsync: this,
@@ -379,6 +379,7 @@ class _JobsScreenState extends State<JobsScreen> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     final sw = MediaQuery.of(context).size.width;
+
     if (loading)
       return Scaffold(
         backgroundColor: kBgPage,
@@ -389,7 +390,7 @@ class _JobsScreenState extends State<JobsScreen> with TickerProviderStateMixin {
               const CircularProgressIndicator(color: kPrimary),
               SizedBox(height: sw * 0.04),
               Text(
-                'Finding your perfect jobs…',
+                'Finding your perfect jobs...',
                 style: TextStyle(
                   fontSize: sw * 0.035,
                   color: kMuted,
@@ -400,6 +401,7 @@ class _JobsScreenState extends State<JobsScreen> with TickerProviderStateMixin {
           ),
         ),
       );
+
     if (error)
       return Scaffold(
         backgroundColor: kBgPage,
@@ -434,7 +436,7 @@ class _JobsScreenState extends State<JobsScreen> with TickerProviderStateMixin {
                 onTap: () => setState(() {
                   loading = true;
                   error = false;
-                  _fetchJobs();
+                  fetchJobs();
                 }),
                 child: Container(
                   padding: EdgeInsets.symmetric(
@@ -470,6 +472,7 @@ class _JobsScreenState extends State<JobsScreen> with TickerProviderStateMixin {
           ),
         ),
       );
+
     return Scaffold(
       backgroundColor: kBgPage,
       body: Column(
@@ -656,7 +659,7 @@ class _JobsScreenState extends State<JobsScreen> with TickerProviderStateMixin {
         color: kInk,
       ),
       decoration: InputDecoration(
-        hintText: 'Search jobs, companies, skills…',
+        hintText: 'Search jobs, companies, skills...',
         hintStyle: TextStyle(fontSize: sw * 0.033, color: kHint),
         prefixIcon: Icon(Icons.search, color: kMuted, size: sw * 0.055),
         filled: true,
@@ -756,7 +759,7 @@ class _JobsScreenState extends State<JobsScreen> with TickerProviderStateMixin {
   );
 
   // ─────────────────────────────────────────────
-  //  JOB LIST  ✅ pull-to-refresh added
+  //  JOB LIST
   // ─────────────────────────────────────────────
   Widget _buildJobList(double sw) {
     final list = filtered;
@@ -811,12 +814,11 @@ class _JobsScreenState extends State<JobsScreen> with TickerProviderStateMixin {
           ],
         ),
       );
+
     return RefreshIndicator(
-      // ← pull-to-refresh
       color: kPrimary,
-      onRefresh: () async {
-        await Future.wait([_fetchJobs(), _loadAppliedJobs()]);
-      },
+      onRefresh: () async =>
+          await Future.wait([fetchJobs(), loadAppliedJobs()]),
       child: ListView.builder(
         padding: EdgeInsets.fromLTRB(
           sw * 0.04,
@@ -825,8 +827,7 @@ class _JobsScreenState extends State<JobsScreen> with TickerProviderStateMixin {
           sw * 0.06,
         ),
         itemCount: list.length,
-        physics:
-            const AlwaysScrollableScrollPhysics(), // needed for RefreshIndicator
+        physics: const AlwaysScrollableScrollPhysics(),
         itemBuilder: (_, i) => JobCard(
           job: list[i],
           sw: sw,
@@ -1137,6 +1138,7 @@ class _JobsScreenState extends State<JobsScreen> with TickerProviderStateMixin {
                         ),
                       ),
                     ],
+                    // ✅ Skills Required from tags[]
                     if (job.tags.isNotEmpty) ...[
                       SizedBox(height: sw * 0.055),
                       _sectionHeader(
@@ -1278,121 +1280,125 @@ class _JobsScreenState extends State<JobsScreen> with TickerProviderStateMixin {
     String title,
     JobTheme theme,
     double sw,
-  ) => Row(
-    children: [
-      Container(
-        width: sw * 0.085,
-        height: sw * 0.085,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(colors: [theme.grad1, theme.grad2]),
-          borderRadius: BorderRadius.circular(10),
+  ) {
+    return Row(
+      children: [
+        Container(
+          width: sw * 0.085,
+          height: sw * 0.085,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(colors: [theme.grad1, theme.grad2]),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(icon, color: Colors.white, size: sw * 0.045),
         ),
-        child: Icon(icon, color: Colors.white, size: sw * 0.045),
-      ),
-      SizedBox(width: sw * 0.025),
-      Text(
-        title,
-        style: TextStyle(
-          fontSize: sw * 0.038,
-          fontWeight: FontWeight.w800,
-          color: kInk,
-        ),
-      ),
-    ],
-  );
-
-  Widget _responsibilitiesBox(List<String> items, JobTheme theme, double sw) =>
-      Container(
-        width: double.infinity,
-        padding: EdgeInsets.all(sw * 0.040),
-        decoration: BoxDecoration(
-          color: kBgPage,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: kBorder),
-        ),
-        child: Column(
-          children: items
-              .asMap()
-              .entries
-              .map(
-                (e) => Padding(
-                  padding: EdgeInsets.only(
-                    bottom: e.key < items.length - 1 ? sw * 0.030 : 0,
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        margin: EdgeInsets.only(top: sw * 0.005),
-                        width: sw * 0.055,
-                        height: sw * 0.055,
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              theme.grad1.withValues(alpha: 0.15),
-                              theme.grad2.withValues(alpha: 0.08),
-                            ],
-                          ),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Center(
-                          child: Text(
-                            '${e.key + 1}',
-                            style: TextStyle(
-                              fontSize: sw * 0.025,
-                              fontWeight: FontWeight.w800,
-                              color: theme.grad1,
-                            ),
-                          ),
-                        ),
-                      ),
-                      SizedBox(width: sw * 0.025),
-                      Expanded(
-                        child: Text(
-                          e.value,
-                          style: TextStyle(
-                            fontSize: sw * 0.033,
-                            color: kSlate,
-                            height: 1.5,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              )
-              .toList(),
-        ),
-      );
-
-  Widget _statCell(IconData icon, String value, String label, double sw) =>
-      Expanded(
-        child: Padding(
-          padding: EdgeInsets.symmetric(vertical: sw * 0.035),
-          child: Column(
-            children: [
-              Icon(icon, size: sw * 0.045, color: kPrimary),
-              SizedBox(height: sw * 0.012),
-              Text(
-                value,
-                textAlign: TextAlign.center,
-                overflow: TextOverflow.ellipsis,
-                maxLines: 1,
-                style: TextStyle(
-                  fontSize: sw * 0.030,
-                  fontWeight: FontWeight.w800,
-                  color: kInk,
-                ),
-              ),
-              Text(
-                label,
-                style: TextStyle(fontSize: sw * 0.025, color: kMuted),
-              ),
-            ],
+        SizedBox(width: sw * 0.025),
+        Text(
+          title,
+          style: TextStyle(
+            fontSize: sw * 0.038,
+            fontWeight: FontWeight.w800,
+            color: kInk,
           ),
         ),
-      );
+      ],
+    );
+  }
+
+  Widget _responsibilitiesBox(List<String> items, JobTheme theme, double sw) {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(sw * 0.040),
+      decoration: BoxDecoration(
+        color: kBgPage,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: kBorder),
+      ),
+      child: Column(
+        children: items
+            .asMap()
+            .entries
+            .map(
+              (e) => Padding(
+                padding: EdgeInsets.only(
+                  bottom: e.key < items.length - 1 ? sw * 0.030 : 0,
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      margin: EdgeInsets.only(top: sw * 0.005),
+                      width: sw * 0.055,
+                      height: sw * 0.055,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            theme.grad1.withValues(alpha: 0.15),
+                            theme.grad2.withValues(alpha: 0.08),
+                          ],
+                        ),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Center(
+                        child: Text(
+                          '${e.key + 1}',
+                          style: TextStyle(
+                            fontSize: sw * 0.025,
+                            fontWeight: FontWeight.w800,
+                            color: theme.grad1,
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: sw * 0.025),
+                    Expanded(
+                      child: Text(
+                        e.value,
+                        style: TextStyle(
+                          fontSize: sw * 0.033,
+                          color: kSlate,
+                          height: 1.5,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            )
+            .toList(),
+      ),
+    );
+  }
+
+  Widget _statCell(IconData icon, String value, String label, double sw) {
+    return Expanded(
+      child: Padding(
+        padding: EdgeInsets.symmetric(vertical: sw * 0.035),
+        child: Column(
+          children: [
+            Icon(icon, size: sw * 0.045, color: kPrimary),
+            SizedBox(height: sw * 0.012),
+            Text(
+              value,
+              textAlign: TextAlign.center,
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+              style: TextStyle(
+                fontSize: sw * 0.030,
+                fontWeight: FontWeight.w800,
+                color: kInk,
+              ),
+            ),
+            Text(
+              label,
+              style: TextStyle(fontSize: sw * 0.025, color: kMuted),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   Widget _vDivider() => Container(width: 1, height: 50, color: kBorder);
 
@@ -1531,14 +1537,15 @@ class _JobsScreenState extends State<JobsScreen> with TickerProviderStateMixin {
                   if (result == 'Applied successfully') {
                     setState(() => applied.add(job.id));
                     _showAppliedDialog(job);
-                    _loadAppliedJobs();
-                  } else if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(result),
-                        duration: const Duration(seconds: 2),
-                      ),
-                    );
+                    loadAppliedJobs();
+                  } else {
+                    if (mounted)
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(result),
+                          duration: const Duration(seconds: 2),
+                        ),
+                      );
                   }
                 },
                 child: Container(
@@ -1585,29 +1592,30 @@ class _JobsScreenState extends State<JobsScreen> with TickerProviderStateMixin {
     );
   }
 
-  Widget _applyDetail(IconData icon, String value, String label, double sw) =>
-      Expanded(
-        child: Column(
-          children: [
-            Icon(icon, size: sw * 0.040, color: kPrimary),
-            SizedBox(height: sw * 0.010),
-            Text(
-              value,
-              textAlign: TextAlign.center,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: sw * 0.028,
-                fontWeight: FontWeight.w800,
-                color: kInk,
-              ),
+  Widget _applyDetail(IconData icon, String value, String label, double sw) {
+    return Expanded(
+      child: Column(
+        children: [
+          Icon(icon, size: sw * 0.040, color: kPrimary),
+          SizedBox(height: sw * 0.010),
+          Text(
+            value,
+            textAlign: TextAlign.center,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: sw * 0.028,
+              fontWeight: FontWeight.w800,
+              color: kInk,
             ),
-            Text(
-              label,
-              style: TextStyle(fontSize: sw * 0.025, color: kMuted),
-            ),
-          ],
-        ),
-      );
+          ),
+          Text(
+            label,
+            style: TextStyle(fontSize: sw * 0.025, color: kMuted),
+          ),
+        ],
+      ),
+    );
+  }
 
   // ─────────────────────────────────────────────
   //  APPLIED DIALOG
@@ -1823,51 +1831,54 @@ class _JobsScreenState extends State<JobsScreen> with TickerProviderStateMixin {
     String label,
     String value,
     double sw,
-  ) => Row(
-    children: [
-      Container(
-        width: sw * 0.075,
-        height: sw * 0.075,
-        decoration: BoxDecoration(
-          color: kSelectedBg,
-          borderRadius: BorderRadius.circular(8),
+  ) {
+    return Row(
+      children: [
+        Container(
+          width: sw * 0.075,
+          height: sw * 0.075,
+          decoration: BoxDecoration(
+            color: kSelectedBg,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(icon, size: sw * 0.038, color: kPrimary),
         ),
-        child: Icon(icon, size: sw * 0.038, color: kPrimary),
-      ),
-      SizedBox(width: sw * 0.025),
-      Text(
-        label,
-        style: TextStyle(
-          fontSize: sw * 0.030,
-          color: kMuted,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-      const Spacer(),
-      Flexible(
-        child: Text(
-          value,
-          textAlign: TextAlign.right,
+        SizedBox(width: sw * 0.025),
+        Text(
+          label,
           style: TextStyle(
-            fontSize: sw * 0.033,
-            fontWeight: FontWeight.w800,
-            color: kInk,
+            fontSize: sw * 0.030,
+            color: kMuted,
+            fontWeight: FontWeight.w600,
           ),
         ),
-      ),
-    ],
-  );
+        const Spacer(),
+        Flexible(
+          child: Text(
+            value,
+            textAlign: TextAlign.right,
+            style: TextStyle(
+              fontSize: sw * 0.033,
+              fontWeight: FontWeight.w800,
+              color: kInk,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 }
 
-// ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════════
 //  JOB CARD
-// ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════════
 class JobCard extends StatelessWidget {
   final Job job;
   final double sw;
   final bool isSaved, isApplied;
   final AnimationController? ctrl;
   final VoidCallback onSave, onApply, onTap;
+
   const JobCard({
     required this.job,
     required this.sw,
@@ -1877,6 +1888,7 @@ class JobCard extends StatelessWidget {
     required this.onApply,
     required this.onTap,
     this.ctrl,
+    super.key,
   });
 
   @override
@@ -1998,7 +2010,6 @@ class JobCard extends StatelessWidget {
                   ],
                 ),
                 SizedBox(height: sw * 0.025),
-                // Tap hint
                 Row(
                   children: [
                     Icon(
@@ -2129,9 +2140,40 @@ class JobCard extends StatelessWidget {
                     ),
                   ],
                 ),
-                SizedBox(height: sw * 0.035),
+                SizedBox(height: sw * 0.030),
+                // ✅ Skills tags displayed on card
+                if (job.tags.isNotEmpty)
+                  Wrap(
+                    spacing: sw * 0.015,
+                    runSpacing: sw * 0.015,
+                    children: job.tags
+                        .take(4) // show max 4 tags on card
+                        .map(
+                          (tag) => Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: sw * 0.022,
+                              vertical: sw * 0.010,
+                            ),
+                            decoration: BoxDecoration(
+                              color: kSelectedBg,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: kBorder),
+                            ),
+                            child: Text(
+                              tag,
+                              style: TextStyle(
+                                fontSize: sw * 0.025,
+                                fontWeight: FontWeight.w700,
+                                color: kPrimary,
+                              ),
+                            ),
+                          ),
+                        )
+                        .toList(),
+                  ),
                 // Apply button
-                if (!isApplied)
+                if (!isApplied) ...[
+                  SizedBox(height: sw * 0.030),
                   GestureDetector(
                     onTap: onApply,
                     behavior: HitTestBehavior.opaque,
@@ -2176,6 +2218,7 @@ class JobCard extends StatelessWidget {
                       ),
                     ),
                   ),
+                ],
               ],
             ),
           ),
@@ -2209,9 +2252,9 @@ class JobCard extends StatelessWidget {
   );
 }
 
-// ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════════
 //  SAVED JOBS PAGE
-// ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════════
 class SavedJobsPage extends StatelessWidget {
   final List<Job> jobs;
   final List<int> savedIds;

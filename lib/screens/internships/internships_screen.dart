@@ -6,9 +6,9 @@ import 'package:http/http.dart' as http;
 
 import '../../api_services/applications.dart';
 
-// ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════════
 //  DESIGN TOKENS
-// ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════════
 const kInk = Color(0xFF0F172A);
 const kSlate = Color(0xFF334155);
 const kMuted = Color(0xFF64748B);
@@ -21,12 +21,11 @@ const kAccent = Color(0xFF38BDF8);
 const kSuccess = Color(0xFF16A34A);
 const kWarning = Color(0xFFF59E0B);
 const kSelectedBg = Color(0xFFEFF6FF);
-
 const kTabs = ['All', 'Paid', 'Unpaid'];
 
-// ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════════
 //  MODEL
-// ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════════
 class Internship {
   final int id;
   final String title, company, location, stipend, type, duration, logo, desc;
@@ -52,22 +51,24 @@ class Internship {
   factory Internship.fromJson(Map<String, dynamic> json) => Internship(
     id: json['internship_id'] ?? 0,
     title: json['title'] ?? 'No title',
-    company: 'Company ${json['company_id'] ?? 'Unknown'}',
+    company: 'Company ${json['company_id'] ?? 0}',
     location: json['location'] ?? 'Remote',
     stipend: json['stipend'] != null ? '${json['stipend']}' : 'Unpaid',
     type: json['internship_type'] ?? 'Paid',
     duration: json['duration'] ?? '1 month',
     match: 0,
     logo: '',
-    tags: const [],
+    tags: (json['skills'] as List<dynamic>? ?? [])
+        .map<String>((s) => s is Map ? s['name'].toString() : s.toString())
+        .toList(),
     remote: json['location']?.toString().toLowerCase() == 'remote',
     desc: json['description'] ?? 'No description',
   );
 }
 
-// ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════════
 //  ICON SYSTEM
-// ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════════
 class InternTheme {
   final IconData icon;
   final Color grad1, grad2;
@@ -110,7 +111,7 @@ InternTheme resolveInternTheme(String title, String company) {
       Color(0xFF6366F1),
     );
   if (t.contains('artificial intelligence') ||
-      t.contains(' ai ') ||
+      t.contains(' ai') ||
       t.contains('ai '))
     return const InternTheme(
       Icons.smart_toy,
@@ -172,9 +173,9 @@ InternTheme resolveInternTheme(String title, String company) {
   );
 }
 
-// ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════════
 //  ICON TILE
-// ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════════
 class InternIconTile extends StatelessWidget {
   final String title, company;
   final double size;
@@ -182,6 +183,7 @@ class InternIconTile extends StatelessWidget {
     required this.title,
     required this.company,
     this.size = 50,
+    super.key,
   });
 
   @override
@@ -210,9 +212,9 @@ class InternIconTile extends StatelessWidget {
   }
 }
 
-// ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════════
 //  SCREEN
-// ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════════
 class InternshipsScreen extends StatefulWidget {
   const InternshipsScreen({super.key});
   @override
@@ -236,12 +238,11 @@ class _InternshipsScreenState extends State<InternshipsScreen>
       vsync: this,
       duration: const Duration(milliseconds: 600),
     )..forward();
-    _loadAppliedInternships();
-    _fetchInternships();
+    loadAppliedInternships();
+    fetchInternships();
   }
 
-  // ✅ FIX: clear() before addAll — removes withdrawn applications
-  Future<void> _loadAppliedInternships() async {
+  Future<void> loadAppliedInternships() async {
     final appsData = await ApplicationsService.getApplications();
     if (appsData != null && appsData['success'] == true) {
       final dataList = appsData['data'] as List;
@@ -258,7 +259,7 @@ class _InternshipsScreenState extends State<InternshipsScreen>
     }
   }
 
-  Future<void> _handleApply(int internshipId, String company) async {
+  Future<void> handleApply(int internshipId, String company) async {
     if (applied.contains(internshipId)) return;
     HapticFeedback.lightImpact();
     final result = await ApplicationsService.apply(internshipId: internshipId);
@@ -273,8 +274,7 @@ class _InternshipsScreenState extends State<InternshipsScreen>
     }
   }
 
-  // ✅ FIX: always clears internships first so list visually reloads
-  Future<void> _fetchInternships() async {
+  Future<void> fetchInternships() async {
     if (mounted) setState(() => internships = []);
     try {
       final response = await http.get(
@@ -284,10 +284,8 @@ class _InternshipsScreenState extends State<InternshipsScreen>
         final Map<String, dynamic> jsonData = json.decode(response.body);
         if (jsonData['success'] == true) {
           final List<dynamic> dataList = jsonData['data'];
-
           for (final c in cardAnims.values) c.dispose();
           cardAnims.clear();
-
           final newList = dataList.map((e) => Internship.fromJson(e)).toList();
           for (int i = 0; i < newList.length; i++) {
             final ctrl = AnimationController(
@@ -537,7 +535,7 @@ class _InternshipsScreenState extends State<InternshipsScreen>
                       _detailRow(
                         Icons.wifi,
                         'Mode',
-                        'Remote – work from anywhere',
+                        'Remote — work from anywhere',
                         sw,
                       ),
                     ],
@@ -709,7 +707,7 @@ class _InternshipsScreenState extends State<InternshipsScreen>
                   : GestureDetector(
                       onTap: () async {
                         Navigator.pop(context);
-                        await _handleApply(intern.id, intern.company);
+                        await handleApply(intern.id, intern.company);
                         _showApplyDialog(intern);
                       },
                       child: Container(
@@ -767,73 +765,76 @@ class _InternshipsScreenState extends State<InternshipsScreen>
     String label,
     double sw, {
     Color iconColor = kPrimary,
-  }) => Expanded(
-    child: Column(
-      children: [
-        Icon(icon, size: sw * 0.040, color: iconColor),
-        SizedBox(height: sw * 0.012),
-        Text(
-          value,
-          textAlign: TextAlign.center,
-          overflow: TextOverflow.ellipsis,
-          maxLines: 1,
-          style: TextStyle(
-            fontSize: sw * 0.030,
-            fontWeight: FontWeight.w800,
-            color: kInk,
+  }) {
+    return Expanded(
+      child: Column(
+        children: [
+          Icon(icon, size: sw * 0.040, color: iconColor),
+          SizedBox(height: sw * 0.012),
+          Text(
+            value,
+            textAlign: TextAlign.center,
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
+            style: TextStyle(
+              fontSize: sw * 0.030,
+              fontWeight: FontWeight.w800,
+              color: kInk,
+            ),
           ),
-        ),
-        Text(
-          label,
-          style: TextStyle(fontSize: sw * 0.025, color: kMuted),
-        ),
-      ],
-    ),
-  );
+          Text(
+            label,
+            style: TextStyle(fontSize: sw * 0.025, color: kMuted),
+          ),
+        ],
+      ),
+    );
+  }
 
   Widget _vDivider() => Container(width: 1, height: 36, color: kBorder);
 
-  Widget _detailRow(IconData icon, String label, String value, double sw) =>
-      Padding(
-        padding: EdgeInsets.symmetric(
-          horizontal: sw * 0.035,
-          vertical: sw * 0.028,
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: sw * 0.070,
-              height: sw * 0.070,
-              decoration: BoxDecoration(
-                color: kSelectedBg,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(icon, size: sw * 0.035, color: kPrimary),
+  Widget _detailRow(IconData icon, String label, String value, double sw) {
+    return Padding(
+      padding: EdgeInsets.symmetric(
+        horizontal: sw * 0.035,
+        vertical: sw * 0.028,
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: sw * 0.070,
+            height: sw * 0.070,
+            decoration: BoxDecoration(
+              color: kSelectedBg,
+              borderRadius: BorderRadius.circular(8),
             ),
-            SizedBox(width: sw * 0.025),
-            Text(
-              label,
+            child: Icon(icon, size: sw * 0.035, color: kPrimary),
+          ),
+          SizedBox(width: sw * 0.025),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: sw * 0.030,
+              color: kMuted,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const Spacer(),
+          Flexible(
+            child: Text(
+              value,
+              textAlign: TextAlign.right,
               style: TextStyle(
-                fontSize: sw * 0.030,
-                color: kMuted,
-                fontWeight: FontWeight.w600,
+                fontSize: sw * 0.033,
+                fontWeight: FontWeight.w800,
+                color: kInk,
               ),
             ),
-            const Spacer(),
-            Flexible(
-              child: Text(
-                value,
-                textAlign: TextAlign.right,
-                style: TextStyle(
-                  fontSize: sw * 0.033,
-                  fontWeight: FontWeight.w800,
-                  color: kInk,
-                ),
-              ),
-            ),
-          ],
-        ),
-      );
+          ),
+        ],
+      ),
+    );
+  }
 
   Widget _dividerLine() => Container(
     height: 1,
@@ -920,7 +921,7 @@ class _InternshipsScreenState extends State<InternshipsScreen>
                 _dialogRow(
                   Icons.wifi,
                   'Mode',
-                  'Remote – work from anywhere',
+                  'Remote — work from anywhere',
                   sw,
                 ),
               SizedBox(height: sw * 0.035),
@@ -1024,43 +1025,44 @@ class _InternshipsScreenState extends State<InternshipsScreen>
     );
   }
 
-  Widget _dialogRow(IconData icon, String label, String value, double sw) =>
-      Padding(
-        padding: EdgeInsets.only(bottom: sw * 0.025),
-        child: Row(
-          children: [
-            Container(
-              width: sw * 0.075,
-              height: sw * 0.075,
-              decoration: BoxDecoration(
-                color: kSelectedBg,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(icon, color: kPrimary, size: sw * 0.038),
+  Widget _dialogRow(IconData icon, String label, String value, double sw) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: sw * 0.025),
+      child: Row(
+        children: [
+          Container(
+            width: sw * 0.075,
+            height: sw * 0.075,
+            decoration: BoxDecoration(
+              color: kSelectedBg,
+              borderRadius: BorderRadius.circular(8),
             ),
-            SizedBox(width: sw * 0.025),
-            Text(
-              '$label  ',
+            child: Icon(icon, color: kPrimary, size: sw * 0.038),
+          ),
+          SizedBox(width: sw * 0.025),
+          Text(
+            '$label  ',
+            style: TextStyle(
+              fontSize: sw * 0.030,
+              color: kMuted,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 fontSize: sw * 0.030,
-                color: kMuted,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w800,
+                color: kInk,
               ),
             ),
-            Expanded(
-              child: Text(
-                value,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: sw * 0.030,
-                  fontWeight: FontWeight.w800,
-                  color: kInk,
-                ),
-              ),
-            ),
-          ],
-        ),
-      );
+          ),
+        ],
+      ),
+    );
+  }
 
   void _showAppliedSnack(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -1240,7 +1242,7 @@ class _InternshipsScreenState extends State<InternshipsScreen>
                 color: kInk,
               ),
               decoration: InputDecoration(
-                hintText: 'Search by role, company or skill',
+                hintText: 'Search by role, company or skill...',
                 hintStyle: TextStyle(fontSize: sw * 0.033, color: kHint),
                 prefixIcon: Icon(Icons.search, color: kMuted, size: sw * 0.050),
                 filled: true,
@@ -1344,8 +1346,8 @@ class _InternshipsScreenState extends State<InternshipsScreen>
             child: RefreshIndicator(
               color: kPrimary,
               onRefresh: () async {
-                await _fetchInternships();
-                await _loadAppliedInternships();
+                await fetchInternships();
+                await loadAppliedInternships();
               },
               child: filtered.isEmpty
                   ? ListView(
@@ -1443,7 +1445,7 @@ class _InternshipsScreenState extends State<InternshipsScreen>
                           );
                         },
                         onApply: () =>
-                            _handleApply(filtered[i].id, filtered[i].company),
+                            handleApply(filtered[i].id, filtered[i].company),
                       ),
                     ),
             ),
@@ -1453,52 +1455,54 @@ class _InternshipsScreenState extends State<InternshipsScreen>
     );
   }
 
-  Widget _statPill(IconData icon, String num, String label, double sw) =>
-      Container(
-        padding: EdgeInsets.symmetric(
-          horizontal: sw * 0.025,
-          vertical: sw * 0.013,
-        ),
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.10),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: sw * 0.030, color: kAccent),
-            SizedBox(width: sw * 0.010),
-            Text(
-              num,
-              style: TextStyle(
-                fontSize: sw * 0.030,
-                fontWeight: FontWeight.w800,
-                color: kAccent,
-              ),
+  Widget _statPill(IconData icon, String num, String label, double sw) {
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: sw * 0.025,
+        vertical: sw * 0.013,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.10),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: sw * 0.030, color: kAccent),
+          SizedBox(width: sw * 0.010),
+          Text(
+            num,
+            style: TextStyle(
+              fontSize: sw * 0.030,
+              fontWeight: FontWeight.w800,
+              color: kAccent,
             ),
-            SizedBox(width: sw * 0.008),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: sw * 0.028,
-                fontWeight: FontWeight.w600,
-                color: Colors.white.withOpacity(0.55),
-              ),
+          ),
+          SizedBox(width: sw * 0.008),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: sw * 0.028,
+              fontWeight: FontWeight.w600,
+              color: Colors.white.withOpacity(0.55),
             ),
-          ],
-        ),
-      );
+          ),
+        ],
+      ),
+    );
+  }
 }
 
-// ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════════
 //  INTERNSHIP CARD
-// ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════════
 class InternshipCard extends StatefulWidget {
   final Internship internship;
   final double sw;
   final bool isSaved, isApplied;
   final AnimationController? ctrl;
   final VoidCallback onSave, onApply, onTap;
+
   const InternshipCard({
     required this.internship,
     required this.sw,
@@ -1508,7 +1512,9 @@ class InternshipCard extends StatefulWidget {
     required this.onApply,
     required this.onTap,
     this.ctrl,
+    super.key,
   });
+
   @override
   State<InternshipCard> createState() => _InternshipCardState();
 }
@@ -1612,6 +1618,7 @@ class _InternshipCardState extends State<InternshipCard>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // ── Title Row ──
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -1712,6 +1719,8 @@ class _InternshipCardState extends State<InternshipCard>
                         ],
                       ),
                       SizedBox(height: sw * 0.030),
+
+                      // ── Description ──
                       Text(
                         intern.desc,
                         maxLines: 2,
@@ -1742,6 +1751,8 @@ class _InternshipCardState extends State<InternshipCard>
                         ],
                       ),
                       SizedBox(height: sw * 0.030),
+
+                      // ── Chips: Duration + Stipend ──
                       Wrap(
                         spacing: sw * 0.018,
                         runSpacing: sw * 0.015,
@@ -1789,33 +1800,49 @@ class _InternshipCardState extends State<InternshipCard>
                               ],
                             ),
                           ),
-                          for (final t in intern.tags)
-                            Container(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: sw * 0.023,
-                                vertical: sw * 0.013,
-                              ),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFF8FAFC),
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(color: kBorder),
-                              ),
-                              child: Text(
-                                t,
-                                style: TextStyle(
-                                  fontSize: sw * 0.028,
-                                  fontWeight: FontWeight.w700,
-                                  color: kSlate,
-                                ),
-                              ),
-                            ),
                         ],
                       ),
+
+                      // ✅ Skills on new line
+                      if (intern.tags.isNotEmpty) ...[
+                        SizedBox(height: sw * 0.015),
+                        Wrap(
+                          spacing: sw * 0.015,
+                          runSpacing: sw * 0.015,
+                          children: intern.tags
+                              .map(
+                                (t) => Container(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: sw * 0.023,
+                                    vertical: sw * 0.013,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFF8FAFC),
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(color: kBorder),
+                                  ),
+                                  child: Text(
+                                    t,
+                                    style: TextStyle(
+                                      fontSize: sw * 0.028,
+                                      fontWeight: FontWeight.w700,
+                                      color: kSlate,
+                                    ),
+                                  ),
+                                ),
+                              )
+                              .toList(),
+                        ),
+                      ],
+
+                      // ── Divider ──
                       Container(
                         margin: EdgeInsets.symmetric(vertical: sw * 0.030),
                         height: 1,
                         color: const Color(0xFFF1F5F9),
                       ),
+
+                      // ── Bottom Row ──
                       Row(
                         children: [
                           if (widget.isApplied)

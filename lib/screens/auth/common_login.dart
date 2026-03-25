@@ -327,9 +327,13 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
       final data = jsonDecode(response.body);
 
       if (response.statusCode == 200 && data["success"] == true) {
+        print("📦 Full API Response: ${data}");
+        print("📦 data['data'] keys: ${data['data']?.keys}");
         final userId = data["data"]["user_id"];
         final roleId = data["data"]["role_id"];
+        final userName = data["data"]["full_name"];
 
+        await _storage.write(key: 'full_name', value: userName ?? '');
         await _storage.write(key: "user_id", value: userId.toString());
         await _storage.write(key: "role_id", value: roleId.toString());
 
@@ -367,7 +371,7 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
           context.go('/');
         }
 
-        print("✅ User ID: $userId, Role ID: $roleId");
+        print("✅ User ID: $userId, Role ID: $roleId,User Name: $userName");
       } else {
         _showNoAccountDialog();
         print("❌ ${data["message"]}");
@@ -682,7 +686,9 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
           Align(
             alignment: Alignment.centerRight,
             child: GestureDetector(
-              onTap: () {},
+              onTap: () {
+                context.push('/update-password');
+              },
               child: Text(
                 'Forgot Password?',
                 style: TextStyle(

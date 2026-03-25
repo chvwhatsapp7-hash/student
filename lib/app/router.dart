@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 /// ── AUTH (one common login + signup for ALL roles) ───────────────────────────
 import '../screens/auth/common_login.dart';
 import '../screens/auth/common_signup.dart';
+import '../screens/auth/updatePassword.dart';
 import '../screens/companies/companies_screen.dart';
 import '../screens/courses/courses_screen.dart';
 
@@ -119,6 +120,10 @@ final GoRouter router = GoRouter(
     GoRoute(
       path: '/school/booking',
       builder: (context, state) => const SchoolBookingScreen(),
+    ),
+    GoRoute(
+      path: '/update-password',
+      builder: (context, state) => const UpdatePasswordScreen(),
     ),
   ],
 );

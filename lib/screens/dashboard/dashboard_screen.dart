@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
-import '../notifications/notification_page.dart';
+
 // ─────────────────────────────────────────────
 //  DESIGN TOKENS
 // ─────────────────────────────────────────────
@@ -574,52 +574,43 @@ class _DashboardScreenState extends State<DashboardScreen>
                         ],
                       ),
                     ),
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => NotificationPage(notifications: []),
+                    // Notification bell
+                    Stack(
+                      children: [
+                        Container(
+                          width: sw * 0.10,
+                          height: sw * 0.10,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.10),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.15),
+                            ),
                           ),
-                        );
-                      },
-                      child: Stack(
-                        children: [
-                          Container(
-                            width: sw * 0.10,
-                            height: sw * 0.10,
+                          child: Icon(
+                            Icons.notifications_none,
+                            color: Colors.white,
+                            size: sw * 0.050,
+                          ),
+                        ),
+                        Positioned(
+                          top: sw * 0.022,
+                          right: sw * 0.022,
+                          child: Container(
+                            width: sw * 0.020,
+                            height: sw * 0.020,
                             decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.10),
-                              borderRadius: BorderRadius.circular(12),
+                              color: kAccent,
+                              shape: BoxShape.circle,
                               border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.15),
-                              ),
-                            ),
-                            child: Icon(
-                              Icons.notifications_none,
-                              color: Colors.white,
-                              size: sw * 0.050,
-                            ),
-                          ),
-                          Positioned(
-                            top: sw * 0.022,
-                            right: sw * 0.022,
-                            child: Container(
-                              width: sw * 0.020,
-                              height: sw * 0.020,
-                              decoration: BoxDecoration(
-                                color: kAccent,
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: const Color(0xFF1E1B4B),
-                                  width: 1.5,
-                                ),
+                                color: const Color(0xFF1E1B4B),
+                                width: 1.5,
                               ),
                             ),
                           ),
-                        ],
-                      ),
-                    )
+                        ),
+                      ],
+                    ),
                   ],
                 ),
                 SizedBox(height: sw * 0.040),

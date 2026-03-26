@@ -1203,7 +1203,7 @@ class _DashboardScreenState extends State<DashboardScreen>
         child: GestureDetector(
           onTap: () {
             HapticFeedback.lightImpact();
-            context.go(a['route'] as String);
+            context.push(a['route'] as String);
           },
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -1385,7 +1385,7 @@ class _DashboardScreenState extends State<DashboardScreen>
     return GestureDetector(
       onTap: () {
         HapticFeedback.lightImpact();
-        context.go(route);
+        context.push(route);
       },
       child: Container(
         width: double.infinity,

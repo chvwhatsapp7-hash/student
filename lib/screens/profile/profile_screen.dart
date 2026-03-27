@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 
+import '../../api_services/authservice.dart';
+
 const kInk = Color(0xFF0F172A);
 const kSlate = Color(0xFF334155);
 const kMuted = Color(0xFF64748B);
@@ -86,6 +88,13 @@ class ProfileState extends ChangeNotifier {
   final _storage = const FlutterSecureStorage();
 
   Future<void> fetchProfile() async {
+    await AuthService().loadTokens();
+    final token = AuthService().accessToken;
+
+    if (token == null) {
+      throw Exception("Token is null. Please login again.");
+    }
+
     isLoading = true;
     errorMessage = null;
     notifyListeners();
@@ -94,6 +103,10 @@ class ProfileState extends ChangeNotifier {
       if (userId == null) throw Exception('Not logged in');
       final res = await http.get(
         Uri.parse('$_baseUrl/api/profile/getUsers?user_id=$userId'),
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
       );
       if (res.statusCode != 200)
         throw Exception('Server error ${res.statusCode}');
@@ -115,12 +128,22 @@ class ProfileState extends ChangeNotifier {
 
   Future<bool> updateProfile(Map<String, dynamic> fields) async {
     try {
+      await AuthService().loadTokens();
+      final token = AuthService().accessToken;
+
+      if (token == null) {
+        throw Exception("Token is null. Please login again.");
+      }
+
       final userId = await _storage.read(key: 'user_id');
       if (userId == null) return false;
       final body = {'user_id': int.parse(userId), ...fields};
       final res = await http.put(
         Uri.parse('$_baseUrl/api/profile/getUsers'),
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
         body: jsonEncode(body),
       );
       if (res.statusCode == 200) {
@@ -404,6 +427,13 @@ class _ProfileScreenState extends State<ProfileScreen>
   //  WITHDRAW APPLICATION
   // ─────────────────────────────────────────────
   Future<void> _withdrawApplication(Map app, int index) async {
+    await AuthService().loadTokens();
+    final token = AuthService().accessToken;
+
+    if (token == null) {
+      throw Exception("Token is null. Please login again.");
+    }
+
     if (index < 0 || index >= profileState.applications.length) return;
     try {
       final userId = await const FlutterSecureStorage().read(key: 'user_id');
@@ -415,7 +445,10 @@ class _ProfileScreenState extends State<ProfileScreen>
       };
       final res = await http.delete(
         Uri.parse('${ProfileState._baseUrl}/api/applications'),
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
         body: jsonEncode(body),
       );
       if (res.statusCode == 200) {
@@ -435,6 +468,13 @@ class _ProfileScreenState extends State<ProfileScreen>
   //  DELETE PROJECT
   // ─────────────────────────────────────────────
   Future<void> _deleteProject(int index) async {
+    await AuthService().loadTokens();
+    final token = AuthService().accessToken;
+
+    if (token == null) {
+      throw Exception("Token is null. Please login again.");
+    }
+
     if (index < 0 || index >= profileState.projects.length) return;
     final proj = profileState.projects[index];
     final projectId = proj['project_id'];
@@ -446,7 +486,10 @@ class _ProfileScreenState extends State<ProfileScreen>
     try {
       final res = await http.delete(
         Uri.parse('${ProfileState._baseUrl}/api/projects'),
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
         body: jsonEncode({'project_id': projectId}),
       );
       if (res.statusCode == 200) {
@@ -466,6 +509,13 @@ class _ProfileScreenState extends State<ProfileScreen>
   //  DELETE CERTIFICATE
   // ─────────────────────────────────────────────
   Future<void> _deleteCertificate(int index) async {
+    await AuthService().loadTokens();
+    final token = AuthService().accessToken;
+
+    if (token == null) {
+      throw Exception("Token is null. Please login again.");
+    }
+
     if (index < 0 || index >= profileState.certifications.length) return;
     final cert = profileState.certifications[index];
     final certId = cert['certificate_id'];
@@ -477,7 +527,10 @@ class _ProfileScreenState extends State<ProfileScreen>
     try {
       final res = await http.delete(
         Uri.parse('${ProfileState._baseUrl}/api/certificates'),
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
         body: jsonEncode({'certificate_id': int.parse(certId)}),
       );
       if (res.statusCode == 200) {
@@ -497,6 +550,13 @@ class _ProfileScreenState extends State<ProfileScreen>
   //  DELETE SKILL
   // ─────────────────────────────────────────────
   Future<void> _deleteSkill(int index) async {
+    await AuthService().loadTokens();
+    final token = AuthService().accessToken;
+
+    if (token == null) {
+      throw Exception("Token is null. Please login again.");
+    }
+
     if (index < 0 || index >= profileState.skills.length) return;
     final sk = profileState.skills[index];
     final skillId = sk['skill_id'] as int?;
@@ -509,7 +569,10 @@ class _ProfileScreenState extends State<ProfileScreen>
       final userId = await const FlutterSecureStorage().read(key: 'user_id');
       final res = await http.delete(
         Uri.parse('${ProfileState._baseUrl}/api/user-skills'),
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
         body: jsonEncode({'user_id': int.parse(userId!), 'skill_id': skillId}),
       );
       if (res.statusCode == 200) {
@@ -528,11 +591,23 @@ class _ProfileScreenState extends State<ProfileScreen>
   // ─────────────────────────────────────────────
   //  ADD SKILL DIALOG
   // ─────────────────────────────────────────────
-  void _addSkillDialog() {
+  Future<void> _addSkillDialog() async {
     final sw = MediaQuery.of(context).size.width;
+    await AuthService().loadTokens();
+    final token = AuthService().accessToken;
+
+    if (token == null) {
+      throw Exception("Token is null. Please login again.");
+    }
 
     final Future<List<Map<String, dynamic>>> skillsFuture = http
-        .get(Uri.parse('${ProfileState._baseUrl}/api/skills'))
+        .get(
+          Uri.parse('${ProfileState._baseUrl}/api/skills'),
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer $token",
+          },
+        )
         .then((res) {
           if (res.statusCode == 200) {
             final body = jsonDecode(res.body);
@@ -846,7 +921,10 @@ class _ProfileScreenState extends State<ProfileScreen>
                               Uri.parse(
                                 '${ProfileState._baseUrl}/api/user-skills',
                               ),
-                              headers: {'Content-Type': 'application/json'},
+                              headers: {
+                                "Content-Type": "application/json",
+                                "Authorization": "Bearer $token",
+                              },
                               body: jsonEncode(postBody),
                             );
                             debugPrint(
@@ -1250,7 +1328,7 @@ class _ProfileScreenState extends State<ProfileScreen>
         Tab(text: 'Skills'),
         Tab(text: 'Certs'),
         Tab(text: 'Projects'),
-        Tab(text: 'Application'),
+        Tab(text: 'Applications'),
       ],
     ),
   );

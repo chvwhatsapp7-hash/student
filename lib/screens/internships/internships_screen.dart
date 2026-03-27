@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 
 import '../../api_services/applications.dart';
+import '../../api_services/authservice.dart';
 
 // ═══════════════════════════════════════════
 //  DESIGN TOKENS
@@ -275,10 +276,21 @@ class _InternshipsScreenState extends State<InternshipsScreen>
   }
 
   Future<void> fetchInternships() async {
+    await AuthService().loadTokens();
+    final token = AuthService().accessToken;
+
+    if (token == null) {
+      throw Exception("Token is null. Please login again.");
+    }
+
     if (mounted) setState(() => internships = []);
     try {
       final response = await http.get(
         Uri.parse('https://studenthub-backend-woad.vercel.app/api/internships'),
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
       );
       if (response.statusCode == 200) {
         final Map<String, dynamic> jsonData = json.decode(response.body);

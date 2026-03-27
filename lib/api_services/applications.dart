@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 
+import 'authservice.dart';
+
 class ApplicationsService {
   // 🔐 Secure Storage
   static const FlutterSecureStorage _storage = FlutterSecureStorage();
@@ -25,6 +27,12 @@ class ApplicationsService {
   // ─────────────────────────────────────────────
   static Future<String> apply({int? jobId, int? internshipId}) async {
     final userId = await getUserId();
+    await AuthService().loadTokens();
+    final token = AuthService().accessToken;
+
+    if (token == null) {
+      throw Exception("Token is null. Please login again.");
+    }
 
     if (userId == null) {
       return "User not logged in";
@@ -41,7 +49,10 @@ class ApplicationsService {
     try {
       final response = await http.post(
         url,
-        headers: {"Content-Type": "application/json"},
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
         body: jsonEncode(body),
       );
 
@@ -62,6 +73,12 @@ class ApplicationsService {
   // ─────────────────────────────────────────────
   static Future<String> withdraw({int? jobId, int? internshipId}) async {
     final userId = await getUserId();
+    await AuthService().loadTokens();
+    final token = AuthService().accessToken;
+
+    if (token == null) {
+      throw Exception("Token is null. Please login again.");
+    }
 
     if (userId == null) {
       return "User not logged in";
@@ -78,7 +95,10 @@ class ApplicationsService {
     try {
       final response = await http.delete(
         url,
-        headers: {"Content-Type": "application/json"},
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
         body: jsonEncode(body),
       );
 
@@ -99,13 +119,25 @@ class ApplicationsService {
   // ─────────────────────────────────────────────
   static Future<Map<String, dynamic>?> getApplications() async {
     final userId = await getUserId();
+    await AuthService().loadTokens();
+    final token = AuthService().accessToken;
+
+    if (token == null) {
+      throw Exception("Token is null. Please login again.");
+    }
 
     if (userId == null) return null;
 
     final url = Uri.parse("$baseUrl/applications?user_id=$userId");
 
     try {
-      final response = await http.get(url);
+      final response = await http.get(
+        url,
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+      );
 
       final data = jsonDecode(response.body);
 

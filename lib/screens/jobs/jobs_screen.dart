@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 
 import '../../api_services/applications.dart';
+import '../../api_services/authservice.dart';
 
 // ═══════════════════════════════════════════
 //  DESIGN TOKENS
@@ -307,6 +308,13 @@ class _JobsScreenState extends State<JobsScreen> with TickerProviderStateMixin {
   }
 
   Future<void> fetchJobs() async {
+    await AuthService().loadTokens();
+    final token = AuthService().accessToken;
+
+    if (token == null) {
+      throw Exception("Token is null. Please login again.");
+    }
+
     if (jobs.isEmpty)
       setState(() {
         loading = true;
@@ -315,6 +323,10 @@ class _JobsScreenState extends State<JobsScreen> with TickerProviderStateMixin {
     try {
       final res = await http.get(
         Uri.parse('https://studenthub-backend-woad.vercel.app/api/jobs'),
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
       );
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);

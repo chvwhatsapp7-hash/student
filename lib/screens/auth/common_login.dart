@@ -2,9 +2,11 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
+import 'package:jwt_decoder/jwt_decoder.dart';
+
+import '../../api_services/authservice.dart';
 
 // ─────────────────────────────────────────────
 //  DESIGN TOKENS
@@ -51,7 +53,7 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
   late Animation<Offset> _fieldsSlide;
   late Animation<double> _btnScale;
 
-  final FlutterSecureStorage _storage = const FlutterSecureStorage();
+  // ✅ REMOVED: FlutterSecureStorage instance (handled by AuthService now)
 
   @override
   void initState() {
@@ -101,7 +103,7 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
     super.dispose();
   }
 
-  // ── VALIDATION HELPERS ─────────────────────
+  // ── VALIDATION HELPERS ──────────────────────
 
   void _showErrorSnack(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -135,7 +137,6 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
   }
 
   void _showNoAccountDialog() {
-    // 👇 Responsive values inside dialog too
     final sw = MediaQuery.of(context).size.width;
 
     showDialog(
@@ -291,7 +292,7 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
     );
   }
 
-  // ── SIGN IN — API completely untouched ──────
+  // ── SIGN IN ─────────────────────────────────
 
   Future<void> _signIn() async {
     if (_emailCtrl.text.trim().isEmpty && _passCtrl.text.trim().isEmpty) {
@@ -312,42 +313,54 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
     final url = Uri.parse(
       'https://studenthub-backend-woad.vercel.app/api/auth/login',
     );
-    final body = {
-      "email": _emailCtrl.text.trim(),
-      "password": _passCtrl.text.trim(),
-    };
 
     try {
       final response = await http.post(
         url,
         headers: {"Content-Type": "application/json"},
-        body: jsonEncode(body),
+        body: jsonEncode({
+          "email": _emailCtrl.text.trim(),
+          "password": _passCtrl.text.trim(),
+        }),
       );
 
       final data = jsonDecode(response.body);
 
       if (response.statusCode == 200 && data["success"] == true) {
-        print("📦 Full API Response: ${data}");
-        print("📦 data['data'] keys: ${data['data']?.keys}");
-        final userId = data["data"]["user_id"];
-        final roleId = data["data"]["role_id"];
-        final userName = data["data"]["full_name"];
+        final String accessToken = data["data"]["accessToken"];
+        final String refreshToken = data["data"]["refreshToken"];
 
-        await _storage.write(key: 'full_name', value: userName ?? '');
-        await _storage.write(key: "user_id", value: userId.toString());
-        await _storage.write(key: "role_id", value: roleId.toString());
+        // ✅ Decode JWT
+        final Map<String, dynamic> payload = JwtDecoder.decode(accessToken);
+        debugPrint("📦 JWT Payload: $payload");
+
+        final String userId = payload['user_id'].toString();
+        final int roleId = payload['role_id'] is int
+            ? payload['role_id']
+            : int.tryParse(payload['role_id'].toString()) ?? 0;
+        final String userName = payload['full_name'] ?? '';
+
+        // ✅ CHANGED: Use AuthService.saveTokens (writes to storage + updates memory in one call)
+        await AuthService().saveTokens(
+          access: accessToken,
+          refresh: refreshToken,
+          user_id: userId,
+          role_id: roleId.toString(),
+          full_name: userName,
+        );
+
+        debugPrint("✅ User ID: $userId, Role: $roleId, Name: $userName");
+        debugPrint("✅ AuthService token: ${AuthService().accessToken}");
+
+        if (!mounted) return;
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Row(
-              children: [
-                const Icon(
-                  Icons.check_circle_rounded,
-                  color: Colors.white,
-                  size: 18,
-                ),
-                const SizedBox(width: 10),
-                const Text(
+              children: const [
+                Icon(Icons.check_circle_rounded, color: Colors.white, size: 18),
+                SizedBox(width: 10),
+                Text(
                   'Signed in successfully!',
                   style: TextStyle(fontWeight: FontWeight.w700),
                 ),
@@ -363,6 +376,7 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
           ),
         );
 
+        // ✅ Navigate based on role
         if (roleId == 3 || roleId == 4) {
           context.go('/engineering');
         } else if (roleId == 2) {
@@ -370,18 +384,16 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
         } else {
           context.go('/');
         }
-
-        print("✅ User ID: $userId, Role ID: $roleId,User Name: $userName");
       } else {
         _showNoAccountDialog();
-        print("❌ ${data["message"]}");
+        debugPrint("❌ ${data["message"]}");
       }
     } catch (e) {
       _showErrorSnack('Something went wrong. Please try again.');
-      print("❌ Sign In Error: $e");
+      debugPrint("❌ Sign In Error: $e");
     }
 
-    setState(() => _isLoading = false);
+    if (mounted) setState(() => _isLoading = false);
   }
 
   // ─────────────────────────────────────────────
@@ -390,7 +402,7 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
 
   @override
   Widget build(BuildContext context) {
-    final sw = MediaQuery.of(context).size.width; // 👈 responsive base
+    final sw = MediaQuery.of(context).size.width;
     final sh = MediaQuery.of(context).size.height;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
@@ -400,7 +412,6 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
         resizeToAvoidBottomInset: true,
         body: Stack(
           children: [
-            // Background blobs — responsive positions
             Positioned(
               top: -sh * 0.10,
               right: -sw * 0.15,
@@ -425,11 +436,10 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
                 ),
               ),
             ),
-
             SafeArea(
               child: SingleChildScrollView(
                 padding: EdgeInsets.symmetric(
-                  horizontal: sw * 0.05, // ~20px on 400px screen
+                  horizontal: sw * 0.05,
                   vertical: sh * 0.02,
                 ),
                 child: Column(
@@ -443,7 +453,6 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
                       ),
                     ),
                     SizedBox(height: sh * 0.03),
-
                     FadeTransition(
                       opacity: _headerFade,
                       child: SlideTransition(
@@ -452,7 +461,6 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
                       ),
                     ),
                     SizedBox(height: sh * 0.035),
-
                     FadeTransition(
                       opacity: _fieldsFade,
                       child: SlideTransition(
@@ -461,7 +469,6 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
                       ),
                     ),
                     SizedBox(height: sh * 0.025),
-
                     FadeTransition(
                       opacity: _fieldsFade,
                       child: Center(
@@ -500,8 +507,6 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
       ),
     );
   }
-
-  // ── TOP BAR ────────────────────────────────
 
   Widget _buildTopBar(double sw) {
     return Row(
@@ -560,8 +565,6 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
     );
   }
 
-  // ── HERO TEXT ──────────────────────────────
-
   Widget _buildHeroText(double sw) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -569,7 +572,7 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
         Text(
           'Sign In',
           style: TextStyle(
-            fontSize: sw * 0.07, // ~28px on 400px screen
+            fontSize: sw * 0.07,
             fontWeight: FontWeight.w800,
             color: Colors.white,
             letterSpacing: -0.6,
@@ -589,11 +592,9 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
     );
   }
 
-  // ── FORM CARD ──────────────────────────────
-
   Widget _buildFormCard(double sw) {
     return Container(
-      padding: EdgeInsets.all(sw * 0.055), // ~22px on 400px screen
+      padding: EdgeInsets.all(sw * 0.055),
       decoration: BoxDecoration(
         color: kCardBg,
         borderRadius: BorderRadius.circular(24),
@@ -609,7 +610,6 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Card header
           Row(
             children: [
               Container(
@@ -631,7 +631,6 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
               ),
               SizedBox(width: sw * 0.03),
               Expanded(
-                // 👈 prevents overflow in narrow screens
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -654,7 +653,6 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
             ],
           ),
           SizedBox(height: sw * 0.05),
-
           _field(
             ctrl: _emailCtrl,
             label: 'Email Address',
@@ -663,7 +661,6 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
             sw: sw,
           ),
           SizedBox(height: sw * 0.03),
-
           _field(
             ctrl: _passCtrl,
             label: 'Password',
@@ -681,14 +678,11 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
               onPressed: () => setState(() => _showPass = !_showPass),
             ),
           ),
-
           SizedBox(height: sw * 0.025),
           Align(
             alignment: Alignment.centerRight,
             child: GestureDetector(
-              onTap: () {
-                context.push('/update-password');
-              },
+              onTap: () => context.push('/update-password'),
               child: Text(
                 'Forgot Password?',
                 style: TextStyle(
@@ -700,14 +694,11 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
             ),
           ),
           SizedBox(height: sw * 0.045),
-
           _buildSubmitBtn(sw),
         ],
       ),
     );
   }
-
-  // ── TEXT FIELD ─────────────────────────────
 
   Widget _field({
     required TextEditingController ctrl,
@@ -757,8 +748,6 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
       ),
     );
   }
-
-  // ── SUBMIT BUTTON ──────────────────────────
 
   Widget _buildSubmitBtn(double sw) {
     return GestureDetector(

@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 
 import '../../api_services/CourseEnrollement.dart';
+import '../../api_services/authservice.dart';
 
 // ─────────────────────────────────────────────
 //  DESIGN TOKENS
@@ -184,9 +185,19 @@ class _CoursesScreenState extends State<CoursesScreen>
   }
 
   Future<void> _fetchCourses() async {
+    await AuthService().loadTokens();
+    final token = AuthService().accessToken;
+
+    if (token == null) {
+      throw Exception("Token is null. Please login again.");
+    }
     try {
       final response = await http.get(
         Uri.parse('https://studenthub-backend-woad.vercel.app/api/getCourses'),
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
       );
 
       if (response.statusCode == 200) {

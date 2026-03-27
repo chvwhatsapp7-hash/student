@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 
+import 'authservice.dart';
+
 class CourseService {
   // 🔐 Secure Storage
   static const FlutterSecureStorage _storage = FlutterSecureStorage();
@@ -25,6 +27,12 @@ class CourseService {
   // ─────────────────────────────────────────────
   static Future<String> enroll(int courseId) async {
     final userId = await getUserId();
+    await AuthService().loadTokens();
+    final token = AuthService().accessToken;
+
+    if (token == null) {
+      throw Exception("Token is null. Please login again.");
+    }
 
     if (userId == null) {
       return "User not logged in";
@@ -37,7 +45,10 @@ class CourseService {
     try {
       final response = await http.post(
         url,
-        headers: {"Content-Type": "application/json"},
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
         body: jsonEncode(body),
       );
 
@@ -91,6 +102,12 @@ class CourseService {
   // ─────────────────────────────────────────────
   static Future<List<Map<String, dynamic>>> getEnrolledCourses() async {
     final userId = await getUserId();
+    await AuthService().loadTokens();
+    final token = AuthService().accessToken;
+
+    if (token == null) {
+      throw Exception("Token is null. Please login again.");
+    }
 
     if (userId == null) {
       return [];
@@ -99,7 +116,13 @@ class CourseService {
     final url = Uri.parse("$baseUrl?user_id=$userId");
 
     try {
-      final response = await http.get(url);
+      final response = await http.get(
+        url,
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+      );
 
       final data = jsonDecode(response.body);
 

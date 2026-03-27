@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 
+import '../../api_services/authservice.dart';
+
 // ─────────────────────────────────────────────
 //  DESIGN TOKENS
 // ─────────────────────────────────────────────
@@ -159,9 +161,20 @@ class _HackathonsScreenState extends State<HackathonsScreen>
   // ── API FETCH ───────────────────────────────
 
   Future<void> _fetchHackathons() async {
+    await AuthService().loadTokens();
+    final token = AuthService().accessToken;
+
+    if (token == null) {
+      throw Exception("Token is null. Please login again.");
+    }
+
     try {
       final res = await http.get(
         Uri.parse('https://studenthub-backend-woad.vercel.app/api/hackathons'),
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
       );
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body)['data'] as List;

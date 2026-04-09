@@ -25,7 +25,7 @@ const kSelectedBg = Color(0xFFEFF6FF);
 const kRose = Color(0xFFF43F5E);
 
 // ─────────────────────────────────────────────
-//  MODEL  — untouched
+//  MODEL
 // ─────────────────────────────────────────────
 
 class Company {
@@ -63,7 +63,7 @@ class Company {
 }
 
 // ─────────────────────────────────────────────
-//  STATIC DATA  — untouched
+//  STATIC FALLBACK DATA
 // ─────────────────────────────────────────────
 
 final List<Company> kCompanies = [
@@ -78,7 +78,7 @@ final List<Company> kCompanies = [
     domain: 'IT Services',
     logo: '🔵',
     desc:
-        'Global leader in digital services, consulting, and next-gen IT solutions for enterprises worldwide.',
+    'Global leader in digital services, consulting, and next-gen IT solutions for enterprises worldwide.',
     website: 'infosys.com',
     lat: 12.97,
     lng: 77.59,
@@ -95,7 +95,7 @@ final List<Company> kCompanies = [
     domain: 'E-Commerce',
     logo: '🟡',
     desc:
-        "India's largest e-commerce marketplace, building the future of retail with cutting-edge tech.",
+    "India's largest e-commerce marketplace, building the future of retail with cutting-edge tech.",
     website: 'flipkart.com',
     lat: 12.95,
     lng: 77.67,
@@ -112,7 +112,7 @@ final List<Company> kCompanies = [
     domain: 'Quick Commerce',
     logo: '⚡',
     desc:
-        'Pioneering 10-minute grocery delivery across India with a tech-first logistics platform.',
+    'Pioneering 10-minute grocery delivery across India with a tech-first logistics platform.',
     website: 'zepto.com',
     lat: 19.07,
     lng: 72.87,
@@ -129,7 +129,7 @@ final List<Company> kCompanies = [
     domain: 'Space & Research',
     logo: '🚀',
     desc:
-        "India's national space research organisation, pushing boundaries in aerospace and satellite tech.",
+    "India's national space research organisation, pushing boundaries in aerospace and satellite tech.",
     website: 'isro.gov.in',
     lat: 13.02,
     lng: 77.57,
@@ -146,7 +146,7 @@ final List<Company> kCompanies = [
     domain: 'Fintech',
     logo: '💙',
     desc:
-        'Full-stack financial solutions powering payments, banking, and payroll for 8M+ businesses.',
+    'Full-stack financial solutions powering payments, banking, and payroll for 8M+ businesses.',
     website: 'razorpay.com',
     lat: 12.93,
     lng: 77.62,
@@ -163,7 +163,7 @@ final List<Company> kCompanies = [
     domain: 'EV / Clean Tech',
     logo: '🟢',
     desc:
-        'Building the future of sustainable mobility with electric vehicles and clean energy solutions.',
+    'Building the future of sustainable mobility with electric vehicles and clean energy solutions.',
     website: 'olaelectric.com',
     lat: 12.91,
     lng: 77.64,
@@ -193,7 +193,7 @@ const Map<String, _TypeStyle> _typeStyles = {
 
 _TypeStyle _style(String type) =>
     _typeStyles[type] ??
-    const _TypeStyle(bg: Color(0xFFF1F5F9), fg: Color(0xFF475569));
+        const _TypeStyle(bg: Color(0xFFF1F5F9), fg: Color(0xFF475569));
 
 // ─────────────────────────────────────────────
 //  SCREEN
@@ -208,11 +208,11 @@ class CompaniesScreen extends StatefulWidget {
 
 class _CompaniesScreenState extends State<CompaniesScreen>
     with TickerProviderStateMixin {
-  // ── state — untouched ──
   int? _selected;
   String _view = 'list';
   String _filter = 'All';
   String _search = '';
+  bool _isLoading = false;
 
   late AnimationController _headerAnim;
   final Map<int, AnimationController> _cardAnims = {};
@@ -243,20 +243,17 @@ class _CompaniesScreenState extends State<CompaniesScreen>
       duration: const Duration(milliseconds: 600),
     )..forward();
     _initCardAnims();
-    _fetchCompanies(); // ← API call — untouched
+    _fetchCompanies();
   }
 
   void _initCardAnims() {
     _cardAnims.clear();
-
     for (int i = 0; i < _apiCompanies.length; i++) {
       final ctrl = AnimationController(
         vsync: this,
         duration: const Duration(milliseconds: 450),
       );
-
       _cardAnims[_apiCompanies[i].id] = ctrl;
-
       Future.delayed(Duration(milliseconds: 80 + i * 80), () {
         if (mounted) ctrl.forward();
       });
@@ -270,15 +267,31 @@ class _CompaniesScreenState extends State<CompaniesScreen>
     super.dispose();
   }
 
+  // ── FIX: use _apiCompanies, not kCompanies ──
   void _selectCompany(int id) {
     HapticFeedback.selectionClick();
     setState(() => _selected = id);
-    _showDetailSheet(kCompanies.firstWhere((c) => c.id == id));
+    final company = _apiCompanies.firstWhere(
+          (c) => c.id == id,
+      orElse: () => _apiCompanies.first,
+    );
+    Navigator.push(
+      context,
+      PageRouteBuilder(
+        pageBuilder: (_, animation, __) =>
+            FadeTransition(
+              opacity: animation,
+              child: CompanyDetailScreen(company: company),
+            ),
+        transitionDuration: const Duration(milliseconds: 300),
+      ),
+    ).then((_) => setState(() => _selected = null));
   }
 
   // ── API FETCH — untouched ───────────────────
 
   Future<void> _fetchCompanies() async {
+    setState(() => _isLoading = true);
     try {
       await AuthService().loadTokens();
       final token = AuthService().accessToken;
@@ -329,9 +342,10 @@ class _CompaniesScreenState extends State<CompaniesScreen>
 
           setState(() {
             _apiCompanies = apiList;
+            _isLoading = false;
           });
 
-          _initCardAnims(); // ✅ IMPORTANT
+          _initCardAnims();
         } else {
           throw Exception('API returned success=false');
         }
@@ -342,10 +356,12 @@ class _CompaniesScreenState extends State<CompaniesScreen>
       }
     } catch (e) {
       debugPrint('Error: $e');
-
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Failed to load companies: $e')));
+      setState(() => _isLoading = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to load companies: $e')),
+        );
+      }
     }
   }
 
@@ -363,21 +379,45 @@ class _CompaniesScreenState extends State<CompaniesScreen>
           _buildSearchBar(),
           _buildFilterBar(),
           Expanded(
-            child: _view == 'list' ? _buildList() : _buildMapPlaceholder(),
+            child: _isLoading
+                ? _buildLoadingState()
+                : _view == 'list'
+                ? _buildList()
+                : _buildMapPlaceholder(),
           ),
         ],
       ),
     );
   }
 
+  // ── LOADING STATE ──────────────────────────
+
+  Widget _buildLoadingState() {
+    return ListView.builder(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 24),
+      itemCount: 4,
+      itemBuilder: (_, __) => _SkeletonCard(),
+    );
+  }
+
   // ── HEADER ─────────────────────────────────
 
   Widget _buildHeader() {
+    final total = _apiCompanies.length;
+    final openings = _apiCompanies.fold(0, (s, c) => s + c.openings);
+    final cities = _apiCompanies.map((c) => c.city).toSet().length;
+
     return AnimatedBuilder(
       animation: _headerAnim,
       builder: (_, child) => Opacity(opacity: _headerAnim.value, child: child),
       child: Container(
-        color: kInk,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
         child: SafeArea(
           bottom: false,
           child: Padding(
@@ -385,7 +425,6 @@ class _CompaniesScreenState extends State<CompaniesScreen>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // title row
                 Row(
                   children: [
                     GestureDetector(
@@ -425,25 +464,46 @@ class _CompaniesScreenState extends State<CompaniesScreen>
                         ],
                       ),
                     ),
+                    // Refresh button
+                    GestureDetector(
+                      onTap: _fetchCompanies,
+                      child: Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.10),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(
+                          Icons.refresh_rounded,
+                          color: Colors.white,
+                          size: 18,
+                        ),
+                      ),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 16),
-                // stats row — Wrap prevents overflow
+                // Stats row — driven by live API data
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
                   children: [
                     _statPill(
                       Icons.business_rounded,
-                      '${kCompanies.length}',
+                      '$total',
                       'Companies',
                     ),
                     _statPill(
                       Icons.work_rounded,
-                      '${kCompanies.fold(0, (s, c) => s + c.openings)}',
+                      openings > 0 ? '$openings' : '—',
                       'Open Roles',
                     ),
-                    _statPill(Icons.location_city_rounded, '6', 'Cities'),
+                    _statPill(
+                      Icons.location_city_rounded,
+                      cities > 0 ? '$cities' : '—',
+                      'Cities',
+                    ),
                   ],
                 ),
               ],
@@ -623,9 +683,9 @@ class _CompaniesScreenState extends State<CompaniesScreen>
             : const AlwaysStoppedAnimation<double>(1.0);
         final slide = ctrl != null
             ? Tween<Offset>(
-                begin: const Offset(0, 0.12),
-                end: Offset.zero,
-              ).animate(CurvedAnimation(parent: ctrl, curve: Curves.easeOut))
+          begin: const Offset(0, 0.12),
+          end: Offset.zero,
+        ).animate(CurvedAnimation(parent: ctrl, curve: Curves.easeOut))
             : const AlwaysStoppedAnimation<Offset>(Offset.zero);
         return FadeTransition(
           opacity: fade,
@@ -642,236 +702,106 @@ class _CompaniesScreenState extends State<CompaniesScreen>
     );
   }
 
-  // ── MAP PLACEHOLDER — untouched ─────────────
-
   Widget _buildMapPlaceholder() {
     return const Center(
       child: Text('Map view coming soon…', style: TextStyle(color: kMuted)),
     );
   }
+}
 
-  // ── DETAIL BOTTOM SHEET ─────────────────────
+// ─────────────────────────────────────────────
+//  SKELETON CARD (loading placeholder)
+// ─────────────────────────────────────────────
 
-  void _showDetailSheet(Company c) {
-    final ts = _style(c.type);
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => DraggableScrollableSheet(
-        initialChildSize: 0.55,
-        minChildSize: 0.35,
-        maxChildSize: 0.85,
-        builder: (_, scrollCtrl) => Container(
-          decoration: const BoxDecoration(
-            color: kCardBg,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-          ),
-          child: ListView(
-            controller: scrollCtrl,
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
-            children: [
-              // handle
-              Center(
-                child: Container(
-                  margin: const EdgeInsets.symmetric(vertical: 12),
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: kBorder,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                ),
-              ),
-              // logo + name
-              Row(
-                children: [
-                  Container(
-                    width: 58,
-                    height: 58,
-                    decoration: BoxDecoration(
-                      color: kBgPage,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: kBorder),
-                    ),
-                    child: _CompanyLogo(name: c.name, size: 58),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                c.name,
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w800,
-                                  color: kInk,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 9,
-                                vertical: 3,
-                              ),
-                              decoration: BoxDecoration(
-                                color: ts.bg,
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Text(
-                                c.type,
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w700,
-                                  color: ts.fg,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 3),
-                        Text(
-                          '${c.city}, ${c.state}  ·  ${c.domain}',
-                          style: const TextStyle(fontSize: 12, color: kMuted),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Text(
-                c.desc,
-                style: const TextStyle(
-                  fontSize: 13,
-                  color: kSlate,
-                  height: 1.6,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              const SizedBox(height: 16),
-              _infoRow(Icons.groups_2_rounded, 'Team Size', c.size),
-              _infoRow(Icons.public_rounded, 'Website', c.website),
-              _infoRow(
-                Icons.location_city_rounded,
-                'Location',
-                '${c.city}, ${c.state}',
-              ),
-              if (c.tags.isNotEmpty) ...[
-                const SizedBox(height: 16),
-                const Text(
-                  'Required Skills',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w800,
-                    color: kInk,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: c.tags
-                      .map(
-                        (t) => Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: kSelectedBg,
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: kBorder),
-                          ),
-                          child: Text(
-                            t,
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                              color: kPrimary,
-                            ),
-                          ),
-                        ),
-                      )
-                      .toList(),
-                ),
-              ],
-              const SizedBox(height: 20),
-              // CTA
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 15),
-                decoration: BoxDecoration(
-                  color: kPrimary,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(
-                      Icons.work_history_rounded,
-                      color: Colors.white,
-                      size: 18,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      c.openings > 0
-                          ? 'View ${c.openings} Open Roles'
-                          : 'View Open Roles',
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+class _SkeletonCard extends StatefulWidget {
+  @override
+  State<_SkeletonCard> createState() => _SkeletonCardState();
+}
+
+class _SkeletonCardState extends State<_SkeletonCard>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _ctrl;
+  late Animation<double> _anim;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1100),
+    )..repeat(reverse: true);
+    _anim = CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut);
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  Widget _box(double w, double h, {double r = 8}) {
+    return AnimatedBuilder(
+      animation: _anim,
+      builder: (_, __) => Container(
+        width: w,
+        height: h,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(r),
+          color: Color.lerp(
+            const Color(0xFFE2E8F0),
+            const Color(0xFFF1F5F9),
+            _anim.value,
           ),
         ),
       ),
     );
   }
 
-  Widget _infoRow(IconData icon, String label, String value) {
+  @override
+  Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: kBgPage,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: kBorder),
+        color: kCardBg,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: kBorder, width: 1.5),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 16, color: kPrimary),
-          const SizedBox(width: 10),
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: kMuted,
-            ),
-          ),
-          const Spacer(),
-          Flexible(
-            child: Text(
-              value,
-              textAlign: TextAlign.right,
-              style: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w800,
-                color: kInk,
+          Row(
+            children: [
+              _box(50, 50, r: 14),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _box(140, 14),
+                    const SizedBox(height: 8),
+                    _box(100, 11),
+                    const SizedBox(height: 6),
+                    _box(80, 11),
+                  ],
+                ),
               ),
-            ),
+            ],
           ),
+          const SizedBox(height: 14),
+          _box(double.infinity, 1, r: 2),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              _box(90, 28, r: 8),
+              const SizedBox(width: 8),
+              _box(110, 28, r: 8),
+              const SizedBox(width: 8),
+              _box(70, 28, r: 8),
+            ],
+          ),
+          const SizedBox(height: 12),
+          _box(double.infinity, 40, r: 12),
         ],
       ),
     );
@@ -913,13 +843,19 @@ class _CompanyCard extends StatelessWidget {
           ),
           boxShadow: isSelected
               ? [
-                  BoxShadow(
-                    color: kPrimary.withOpacity(0.12),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ]
-              : null,
+            BoxShadow(
+              color: kPrimary.withOpacity(0.12),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ]
+              : [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -928,16 +864,7 @@ class _CompanyCard extends StatelessWidget {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  width: 50,
-                  height: 50,
-                  decoration: BoxDecoration(
-                    color: kBgPage,
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: kBorder),
-                  ),
-                  child: _CompanyLogo(name: c.name, size: 50),
-                ),
+                _CompanyLogo(name: c.name, size: 50),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
@@ -985,9 +912,15 @@ class _CompanyCard extends StatelessWidget {
                             color: kRose,
                           ),
                           const SizedBox(width: 3),
-                          Text(
-                            '${c.city}, ${c.state}',
-                            style: const TextStyle(fontSize: 12, color: kMuted),
+                          Expanded(
+                            child: Text(
+                              '${c.city}${c.state.isNotEmpty ? ', ${c.state.trim()}' : ''}',
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: kMuted,
+                              ),
+                            ),
                           ),
                         ],
                       ),
@@ -1022,13 +955,15 @@ class _CompanyCard extends StatelessWidget {
             Container(height: 1, color: const Color(0xFFF1F5F9)),
             const SizedBox(height: 12),
 
-            // ── META CHIPS — Wrap prevents overflow ──
+            // ── META CHIPS ──
             Wrap(
               spacing: 8,
               runSpacing: 8,
               children: [
-                _metaChip(icon: Icons.groups_2_rounded, label: c.size),
-                _metaChip(icon: Icons.public_rounded, label: c.website),
+                if (c.size.isNotEmpty)
+                  _metaChip(icon: Icons.groups_2_rounded, label: c.size),
+                if (c.website.isNotEmpty)
+                  _metaChip(icon: Icons.public_rounded, label: c.website),
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 10,
@@ -1058,7 +993,7 @@ class _CompanyCard extends StatelessWidget {
               ],
             ),
 
-            // ── SKILL TAGS — Wrap prevents overflow ──
+            // ── SKILL TAGS ──
             if (c.tags.isNotEmpty) ...[
               const SizedBox(height: 10),
               Wrap(
@@ -1067,25 +1002,25 @@ class _CompanyCard extends StatelessWidget {
                 children: c.tags
                     .map(
                       (t) => Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 9,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF8FAFC),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: kBorder),
-                        ),
-                        child: Text(
-                          t,
-                          style: const TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: kSlate,
-                          ),
-                        ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 9,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF8FAFC),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: kBorder),
+                    ),
+                    child: Text(
+                      t,
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: kSlate,
                       ),
-                    )
+                    ),
+                  ),
+                )
                     .toList(),
               ),
             ],
@@ -1097,7 +1032,12 @@ class _CompanyCard extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 11),
               decoration: BoxDecoration(
-                color: isSelected ? kPrimary : kSelectedBg,
+                gradient: isSelected
+                    ? const LinearGradient(
+                  colors: [Color(0xFF1D4ED8), Color(0xFF2563EB)],
+                )
+                    : null,
+                color: isSelected ? null : kSelectedBg,
                 borderRadius: BorderRadius.circular(12),
                 border: isSelected ? null : Border.all(color: kBorder),
               ),
@@ -1105,13 +1045,13 @@ class _CompanyCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(
-                    Icons.work_history_rounded,
+                    Icons.open_in_new_rounded,
                     size: 15,
                     color: isSelected ? Colors.white : kPrimary,
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    'View Details',
+                    'View Full Details',
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w800,
@@ -1155,10 +1095,631 @@ class _CompanyCard extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────
+//  COMPANY DETAIL SCREEN  (full-page push)
+// ─────────────────────────────────────────────
+
+class CompanyDetailScreen extends StatelessWidget {
+  final Company company;
+
+  const CompanyDetailScreen({super.key, required this.company});
+
+  @override
+  Widget build(BuildContext context) {
+    final c = company;
+    final ts = _style(c.type);
+    final colors = _CompanyLogo._colorsFor(c.name);
+
+    return Scaffold(
+      backgroundColor: kBgPage,
+      body: CustomScrollView(
+        slivers: [
+          // ── SLIVER APP BAR with gradient ──
+          SliverAppBar(
+            expandedHeight: 200,
+            pinned: true,
+            backgroundColor: colors[0],
+            leading: GestureDetector(
+              onTap: () => Navigator.pop(context),
+              child: Container(
+                margin: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.25),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.arrow_back_ios_new_rounded,
+                  color: Colors.white,
+                  size: 16,
+                ),
+              ),
+            ),
+            flexibleSpace: FlexibleSpaceBar(
+              background: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [colors[0], colors[1]],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                ),
+                child: SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 60, 20, 20),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        // Large logo
+                        _CompanyLogo(name: c.name, size: 72),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                c.name,
+                                style: const TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w900,
+                                  color: Colors.white,
+                                  letterSpacing: -0.5,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                c.domain,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.white.withOpacity(0.75),
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        // Type badge
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 5,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.20),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: Colors.white.withOpacity(0.35),
+                            ),
+                          ),
+                          child: Text(
+                            c.type,
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+          // ── BODY CONTENT ──
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // ── QUICK STATS ROW ──
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _statCard(
+                          icon: Icons.groups_2_rounded,
+                          label: 'Team Size',
+                          value: c.size.isNotEmpty ? c.size : '—',
+                          iconColor: kPrimary,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: _statCard(
+                          icon: Icons.bolt_rounded,
+                          label: 'Openings',
+                          value: c.openings > 0 ? '${c.openings}' : 'Hiring',
+                          iconColor: kSuccess,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: _statCard(
+                          icon: Icons.location_city_rounded,
+                          label: 'City',
+                          value: c.city.isNotEmpty ? c.city : '—',
+                          iconColor: kRose,
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // ── ABOUT ──
+                  if (c.desc.isNotEmpty) ...[
+                    _sectionHeader('About', Icons.info_outline_rounded),
+                    const SizedBox(height: 10),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: kCardBg,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: kBorder),
+                      ),
+                      child: Text(
+                        c.desc,
+                        style: const TextStyle(
+                          fontSize: 13.5,
+                          color: kSlate,
+                          height: 1.65,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                  ],
+
+                  // ── COMPANY INFO ──
+                  _sectionHeader('Company Info', Icons.business_rounded),
+                  const SizedBox(height: 10),
+                  _infoCard([
+                    if (c.size.isNotEmpty)
+                      _InfoRow(
+                        icon: Icons.groups_2_rounded,
+                        label: 'Team Size',
+                        value: c.size,
+                      ),
+                    if (c.domain.isNotEmpty)
+                      _InfoRow(
+                        icon: Icons.category_rounded,
+                        label: 'Industry',
+                        value: c.domain,
+                      ),
+                    if (c.type.isNotEmpty)
+                      _InfoRow(
+                        icon: Icons.corporate_fare_rounded,
+                        label: 'Company Type',
+                        value: c.type,
+                        valueColor: ts.fg,
+                      ),
+                    if (c.city.isNotEmpty)
+                      _InfoRow(
+                        icon: Icons.location_on_rounded,
+                        label: 'Location',
+                        value:
+                        '${c.city}${c.state.isNotEmpty ? ', ${c.state.trim()}' : ''}',
+                      ),
+                    if (c.website.isNotEmpty)
+                      _InfoRow(
+                        icon: Icons.public_rounded,
+                        label: 'Website',
+                        value: c.website,
+                        valueColor: kPrimary,
+                        isLast: true,
+                      ),
+                  ]),
+
+                  const SizedBox(height: 20),
+
+                  // ── SKILLS ──
+                  if (c.tags.isNotEmpty) ...[
+                    _sectionHeader(
+                      'Required Skills',
+                      Icons.code_rounded,
+                    ),
+                    const SizedBox(height: 10),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: kCardBg,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: kBorder),
+                      ),
+                      child: Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: c.tags.map((t) => _skillChip(t)).toList(),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                  ],
+
+                  // ── PERKS placeholder section ──
+                  _sectionHeader('Why Join Us?', Icons.star_rounded),
+                  const SizedBox(height: 10),
+                  _perksCard(c),
+
+                  const SizedBox(height: 28),
+
+                  // ── CTA BUTTONS ──
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _outlineButton(
+                          icon: Icons.public_rounded,
+                          label: 'Website',
+                          onTap: () {},
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        flex: 2,
+                        child: _primaryButton(
+                          icon: Icons.work_history_rounded,
+                          label: c.openings > 0
+                              ? 'View ${c.openings} Open Roles'
+                              : 'View Open Roles',
+                          onTap: () {},
+                          colors: colors,
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 32),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── HELPERS ────────────────────────────────
+
+  Widget _sectionHeader(String title, IconData icon) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(
+            color: kSelectedBg,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(icon, size: 15, color: kPrimary),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w800,
+            color: kInk,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _statCard({
+    required IconData icon,
+    required String label,
+    required String value,
+    required Color iconColor,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+      decoration: BoxDecoration(
+        color: kCardBg,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: kBorder),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, size: 20, color: iconColor),
+          const SizedBox(height: 6),
+          Text(
+            value,
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
+              color: kInk,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: const TextStyle(fontSize: 10, color: kMuted),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _infoCard(List<Widget> rows) {
+    return Container(
+      decoration: BoxDecoration(
+        color: kCardBg,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: kBorder),
+      ),
+      child: Column(children: rows),
+    );
+  }
+
+  Widget _skillChip(String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+      decoration: BoxDecoration(
+        color: kSelectedBg,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: kPrimary.withOpacity(0.20)),
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+          color: kPrimary,
+        ),
+      ),
+    );
+  }
+
+  Widget _perksCard(Company c) {
+    // Build context-aware perks from available data
+    final perks = <Map<String, dynamic>>[];
+
+    if (c.size.isNotEmpty) {
+      perks.add({
+        'icon': Icons.groups_2_rounded,
+        'title': 'Large Team',
+        'sub': 'Collaborate with ${c.size}',
+      });
+    }
+
+    perks.add({
+      'icon': Icons.trending_up_rounded,
+      'title': 'Career Growth',
+      'sub': 'Fast-track your career in ${c.domain}',
+    });
+
+    perks.add({
+      'icon': Icons.lightbulb_rounded,
+      'title': 'Innovation First',
+      'sub': 'Work on cutting-edge projects',
+    });
+
+    if (c.openings > 0) {
+      perks.add({
+        'icon': Icons.bolt_rounded,
+        'title': 'Actively Hiring',
+        'sub': '${c.openings} open positions available',
+      });
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: kCardBg,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: kBorder),
+      ),
+      child: Column(
+        children: perks.asMap().entries.map((entry) {
+          final p = entry.value;
+          final isLast = entry.key == perks.length - 1;
+          return Column(
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 38,
+                    height: 38,
+                    decoration: BoxDecoration(
+                      color: kSelectedBg,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(
+                      p['icon'] as IconData,
+                      size: 18,
+                      color: kPrimary,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          p['title'] as String,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: kInk,
+                          ),
+                        ),
+                        const SizedBox(height: 1),
+                        Text(
+                          p['sub'] as String,
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: kMuted,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Icon(
+                    Icons.check_circle_rounded,
+                    size: 16,
+                    color: kSuccess,
+                  ),
+                ],
+              ),
+              if (!isLast) ...[
+                const SizedBox(height: 12),
+                Container(height: 1, color: const Color(0xFFF1F5F9)),
+                const SizedBox(height: 12),
+              ],
+            ],
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  Widget _outlineButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        decoration: BoxDecoration(
+          color: kCardBg,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: kBorder, width: 1.5),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 16, color: kPrimary),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: kPrimary,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _primaryButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+    required List<Color> colors,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(colors: colors),
+          borderRadius: BorderRadius.circular(14),
+          boxShadow: [
+            BoxShadow(
+              color: colors[0].withOpacity(0.35),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 16, color: Colors.white),
+            const SizedBox(width: 6),
+            Flexible(
+              child: Text(
+                label,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────
+//  INFO ROW (used inside detail screen)
+// ─────────────────────────────────────────────
+
+class _InfoRow extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+  final Color? valueColor;
+  final bool isLast;
+
+  const _InfoRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+    this.valueColor,
+    this.isLast = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+          child: Row(
+            children: [
+              Icon(icon, size: 16, color: kPrimary),
+              const SizedBox(width: 10),
+              Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: kMuted,
+                ),
+              ),
+              const Spacer(),
+              Flexible(
+                child: Text(
+                  value,
+                  textAlign: TextAlign.right,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                    color: valueColor ?? kInk,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (!isLast)
+          Container(
+            height: 1,
+            margin: const EdgeInsets.symmetric(horizontal: 14),
+            color: const Color(0xFFF1F5F9),
+          ),
+      ],
+    );
+  }
+}
+
+// ─────────────────────────────────────────────
 //  COMPANY LOGO WIDGET
-//  Renders a professional styled initial-avatar
-//  for each company — colour-matched per brand.
-//  No changes to data or API needed.
 // ─────────────────────────────────────────────
 
 class _CompanyLogo extends StatelessWidget {
@@ -1167,8 +1728,6 @@ class _CompanyLogo extends StatelessWidget {
 
   const _CompanyLogo({required this.name, required this.size});
 
-  // Brand-matched colours for known companies.
-  // Any unknown company gets a colour derived from its name.
   static const Map<String, List<Color>> _brandColors = {
     'infosys': [Color(0xFF007CC2), Color(0xFF005A8E)],
     'flipkart': [Color(0xFF2874F0), Color(0xFF1A5DC0)],
@@ -1186,7 +1745,6 @@ class _CompanyLogo extends StatelessWidget {
     'paytm': [Color(0xFF00B9F1), Color(0xFF0090C0)],
   };
 
-  // Fallback palette cycled by first char
   static const List<List<Color>> _fallback = [
     [Color(0xFF1D4ED8), Color(0xFF1E3A8A)],
     [Color(0xFF7C3AED), Color(0xFF5B21B6)],
@@ -1198,18 +1756,18 @@ class _CompanyLogo extends StatelessWidget {
     [Color(0xFF2563EB), Color(0xFF1D4ED8)],
   ];
 
-  List<Color> _colors() {
+  // Static helper so CompanyDetailScreen can access colours too
+  static List<Color> _colorsFor(String name) {
     final key = name.toLowerCase();
-    // Check known brands
     for (final entry in _brandColors.entries) {
       if (key.contains(entry.key)) return entry.value;
     }
-    // Fallback — cycle by first letter
     final idx = (name.isNotEmpty ? name.codeUnitAt(0) : 65) % _fallback.length;
     return _fallback[idx];
   }
 
-  // Build initials — up to 2 chars
+  List<Color> _colors() => _colorsFor(name);
+
   String _initials() {
     final parts = name.trim().split(RegExp(r'\s+'));
     if (parts.length >= 2) {

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
+import '../notifications/notification_page.dart';
 
 import '../../api_services/applications.dart';
 import '../../api_services/authservice.dart';
@@ -1930,7 +1931,7 @@ class JobCard extends StatelessWidget {
                 colors: [Color(0xFFEFF6FF), Color(0xFFF0FDF4)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-              )
+         )
             : null,
         color: isApplied ? null : kCardBg,
         borderRadius: BorderRadius.circular(20),

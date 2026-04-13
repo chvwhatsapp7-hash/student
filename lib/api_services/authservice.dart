@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../services/api_config.dart';
 
 class AuthService {
   static final AuthService _instance = AuthService._internal();
@@ -29,7 +30,7 @@ class AuthService {
     // Setup Dio
     dio = Dio(
       BaseOptions(
-        baseUrl: 'https://your-api.com/api', // update for your backend
+        baseUrl: ApiConfig.baseUrl,
         connectTimeout: const Duration(seconds: 10),
         receiveTimeout: const Duration(seconds: 10),
       ),

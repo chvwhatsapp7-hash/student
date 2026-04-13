@@ -309,28 +309,15 @@ class _JobsScreenState extends State<JobsScreen> with TickerProviderStateMixin {
   }
 
   Future<void> fetchJobs() async {
-    await AuthService().loadTokens();
-    final token = AuthService().accessToken;
-
-    if (token == null) {
-      throw Exception("Token is null. Please login again.");
-    }
-
     if (jobs.isEmpty)
       setState(() {
         loading = true;
         error = false;
       });
     try {
-      final res = await http.get(
-        Uri.parse('https://studenthub-backend-woad.vercel.app/api/jobs'),
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer $token",
-        },
-      );
+      final res = await AuthService().get('/bulk?type=jobs');
       if (res.statusCode == 200) {
-        final data = jsonDecode(res.body);
+        final data = res.data;
         final List jobsData = data['data'] ?? [];
         final newJobs = jobsData.map((j) => Job.fromJson(j)).toList();
         for (final c in cardAnims.values) c.dispose();

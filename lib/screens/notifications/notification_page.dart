@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../models/notification_model.dart';
+import '../../api_services/authservice.dart';
 
 // ─────────────────────────────────────────────
 //  DESIGN TOKENS
@@ -164,10 +165,10 @@ class _NotificationPageState extends State<NotificationPage>
     with SingleTickerProviderStateMixin {
 
   late AnimationController _headerAnim;
-  final Set<int> _read = {};
-
-  List<AppNotification> get _notifications =>
-      widget.notifications ?? staticNotifications;
+  final Set<String> _read = {};
+  
+  List<AppNotification> _notifications = [];
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -175,6 +176,63 @@ class _NotificationPageState extends State<NotificationPage>
     _headerAnim = AnimationController(
       vsync: this, duration: const Duration(milliseconds: 600),
     )..forward();
+    _loadNotifs();
+  }
+  
+  Future<void> _loadNotifs() async {
+    try {
+      final res = await AuthService().get('/notifications');
+      if (res.statusCode == 200) {
+        final List data = res.data is List ? res.data as List : (res.data['data'] ?? []);
+        final parsed = data.map((f) {
+           final id = f['notification_id']?.toString() ?? UniqueKey().toString();
+           final isRead = f['is_read'] == 1 || f['is_read'] == true;
+           if (isRead) _read.add(id);
+           return AppNotification(
+              id: id,
+              title: f['title'] ?? 'Notification',
+              body: f['message'] ?? '',
+              time: DateTime.tryParse(f['created_at'].toString()) ?? DateTime.now(),
+              isRead: isRead,
+           );
+        }).toList();
+        
+        if (mounted) {
+          setState(() {
+            _notifications = parsed;
+            _isLoading = false;
+          });
+        }
+        return;
+      }
+    } catch (_) {}
+    
+    // Fallback
+    if (mounted) {
+      setState(() {
+        _notifications = widget.notifications ?? staticNotifications;
+        for (var n in _notifications) {
+           if (n.isRead && n.id != null) _read.add(n.id!);
+        }
+        _isLoading = false;
+      });
+    }
+  }
+
+  void _markAllRead() {
+    AuthService().put('/notifications/read-all', {});
+    setState(() {
+      for (final n in _notifications) {
+        if (n.id != null) _read.add(n.id!);
+      }
+    });
+  }
+  
+  void _markRead(String id) {
+    AuthService().put('/notifications', {'notification_id': id});
+    setState(() {
+      _read.add(id);
+    });
   }
 
   @override
@@ -200,9 +258,11 @@ class _NotificationPageState extends State<NotificationPage>
         children: [
           _buildHeader(sw),
           Expanded(
-            child: list.isEmpty
-                ? _buildEmpty(sw)
-                : _buildList(sw, list),
+            child: _isLoading 
+                ? const Center(child: CircularProgressIndicator(color: kPrimary))
+                : (list.isEmpty
+                  ? _buildEmpty(sw)
+                  : _buildList(sw, list)),
           ),
         ],
       ),
@@ -277,11 +337,7 @@ class _NotificationPageState extends State<NotificationPage>
                     ),
                     if (_unreadCount > 0)
                       GestureDetector(
-                        onTap: () => setState(() {
-                          for (int i = 0; i < _notifications.length; i++) {
-                            _read.add(i);
-                          }
-                        }),
+                        onTap: _markAllRead,
                         child: Container(
                           padding: EdgeInsets.symmetric(
                               horizontal: sw * 0.030,
@@ -443,11 +499,17 @@ class _NotificationPageState extends State<NotificationPage>
 
   Widget _buildCard(AppNotification n, int index, double sw) {
     final theme   = _resolveTheme(n.title);
-    final isRead  = _read.contains(index);
+    final isRead  = n.id != null ? _read.contains(n.id) : _read.contains(index.toString());
     final timeStr = _formatTime(n.time);
 
     return GestureDetector(
-      onTap: () => setState(() => _read.add(index)),
+      onTap: () {
+         if (n.id != null) {
+            _markRead(n.id!);
+         } else {
+            setState(() => _read.add(index.toString()));
+         }
+      },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
         margin: EdgeInsets.only(bottom: sw * 0.025),

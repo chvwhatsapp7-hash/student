@@ -277,24 +277,11 @@ class _InternshipsScreenState extends State<InternshipsScreen>
   }
 
   Future<void> fetchInternships() async {
-    await AuthService().loadTokens();
-    final token = AuthService().accessToken;
-
-    if (token == null) {
-      throw Exception("Token is null. Please login again.");
-    }
-
     if (mounted) setState(() => internships = []);
     try {
-      final response = await http.get(
-        Uri.parse('https://studenthub-backend-woad.vercel.app/api/internships'),
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer $token",
-        },
-      );
+      final response = await AuthService().get('/bulk?type=internships');
       if (response.statusCode == 200) {
-        final Map<String, dynamic> jsonData = json.decode(response.body);
+        final Map<String, dynamic> jsonData = response.data;
         if (jsonData['success'] == true) {
           final List<dynamic> dataList = jsonData['data'];
           for (final c in cardAnims.values) c.dispose();

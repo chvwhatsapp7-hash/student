@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 
+import '../services/api_config.dart';
 import 'authservice.dart';
 
 class ApplicationsService {
@@ -27,18 +28,7 @@ class ApplicationsService {
   // ─────────────────────────────────────────────
   static Future<String> apply({int? jobId, int? internshipId}) async {
     final userId = await getUserId();
-    await AuthService().loadTokens();
-    final token = AuthService().accessToken;
-
-    if (token == null) {
-      throw Exception("Token is null. Please login again.");
-    }
-
-    if (userId == null) {
-      return "User not logged in";
-    }
-
-    final url = Uri.parse("$baseUrl/applications");
+    if (userId == null) return "User not logged in";
 
     final body = {
       "user_id": userId,
@@ -47,22 +37,10 @@ class ApplicationsService {
     };
 
     try {
-      final response = await http.post(
-        url,
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer $token",
-        },
-        body: jsonEncode(body),
-      );
-
-      final data = jsonDecode(response.body);
-
-      if (response.statusCode == 201) {
-        return "Applied successfully";
-      } else {
-        return data["message"] ?? "Something went wrong";
-      }
+      final res = await AuthService().post('/applications', body);
+      if (res.statusCode == 201) return "Applied successfully";
+      final data = res.data;
+      return (data is Map && data["message"] != null) ? data["message"] : "Something went wrong";
     } catch (e) {
       return "Error: $e";
     }
@@ -73,18 +51,10 @@ class ApplicationsService {
   // ─────────────────────────────────────────────
   static Future<String> withdraw({int? jobId, int? internshipId}) async {
     final userId = await getUserId();
+    if (userId == null) return "User not logged in";
     await AuthService().loadTokens();
     final token = AuthService().accessToken;
-
-    if (token == null) {
-      throw Exception("Token is null. Please login again.");
-    }
-
-    if (userId == null) {
-      return "User not logged in";
-    }
-
-    final url = Uri.parse("$baseUrl/applications");
+    if (token == null) throw Exception("Token is null. Please login again.");
 
     final body = {
       "user_id": userId,
@@ -94,21 +64,16 @@ class ApplicationsService {
 
     try {
       final response = await http.delete(
-        url,
+        Uri.parse("${ApiConfig.baseUrl}/applications"),
         headers: {
           "Content-Type": "application/json",
           "Authorization": "Bearer $token",
         },
         body: jsonEncode(body),
       );
-
       final data = jsonDecode(response.body);
-
-      if (response.statusCode == 200) {
-        return "Application withdrawn";
-      } else {
-        return data["message"] ?? "Something went wrong";
-      }
+      if (response.statusCode == 200) return "Application withdrawn";
+      return data["message"] ?? "Something went wrong";
     } catch (e) {
       return "Error: $e";
     }
@@ -119,33 +84,14 @@ class ApplicationsService {
   // ─────────────────────────────────────────────
   static Future<Map<String, dynamic>?> getApplications() async {
     final userId = await getUserId();
-    await AuthService().loadTokens();
-    final token = AuthService().accessToken;
-
-    if (token == null) {
-      throw Exception("Token is null. Please login again.");
-    }
-
     if (userId == null) return null;
 
-    final url = Uri.parse("$baseUrl/applications?user_id=$userId");
-
     try {
-      final response = await http.get(
-        url,
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer $token",
-        },
-      );
-
-      final data = jsonDecode(response.body);
-
-      if (response.statusCode == 200) {
-        return data;
-      } else {
-        return null;
+      final res = await AuthService().get('/applications/$userId');
+      if (res.statusCode == 200) {
+        return res.data is Map<String, dynamic> ? res.data as Map<String, dynamic> : null;
       }
+      return null;
     } catch (e) {
       return null;
     }

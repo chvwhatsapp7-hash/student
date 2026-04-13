@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import 'school_data.dart';
 import 'school_state.dart';
+import '../../services/school_api_service.dart';
 
 // ─────────────────────────────────────────────
 //  COURSES SCREEN
@@ -19,24 +20,37 @@ class SchoolCoursesScreen extends StatefulWidget {
 class _SchoolCoursesScreenState extends State<SchoolCoursesScreen>
     with TickerProviderStateMixin {
   String _ageFilter = 'All';
+  List<Course> _courses = [];
+  bool _isLoading = true;
 
   late AnimationController _headerAnim;
   late Animation<double>   _headerFade;
   late Animation<Offset>   _headerSlide;
 
   List<Course> get _filtered => _ageFilter == 'All'
-      ? kCourses
-      : kCourses.where((c) => c.age == _ageFilter).toList();
+      ? _courses
+      : _courses.where((c) => c.age == _ageFilter).toList();
 
   @override
   void initState() {
     super.initState();
+    _loadCourses();
     _headerAnim = AnimationController(
       vsync: this, duration: const Duration(milliseconds: 600),
     )..forward();
     _headerFade  = CurvedAnimation(parent: _headerAnim, curve: Curves.easeOut);
     _headerSlide = Tween<Offset>(begin: const Offset(0, -0.15), end: Offset.zero)
         .animate(CurvedAnimation(parent: _headerAnim, curve: Curves.easeOut));
+  }
+
+  Future<void> _loadCourses() async {
+    final fetched = await SchoolApiService.instance.getCourses();
+    if (mounted) {
+      setState(() {
+        _courses = fetched;
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -71,7 +85,11 @@ class _SchoolCoursesScreenState extends State<SchoolCoursesScreen>
           _buildHeader(state),
           _buildFilterBar(),
           const SizedBox(height: 6),
-          Expanded(child: _buildCourseList(state)),
+          Expanded(
+            child: _isLoading 
+              ? const Center(child: CircularProgressIndicator()) 
+              : _buildCourseList(state)
+          ),
         ],
       ),
     );
@@ -172,7 +190,7 @@ class _SchoolCoursesScreenState extends State<SchoolCoursesScreen>
                   Wrap(
                     spacing: 10, runSpacing: 8,
                     children: [
-                      _statChip('🎓', '${kCourses.length} Courses'),
+                      _statChip('🎓', '${_courses.length} Courses'),
                       _statChip('👦', 'Ages 8–17'),
                       _statChip('⭐', '4.8 Avg Rating'),
                     ],

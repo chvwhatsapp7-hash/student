@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 
+import '../services/api_config.dart';
 import 'authservice.dart';
 
 class CourseService {
@@ -27,37 +28,20 @@ class CourseService {
   // ─────────────────────────────────────────────
   static Future<String> enroll(int courseId) async {
     final userId = await getUserId();
-    await AuthService().loadTokens();
-    final token = AuthService().accessToken;
-
-    if (token == null) {
-      throw Exception("Token is null. Please login again.");
-    }
-
     if (userId == null) {
       return "User not logged in";
     }
 
-    final url = Uri.parse(baseUrl);
-
     final body = {"user_id": userId, "course_id": courseId};
 
     try {
-      final response = await http.post(
-        url,
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer $token",
-        },
-        body: jsonEncode(body),
-      );
+      final res = await AuthService().post("/course-enrollments", body);
 
-      final data = jsonDecode(response.body);
-
-      if (response.statusCode == 201) {
+      if (res.statusCode == 201 || res.statusCode == 200) {
         return "Enrolled successfully";
       } else {
-        return data["message"] ?? "Something went wrong";
+        final data = res.data;
+        return (data is Map && data["message"] != null) ? data["message"] : "Something went wrong";
       }
     } catch (e) {
       return "Error: $e";
@@ -69,19 +53,25 @@ class CourseService {
   // ─────────────────────────────────────────────
   static Future<String> unenroll(int courseId) async {
     final userId = await getUserId();
-
     if (userId == null) {
       return "User not logged in";
     }
 
-    final url = Uri.parse(baseUrl);
+    await AuthService().loadTokens();
+    final token = AuthService().accessToken;
+    if (token == null) throw Exception("Token missing");
+
+    final url = Uri.parse("${ApiConfig.baseUrl}/course-enrollments");
 
     final body = {"user_id": userId, "course_id": courseId};
 
     try {
       final response = await http.delete(
         url,
-        headers: {"Content-Type": "application/json"},
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer $token",
+        },
         body: jsonEncode(body),
       );
 
@@ -102,31 +92,15 @@ class CourseService {
   // ─────────────────────────────────────────────
   static Future<List<Map<String, dynamic>>> getEnrolledCourses() async {
     final userId = await getUserId();
-    await AuthService().loadTokens();
-    final token = AuthService().accessToken;
-
-    if (token == null) {
-      throw Exception("Token is null. Please login again.");
-    }
-
     if (userId == null) {
       return [];
     }
 
-    final url = Uri.parse("$baseUrl?user_id=$userId");
-
     try {
-      final response = await http.get(
-        url,
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer $token",
-        },
-      );
-
-      final data = jsonDecode(response.body);
+      final response = await AuthService().get("/course-enrollments?user_id=$userId");
 
       if (response.statusCode == 200) {
+        final data = response.data;
         return List<Map<String, dynamic>>.from(data["data"]);
       } else {
         return [];

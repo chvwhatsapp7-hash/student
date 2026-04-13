@@ -940,6 +940,7 @@ class _ProfileCourseCardState extends State<_ProfileCourseCard>
   }
 }
 
+
 // ─────────────────────────────────────────────
 //  HELPERS
 // ─────────────────────────────────────────────

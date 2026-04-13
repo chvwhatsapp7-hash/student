@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../../services/school_api_service.dart';
 
 // ─────────────────────────────────────────────
 //  CONSTANTS
@@ -93,6 +94,8 @@ class _SchoolSignupScreenState extends State<SchoolSignupScreen>
     'age':         '',
     'school':      '',
     'grade':       '',
+    'studentEmail':'',
+    'password':    '',
     'parentName':  '',
     'parentPhone': '',
     'parentEmail': '',
@@ -165,12 +168,31 @@ class _SchoolSignupScreenState extends State<SchoolSignupScreen>
     }
   }
 
-  void _nextStep() {
+  bool _isLoading = false;
+
+  void _nextStep() async {
     if (_step < 2) {
       _animateStep(() => _step++);
     } else {
-      // KEY FIX: go to /school/layout (nav shell), not /school
-      context.go('/school/layout');
+      setState(() => _isLoading = true);
+      final success = await SchoolApiService.instance.register(
+        fullName: _form['name'],
+        email: _form['studentEmail'].toString().trim(),
+        password: _form['password'],
+        phone: _form['parentPhone'],
+        schoolName: _form['school'],
+        grade: _form['grade'],
+      );
+      if (mounted) {
+        setState(() => _isLoading = false);
+        if (success) {
+          context.go('/school/login'); // Or auto-login and go layout
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Registration failed. Please try again.')),
+          );
+        }
+      }
     }
   }
 
@@ -399,12 +421,19 @@ class _SchoolSignupScreenState extends State<SchoolSignupScreen>
       children: [
         _field('🧒', 'Your Name',   (v) => _form['name']   = v),
         const SizedBox(height: 12),
-        _field('🎂', 'Age',         (v) => _form['age']    = v,
-            type: TextInputType.number),
-        const SizedBox(height: 12),
-        _dropdown(),
+        Row(
+          children: [
+            Expanded(child: _field('🎂', 'Age', (v) => _form['age'] = v, type: TextInputType.number)),
+            const SizedBox(width: 12),
+            Expanded(child: _dropdown()),
+          ],
+        ),
         const SizedBox(height: 12),
         _field('🏫', 'School Name', (v) => _form['school'] = v),
+        const SizedBox(height: 12),
+        _field('📧', 'Your Email', (v) => _form['studentEmail'] = v, type: TextInputType.emailAddress),
+        const SizedBox(height: 12),
+        _field('🔒', 'Password', (v) => _form['password'] = v, obscure: true),
       ],
     );
   }
@@ -649,18 +678,25 @@ class _SchoolSignupScreenState extends State<SchoolSignupScreen>
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(
-                isLast ? 'Start Learning! 🎉' : 'Next Step',
-                style: const TextStyle(
-                  color: Colors.white, fontSize: 17,
-                  fontWeight: FontWeight.w800, letterSpacing: 0.2,
+              if (_isLoading)
+                const SizedBox(
+                  width: 22, height: 22,
+                  child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white),
+                )
+              else ...[
+                Text(
+                  isLast ? 'Start Learning! 🎉' : 'Next Step',
+                  style: const TextStyle(
+                    color: Colors.white, fontSize: 17,
+                    fontWeight: FontWeight.w800, letterSpacing: 0.2,
+                  ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              Icon(
-                isLast ? Icons.check_circle_rounded : Icons.arrow_forward_rounded,
-                color: Colors.white, size: 20,
-              ),
+                const SizedBox(width: 8),
+                Icon(
+                  isLast ? Icons.check_circle_rounded : Icons.arrow_forward_rounded,
+                  color: Colors.white, size: 20,
+                ),
+              ],
             ],
           ),
         ),

@@ -185,62 +185,52 @@ class _CoursesScreenState extends State<CoursesScreen>
   }
 
   Future<void> _fetchCourses() async {
-    await AuthService().loadTokens();
-    final token = AuthService().accessToken;
-
-    if (token == null) {
-      throw Exception("Token is null. Please login again.");
-    }
     try {
-      final response = await http.get(
-        Uri.parse('https://studenthub-backend-woad.vercel.app/api/getCourses'),
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer $token",
-        },
-      );
+      final response = await AuthService().get('/getCourses?target_group=college');
 
       if (response.statusCode == 200) {
-        final Map<String, dynamic> jsonData = json.decode(response.body);
+        final Map<String, dynamic> jsonData = response.data;
 
         if (jsonData['success'] == true) {
           final List<dynamic> dataList = jsonData['data'];
 
-          setState(() {
-            _courses = dataList
-                .map(
-                  (e) => EngCourse(
-                    id: e['course_id'] ?? 0,
-                    title: e['title'] ?? '',
-                    category: e['category'] ?? '',
-                    duration: e['duration'] ?? '',
-                    price: e['price'].toString(),
-                    mode: ['Online'],
-                    rating: (e['rating'] ?? 0).toDouble(),
-                    students: 0,
-                    level: e['level'] ?? '',
-                    instructor: e['instructor'] ?? '',
-                    badge: _resolveBadge(e['title'] ?? '', e['category'] ?? ''),
-                    tags: [],
-                    desc: e['description'] ?? '',
-                    bgColor: _resolveBgColor(e['category'] ?? ''),
-                  ),
-                )
-                .toList();
+          if (mounted) {
+            setState(() {
+              _courses = dataList
+                  .map(
+                    (e) => EngCourse(
+                      id: e['course_id'] ?? 0,
+                      title: e['title'] ?? '',
+                      category: e['category'] ?? '',
+                      duration: e['duration'] ?? '',
+                      price: e['price'].toString(),
+                      mode: ['Online'],
+                      rating: (e['rating'] ?? 0).toDouble(),
+                      students: 0,
+                      level: e['level'] ?? '',
+                      instructor: e['instructor'] ?? '',
+                      badge: _resolveBadge(e['title'] ?? '', e['category'] ?? ''),
+                      tags: [],
+                      desc: e['description'] ?? '',
+                      bgColor: _resolveBgColor(e['category'] ?? ''),
+                    ),
+                  )
+                  .toList();
 
-            _isLoading = false;
+              _isLoading = false;
 
-            for (int i = 0; i < _courses.length; i++) {
-              final ctrl = AnimationController(
-                vsync: this,
-                duration: const Duration(milliseconds: 460),
-              );
-              _cardAnims[_courses[i].id] = ctrl;
-              Future.delayed(Duration(milliseconds: 80 + i * 80), () {
-                if (mounted) ctrl.forward();
-              });
-            }
-          });
+              for (int i = 0; i < _courses.length; i++) {
+                final ctrl = AnimationController(
+                  vsync: this,
+                  duration: const Duration(milliseconds: 460),
+                );
+                _cardAnims[_courses[i].id] = ctrl;
+                Future.delayed(Duration(milliseconds: 80 + i * 80), () {
+                  if (mounted) ctrl.forward();
+                });
+              }
+            });
+          }
         } else {
           throw Exception('API returned success=false');
         }
@@ -248,7 +238,7 @@ class _CoursesScreenState extends State<CoursesScreen>
         throw Exception('Failed to load courses: ${response.statusCode}');
       }
     } catch (e) {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
       debugPrint('Error fetching courses: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

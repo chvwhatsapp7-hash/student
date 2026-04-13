@@ -103,23 +103,21 @@ class ProfileState extends ChangeNotifier {
     try {
       final userId = await _storage.read(key: 'user_id');
       if (userId == null) throw Exception('Not logged in');
-      final res = await http.get(
-        Uri.parse('$_baseUrl/api/profile/getUsers?user_id=$userId'),
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer $token",
-        },
-      );
-      if (res.statusCode != 200)
-        throw Exception('Server error ${res.statusCode}');
-      final body = jsonDecode(res.body) as Map<String, dynamic>;
-      if (body['success'] != true) throw Exception('API returned failure');
-      final data = body['data'] as Map<String, dynamic>;
-      _mapUser(data['user'] as Map<String, dynamic>);
-      _mapApplications(data['applications'] as List<dynamic>);
-      _mapCertificates(data['certificates'] as List<dynamic>);
-      _mapProjects(data['projects'] as List<dynamic>);
-      _mapSkills(data['skills'] as List<dynamic>);
+      
+      final res = await AuthService().get('/profile/$userId');
+      if (res.statusCode != 200) {
+         throw Exception('Server error ${res.statusCode}');
+      }
+      
+      final data = res.data is Map ? res.data as Map<String, dynamic> : res.data['data'];
+      if (data == null) throw Exception('No profile data returned');
+      
+      _mapUser(data);
+      _mapApplications(data['applications'] ?? []);
+      _mapCertificates(data['certificates'] ?? []);
+      _mapProjects(data['projects'] ?? []);
+      _mapSkills(data['skills'] ?? []);
+      
     } catch (e) {
       errorMessage = e.toString();
     } finally {
@@ -130,28 +128,14 @@ class ProfileState extends ChangeNotifier {
 
   Future<bool> updateProfile(Map<String, dynamic> fields) async {
     try {
-      await AuthService().loadTokens();
-      final token = AuthService().accessToken;
-
-      if (token == null) {
-        throw Exception("Token is null. Please login again.");
-      }
-
       final userId = await _storage.read(key: 'user_id');
       if (userId == null) return false;
-      final body = {'user_id': int.parse(userId), ...fields};
-      final res = await http.put(
-        Uri.parse('$_baseUrl/api/profile/getUsers'),
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer $token",
-        },
-        body: jsonEncode(body),
-      );
+      
+      final res = await AuthService().put('/profile/$userId', fields);
       if (res.statusCode == 200) {
-        final resBody = jsonDecode(res.body);
-        if (resBody['data']?['user'] != null) {
-          _mapUser(resBody['data']['user'] as Map<String, dynamic>);
+        final data = res.data;
+        if (data != null) {
+          _mapUser(data as Map<String, dynamic>);
         }
         notifyListeners();
         return true;

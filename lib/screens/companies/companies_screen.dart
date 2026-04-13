@@ -288,31 +288,15 @@ class _CompaniesScreenState extends State<CompaniesScreen>
     ).then((_) => setState(() => _selected = null));
   }
 
-  // ── API FETCH — untouched ───────────────────
+  // ── API FETCH ─────────────────────────────
 
   Future<void> _fetchCompanies() async {
     setState(() => _isLoading = true);
     try {
-      await AuthService().loadTokens();
-      final token = AuthService().accessToken;
-
-      if (token == null) {
-        throw Exception("Token is null. Please login again.");
-      }
-
-      final response = await http.get(
-        Uri.parse('https://studenthub-backend-woad.vercel.app/api/companies'),
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer $token",
-        },
-      );
-
-      debugPrint("STATUS: ${response.statusCode}");
-      debugPrint("BODY: ${response.body}");
+      final response = await AuthService().get('/bulk?type=companies');
 
       if (response.statusCode == 200) {
-        final Map<String, dynamic> jsonData = json.decode(response.body);
+        final Map<String, dynamic> jsonData = response.data;
 
         if (jsonData['success'] == true) {
           final List<dynamic> dataList = jsonData['data'];
@@ -340,12 +324,13 @@ class _CompaniesScreenState extends State<CompaniesScreen>
             );
           }).toList();
 
-          setState(() {
-            _apiCompanies = apiList;
-            _isLoading = false;
-          });
-
-          _initCardAnims();
+          if (mounted) {
+            setState(() {
+              _apiCompanies = apiList;
+              _isLoading = false;
+            });
+            _initCardAnims();
+          }
         } else {
           throw Exception('API returned success=false');
         }
@@ -356,7 +341,7 @@ class _CompaniesScreenState extends State<CompaniesScreen>
       }
     } catch (e) {
       debugPrint('Error: $e');
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to load companies: $e')),

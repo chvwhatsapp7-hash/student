@@ -162,34 +162,23 @@ class _HackathonsScreenState extends State<HackathonsScreen>
   // ── API FETCH ───────────────────────────────
 
   Future<void> _fetchHackathons() async {
-    await AuthService().loadTokens();
-    final token = AuthService().accessToken;
-
-    if (token == null) {
-      throw Exception("Token is null. Please login again.");
-    }
-
     try {
-      final res = await http.get(
-        Uri.parse('https://studenthub-backend-woad.vercel.app/api/hackathons'),
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer $token",
-        },
-      );
+      final res = await AuthService().get('/hackathons');
       if (res.statusCode == 200) {
-        final data = jsonDecode(res.body)['data'] as List;
+        final data = res.data['data'] as List;
         final hackathons = data.map((e) => Hackathon.fromApi(e)).toList();
-        setState(() {
-          _hackathons = hackathons;
-          _loading = false;
-        });
-        _startCardAnims();
+        if (mounted) {
+          setState(() {
+            _hackathons = hackathons;
+            _loading = false;
+          });
+          _startCardAnims();
+        }
       } else {
-        setState(() => _loading = false);
+        if (mounted) setState(() => _loading = false);
       }
     } catch (e) {
-      setState(() => _loading = false);
+      if (mounted) setState(() => _loading = false);
     }
   }
 

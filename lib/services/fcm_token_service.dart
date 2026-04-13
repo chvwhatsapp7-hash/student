@@ -2,10 +2,10 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
+import 'api_config.dart';
 
 class FcmTokenService {
-  static const String baseUrl =
-      "https://your-backend-url.com/api/notifications/token";
+  static String get baseUrl => "${ApiConfig.baseUrl}/notifications/token";
 
   /// Sends the FCM token to the backend
   static Future<void> sendTokenToBackend(String authToken) async {
@@ -20,6 +20,11 @@ class FcmTokenService {
 
       debugPrint("📱 FCM TOKEN: $token");
 
+      // Use AuthService (which handles Base URL automatically if configured)
+      // or we can use the `baseUrl` explicitly with the underlying HTTP package logic
+      // But since we just pass the auth token directly from the parameter here,
+      // we'll keep the http call with the parameter token. Actually, we can use http here 
+      // since the Token is literally being explicitly passed in.
       final response = await http.post(
         Uri.parse(baseUrl),
         headers: {
@@ -29,7 +34,7 @@ class FcmTokenService {
         body: jsonEncode({"token": token}),
       );
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 || response.statusCode == 201) {
         debugPrint("✅ FCM token sent successfully");
       } else {
         debugPrint(

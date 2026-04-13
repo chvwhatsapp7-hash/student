@@ -66,18 +66,18 @@ const _roles = [
 ];
 
 // These constants are kept for when role-specific fields are re-enabled
-const _grades = [
-  'Grade 5',
-  'Grade 6',
-  'Grade 7',
-  'Grade 8',
-  'Grade 9',
-  'Grade 10',
-  'Grade 11',
-  'Grade 12',
-];
-const _engYears = ['1st Year', '2nd Year', '3rd Year', '4th Year'];
-const _pgYears = ['1st Year', '2nd Year'];
+// const _grades = [
+//   'Grade 5',
+//   'Grade 6',
+//   'Grade 7',
+//   'Grade 8',
+//   'Grade 9',
+//   'Grade 10',
+//   'Grade 11',
+//   'Grade 12',
+// ];
+// const _engYears = ['1st Year', '2nd Year', '3rd Year', '4th Year'];
+// const _pgYears = ['1st Year', '2nd Year'];
 
 // ─────────────────────────────────────────────
 //  SCREEN

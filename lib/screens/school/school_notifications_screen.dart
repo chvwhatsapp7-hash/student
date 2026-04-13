@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
 import 'school_data.dart';
+import '../../services/school_api_service.dart';
 
 // ─────────────────────────────────────────────
 //  NOTIFICATION MODEL
@@ -101,7 +102,8 @@ class _SchoolNotificationsScreenState
     extends State<SchoolNotificationsScreen>
     with TickerProviderStateMixin {
 
-  late final List<SchoolNotif> _notifs = List.from(_kNotifs);
+  List<SchoolNotif> _notifs = [];
+  bool _isLoading = true;
   late AnimationController _headerAnim;
 
   late List<AnimationController> _itemAnims;
@@ -111,6 +113,7 @@ class _SchoolNotificationsScreenState
   @override
   void initState() {
     super.initState();
+    _loadNotifs();
 
     _headerAnim = AnimationController(
       vsync: this,
@@ -137,6 +140,62 @@ class _SchoolNotificationsScreenState
     }
   }
 
+  Future<void> _loadNotifs() async {
+    final fetched = await SchoolApiService.instance.getNotifications();
+    List<SchoolNotif> parsed = [];
+    if (fetched.isNotEmpty) {
+      for (var f in fetched) {
+        if (f is Map<String, dynamic>) {
+          parsed.add(SchoolNotif(
+            id: f['notification_id']?.toString() ?? UniqueKey().toString(),
+            type: _parseType(f['type']),
+            emoji: '🔔', // fallback 
+            title: f['title'] ?? 'Notification',
+            body: f['message'] ?? '',
+            timeAgo: 'Just now',
+            isRead: f['is_read'] == 1 || f['is_read'] == true,
+          ));
+        }
+      }
+    } else {
+      parsed = List.from(_kNotifs); // fallback to offline dummy data to preserve UI preview
+    }
+    
+    if (mounted) {
+      setState(() {
+        _notifs = parsed;
+        _isLoading = false;
+        
+        // Re-init animations
+        _itemAnims = List.generate(
+          _notifs.length,
+          (_) => AnimationController(
+            vsync: this,
+            duration: const Duration(milliseconds: 420),
+          ),
+        );
+        _itemFade = _itemAnims.map((c) => CurvedAnimation(parent: c, curve: Curves.easeOut)).toList();
+        _itemSlide = _itemAnims.map((c) => Tween<Offset>(begin: const Offset(0, 0.10), end: Offset.zero)
+            .animate(CurvedAnimation(parent: c, curve: Curves.easeOut))).toList();
+            
+        for (int i = 0; i < _notifs.length; i++) {
+          Future.delayed(Duration(milliseconds: 80 + i * 60), () {
+            if (mounted) _itemAnims[i].forward();
+          });
+        }
+      });
+    }
+  }
+  
+  NotifType _parseType(dynamic type) {
+    if (type == null) return NotifType.system;
+    final t = type.toString().toLowerCase();
+    if (t.contains('course')) return NotifType.course;
+    if (t.contains('hackathon')) return NotifType.challenge;
+    if (t.contains('job') || t.contains('internship')) return NotifType.achievement;
+    return NotifType.system;
+  }
+
   @override
   void dispose() {
     _headerAnim.dispose();
@@ -148,14 +207,17 @@ class _SchoolNotificationsScreenState
 
   void _markAllRead() {
     HapticFeedback.lightImpact();
+    SchoolApiService.instance.markAllNotificationsRead();
     setState(() {
       for (final n in _notifs) n.isRead = true;
     });
   }
 
   void _markRead(String id) {
+    SchoolApiService.instance.markNotificationRead(id);
     setState(() {
-      _notifs.firstWhere((n) => n.id == id).isRead = true;
+      final notif = _notifs.firstWhere((n) => n.id == id, orElse: () => _notifs.first);
+      notif.isRead = true;
     });
   }
 
@@ -201,7 +263,9 @@ class _SchoolNotificationsScreenState
       body: Column(children: [
         _buildHeader(),
         Expanded(
-          child: ListView(
+          child: _isLoading 
+            ? const Center(child: CircularProgressIndicator()) 
+            : ListView(
             padding: const EdgeInsets.fromLTRB(16, 14, 16, 30),
             children: [
               if (today.isNotEmpty) ...[

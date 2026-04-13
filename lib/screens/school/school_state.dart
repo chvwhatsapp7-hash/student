@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../services/school_api_service.dart';
 
 // ─────────────────────────────────────────────
 //  ENUMS & MODELS  (single source of truth)
@@ -63,7 +64,7 @@ class SchoolStateNotifier extends ChangeNotifier {
   int get interestedCount =>
       _statuses.values.where((s) => s == CourseStatus.interested).length;
 
-  // ── mutations ─────────────────────────────
+// ── mutations ─────────────────────────────
 
   void setStatus(int id, CourseStatus status) {
     _statuses[id] = status;
@@ -73,6 +74,20 @@ class SchoolStateNotifier extends ChangeNotifier {
   void updateProfile(StudentProfile p) {
     _profile = p;
     notifyListeners();
+    // Background sync via SchoolApiService
+    SchoolApiService.instance.updateProfile(p.name, p.grade, p.school);
+  }
+
+  Future<void> fetchProfile() async {
+    final data = await SchoolApiService.instance.getProfile();
+    if (data != null) {
+      _profile = _profile.copyWith(
+        name: data['full_name'] ?? _profile.name,
+        grade: data['degree'] ?? _profile.grade,
+        school: data['university'] ?? _profile.school,
+      );
+      notifyListeners();
+    }
   }
 
   void completeChallenge() {
@@ -82,6 +97,7 @@ class SchoolStateNotifier extends ChangeNotifier {
     notifyListeners();
   }
 }
+
 
 // ── Provider widget ────────────────────────
 

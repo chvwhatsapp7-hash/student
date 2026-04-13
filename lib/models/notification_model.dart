@@ -1,11 +1,15 @@
 class AppNotification {
-  final String title;
-  final String body;
+  final String? id;       // backend document ID
+  final String  title;
+  final String  body;
   final DateTime time;
+  final bool    isRead;
 
-  AppNotification({
+  const AppNotification({
+    this.id,
     required this.title,
     required this.body,
     required this.time,
+    this.isRead = false,
   });
 }

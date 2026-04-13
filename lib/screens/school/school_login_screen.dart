@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../../services/school_api_service.dart';
 
 // ─────────────────────────────────────────────
 //  CONSTANTS
@@ -126,10 +127,19 @@ class _SchoolLoginScreenState extends State<SchoolLoginScreen>
 
   Future<void> _handleLogin() async {
     setState(() => _isLoading = true);
-    await Future.delayed(const Duration(milliseconds: 900));
+    final success = await SchoolApiService.instance.login(
+      _emailCtrl.text.trim(), 
+      _passCtrl.text,
+    );
     if (mounted) {
       setState(() => _isLoading = false);
-      context.go('/school/layout');   // ← enters the bottom-nav shell
+      if (success) {
+        context.go('/school/layout');   // ← enters the bottom-nav shell
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Login failed. Please try again.')),
+        );
+      }
     }
   }
 

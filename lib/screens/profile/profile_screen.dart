@@ -3,8 +3,10 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
+import 'package:go_router/go_router.dart';
 
 import '../../api_services/authservice.dart';
+import '../notifications/notification_page.dart'; // ← added import
 
 const kInk = Color(0xFF0F172A);
 const kSlate = Color(0xFF334155);
@@ -70,7 +72,7 @@ class ProfileState extends ChangeNotifier {
 
   void addApplication(String role, String company, {String type = 'Job'}) {
     final already = applications.any(
-      (a) => a['role'] == role && a['company'] == company,
+          (a) => a['role'] == role && a['company'] == company,
     );
     if (!already) {
       applications.insert(0, {
@@ -186,7 +188,7 @@ class ProfileState extends ChangeNotifier {
         'internship_id': a['internship_id'],
         'role': (isJob ? a['job_title'] : a['internship_title']) ?? '',
         'company':
-            (isJob ? a['job_company_name'] : a['internship_company_name']) ??
+        (isJob ? a['job_company_name'] : a['internship_company_name']) ??
             '',
         'status': _capitalize(a['status'] ?? 'applied'),
         'date': _timeAgo(a['applied_at']),
@@ -199,12 +201,12 @@ class ProfileState extends ChangeNotifier {
     certifications = list
         .map(
           (c) => {
-            'certificate_id': (c['certificate_id'] ?? '').toString(),
-            'name': (c['title'] ?? '') as String,
-            'issuer': (c['issuer'] ?? '') as String,
-            'date': _formatDate(c['issue_date']),
-          },
-        )
+        'certificate_id': (c['certificate_id'] ?? '').toString(),
+        'name': (c['title'] ?? '') as String,
+        'issuer': (c['issuer'] ?? '') as String,
+        'date': _formatDate(c['issue_date']),
+      },
+    )
         .toList();
   }
 
@@ -212,13 +214,13 @@ class ProfileState extends ChangeNotifier {
     projects = list
         .map(
           (p) => <String, dynamic>{
-            'project_id': p['project_id'],
-            'title': (p['title'] ?? '') as String,
-            'desc': (p['description'] ?? '') as String,
-            'tech': <String>[],
-            'link': '',
-          },
-        )
+        'project_id': p['project_id'],
+        'title': (p['title'] ?? '') as String,
+        'desc': (p['description'] ?? '') as String,
+        'tech': <String>[],
+        'link': '',
+      },
+    )
         .toList();
   }
 
@@ -226,11 +228,11 @@ class ProfileState extends ChangeNotifier {
     skills = list
         .map(
           (s) => <String, dynamic>{
-            'skill_id': s['skill_id'],
-            'name': (s['skill_name'] ?? '') as String,
-            'level': ((s['proficiency'] as num) / 100.0).clamp(0.0, 1.0),
-          },
-        )
+        'skill_id': s['skill_id'],
+        'name': (s['skill_name'] ?? '') as String,
+        'level': ((s['proficiency'] as num) / 100.0).clamp(0.0, 1.0),
+      },
+    )
         .toList();
   }
 
@@ -371,7 +373,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     _xpVal = _buildXpTween();
     _skillAnims = List.generate(
       profileState.skills.length,
-      (_) => AnimationController(
+          (_) => AnimationController(
         vsync: this,
         duration: const Duration(milliseconds: 900),
       ),
@@ -602,42 +604,42 @@ class _ProfileScreenState extends State<ProfileScreen>
 
     final Future<List<Map<String, dynamic>>> skillsFuture = http
         .get(
-          Uri.parse('${ProfileState._baseUrl}/api/skills'),
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": "Bearer $token",
+      Uri.parse('${ProfileState._baseUrl}/api/skills'),
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer $token",
+      },
+    )
+        .then((res) {
+      if (res.statusCode == 200) {
+        final body = jsonDecode(res.body);
+        List<dynamic> list = [];
+        if (body is List) {
+          list = body;
+        } else if (body['data'] is List) {
+          list = body['data'];
+        } else if (body['skills'] is List) {
+          list = body['skills'];
+        }
+        return list
+            .map(
+              (s) => <String, dynamic>{
+            'skill_id': s['skill_id'] ?? s['id'],
+            'name': (s['name'] ?? s['skill_name'] ?? '').toString(),
           },
         )
-        .then((res) {
-          if (res.statusCode == 200) {
-            final body = jsonDecode(res.body);
-            List<dynamic> list = [];
-            if (body is List) {
-              list = body;
-            } else if (body['data'] is List) {
-              list = body['data'];
-            } else if (body['skills'] is List) {
-              list = body['skills'];
-            }
-            return list
-                .map(
-                  (s) => <String, dynamic>{
-                    'skill_id': s['skill_id'] ?? s['id'],
-                    'name': (s['name'] ?? s['skill_name'] ?? '').toString(),
-                  },
-                )
-                .where(
-                  (s) =>
-                      s['skill_id'] != null && (s['name'] as String).isNotEmpty,
-                )
-                .toList();
-          }
-          return <Map<String, dynamic>>[];
-        })
+            .where(
+              (s) =>
+          s['skill_id'] != null && (s['name'] as String).isNotEmpty,
+        )
+            .toList();
+      }
+      return <Map<String, dynamic>>[];
+    })
         .catchError((e) {
-          debugPrint('Skills fetch error: $e');
-          return <Map<String, dynamic>>[];
-        });
+      debugPrint('Skills fetch error: $e');
+      return <Map<String, dynamic>>[];
+    });
 
     double level = 0.70;
     int? selectedSkillId;
@@ -740,7 +742,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                               ),
                               items: [
                                 ...allSkills.map(
-                                  (s) => DropdownMenuItem<int>(
+                                      (s) => DropdownMenuItem<int>(
                                     value: s['skill_id'] as int,
                                     child: Text(s['name'] as String),
                                   ),
@@ -777,10 +779,10 @@ class _ProfileScreenState extends State<ProfileScreen>
                                     isOther = false;
                                     selectedSkillId = val;
                                     selectedSkillName =
-                                        allSkills.firstWhere(
-                                              (s) => s['skill_id'] == val,
-                                            )['name']
-                                            as String;
+                                    allSkills.firstWhere(
+                                          (s) => s['skill_id'] == val,
+                                    )['name']
+                                    as String;
                                   }
                                 });
                               },
@@ -888,8 +890,8 @@ class _ProfileScreenState extends State<ProfileScreen>
                         onTap: () async {
                           final String? finalSkillName = isOther
                               ? (otherCtrl.text.trim().isEmpty
-                                    ? null
-                                    : otherCtrl.text.trim())
+                              ? null
+                              : otherCtrl.text.trim())
                               : selectedSkillName;
 
                           if (finalSkillName == null ||
@@ -941,9 +943,9 @@ class _ProfileScreenState extends State<ProfileScreen>
                                 final existingIndex = profileState.skills
                                     .indexWhere(
                                       (s) =>
-                                          (s['name'] as String).toLowerCase() ==
-                                          finalSkillName.toLowerCase(),
-                                    );
+                                  (s['name'] as String).toLowerCase() ==
+                                      finalSkillName.toLowerCase(),
+                                );
                                 if (existingIndex != -1) {
                                   profileState.skills[existingIndex]['level'] =
                                       level;
@@ -1095,6 +1097,7 @@ class _ProfileScreenState extends State<ProfileScreen>
           bottom: false,
           child: Column(
             children: [
+              // ── TOP BAR ── only this Row was changed ──────────────
               Padding(
                 padding: EdgeInsets.fromLTRB(
                   sw * 0.05,
@@ -1104,9 +1107,10 @@ class _ProfileScreenState extends State<ProfileScreen>
                 ),
                 child: Row(
                   children: [
+                    // Back button (already worked via maybePop)
                     _iconBtn(
                       Icons.arrow_back_ios_new,
-                      () => Navigator.maybePop(context),
+                          () => Navigator.maybePop(context),
                       sw,
                     ),
                     const Spacer(),
@@ -1119,16 +1123,39 @@ class _ProfileScreenState extends State<ProfileScreen>
                       ),
                     ),
                     const Spacer(),
+                    // Notification bell → NotificationPage
                     _iconBtn(
-                      Icons.edit,
-                      _editBasicInfo,
+                      Icons.notifications_outlined,
+                          () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const NotificationPage(),
+                        ),
+                      ),
                       sw,
-                      bg: kPrimary.withValues(alpha: 0.45),
+                      bg: Colors.white.withValues(alpha: 0.10),
                       iconColor: kAccent,
+                    ),
+                    SizedBox(width: sw * 0.025),
+                    // Logout → clears storage, pushes /login
+                    _iconBtn(
+                      Icons.logout,
+                          () async {
+                        const storage = FlutterSecureStorage();
+                        await storage.deleteAll();
+
+                        if (!context.mounted) return;
+
+                        context.go('/login'); // GoRouter navigation
+                      },
+                      sw,
+                      bg: Colors.red.withValues(alpha: 0.25),
+                      iconColor: Colors.redAccent,
                     ),
                   ],
                 ),
               ),
+              // ── END TOP BAR ────────────────────────────────────────
               SizedBox(height: sw * 0.030),
               Stack(
                 alignment: Alignment.bottomRight,
@@ -1284,12 +1311,12 @@ class _ProfileScreenState extends State<ProfileScreen>
   );
 
   Widget _iconBtn(
-    IconData icon,
-    VoidCallback onTap,
-    double sw, {
-    Color? bg,
-    Color iconColor = Colors.white,
-  }) {
+      IconData icon,
+      VoidCallback onTap,
+      double sw, {
+        Color? bg,
+        Color iconColor = Colors.white,
+      }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -1470,36 +1497,36 @@ class _ProfileScreenState extends State<ProfileScreen>
           onEdit: () => _tab.animateTo(1),
           child: p.skills.isEmpty
               ? Text(
-                  'No skills added yet.',
-                  style: TextStyle(fontSize: sw * 0.033, color: kMuted),
-                )
+            'No skills added yet.',
+            style: TextStyle(fontSize: sw * 0.033, color: kMuted),
+          )
               : Wrap(
-                  spacing: sw * 0.020,
-                  runSpacing: sw * 0.020,
-                  children: p.skills.map((s) {
-                    final pct = ((s['level'] as double) * 100).toInt();
-                    return Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: sw * 0.030,
-                        vertical: sw * 0.015,
-                      ),
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [kPrimary, Color(0xFF4F46E5)],
-                        ),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        '${s['name']}  $pct%',
-                        style: TextStyle(
-                          fontSize: sw * 0.028,
-                          fontWeight: FontWeight.w800,
-                          color: Colors.white,
-                        ),
-                      ),
-                    );
-                  }).toList(),
+            spacing: sw * 0.020,
+            runSpacing: sw * 0.020,
+            children: p.skills.map((s) {
+              final pct = ((s['level'] as double) * 100).toInt();
+              return Container(
+                padding: EdgeInsets.symmetric(
+                  horizontal: sw * 0.030,
+                  vertical: sw * 0.015,
                 ),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [kPrimary, Color(0xFF4F46E5)],
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  '${s['name']}  $pct%',
+                  style: TextStyle(
+                    fontSize: sw * 0.028,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
         ),
       ],
     );
@@ -1515,11 +1542,11 @@ class _ProfileScreenState extends State<ProfileScreen>
         decoration: BoxDecoration(
           gradient: has
               ? LinearGradient(
-                  colors: [
-                    kPrimary.withValues(alpha: 0.07),
-                    const Color(0xFF4F46E5).withValues(alpha: 0.03),
-                  ],
-                )
+            colors: [
+              kPrimary.withValues(alpha: 0.07),
+              const Color(0xFF4F46E5).withValues(alpha: 0.03),
+            ],
+          )
               : null,
           color: has ? null : kCardBg,
           borderRadius: BorderRadius.circular(18),
@@ -1605,12 +1632,12 @@ class _ProfileScreenState extends State<ProfileScreen>
   }
 
   Widget _dRow(
-    IconData icon,
-    String val,
-    String lbl,
-    double sw, {
-    bool last = false,
-  }) {
+      IconData icon,
+      String val,
+      String lbl,
+      double sw, {
+        bool last = false,
+      }) {
     return Container(
       padding: EdgeInsets.symmetric(vertical: sw * 0.025),
       decoration: BoxDecoration(
@@ -1673,80 +1700,80 @@ class _ProfileScreenState extends State<ProfileScreen>
           onEdit: null,
           child: p.skills.isEmpty
               ? Text(
-                  'No skills added yet.',
-                  style: TextStyle(fontSize: sw * 0.033, color: kMuted),
-                )
+            'No skills added yet.',
+            style: TextStyle(fontSize: sw * 0.033, color: kMuted),
+          )
               : Column(
-                  children: List.generate(p.skills.length, (i) {
-                    if (i >= _skillAnims.length) return const SizedBox();
-                    final sk = p.skills[i];
-                    final name = sk['name'] as String;
-                    final target = sk['level'] as double;
-                    final pct = (target * 100).toInt();
-                    final barCol = target >= 0.80
-                        ? kSuccess
-                        : target >= 0.60
-                        ? kPrimary
-                        : kWarning;
-                    return Padding(
-                      padding: EdgeInsets.only(bottom: sw * 0.050),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  name,
-                                  style: TextStyle(
-                                    fontSize: sw * 0.033,
-                                    fontWeight: FontWeight.w800,
-                                    color: kInk,
-                                  ),
-                                ),
-                              ),
-                              AnimatedBuilder(
-                                animation: _skillAnims[i],
-                                builder: (_, __) => Text(
-                                  '${(_skillAnims[i].value * pct).toInt()}%',
-                                  style: TextStyle(
-                                    fontSize: sw * 0.030,
-                                    fontWeight: FontWeight.w700,
-                                    color: barCol,
-                                  ),
-                                ),
-                              ),
-                              SizedBox(width: sw * 0.020),
-                              GestureDetector(
-                                onTap: () => _deleteSkill(i),
-                                child: Icon(
-                                  Icons.remove_circle_outline,
-                                  size: sw * 0.045,
-                                  color: Colors.red.shade300,
-                                ),
-                              ),
-                            ],
-                          ),
-                          SizedBox(height: sw * 0.020),
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(6),
-                            child: AnimatedBuilder(
-                              animation: _skillAnims[i],
-                              builder: (_, __) => LinearProgressIndicator(
-                                value: _skillAnims[i].value * target,
-                                minHeight: 8,
-                                backgroundColor: const Color(0xFFE2E8F0),
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  barCol,
-                                ),
-                              ),
+            children: List.generate(p.skills.length, (i) {
+              if (i >= _skillAnims.length) return const SizedBox();
+              final sk = p.skills[i];
+              final name = sk['name'] as String;
+              final target = sk['level'] as double;
+              final pct = (target * 100).toInt();
+              final barCol = target >= 0.80
+                  ? kSuccess
+                  : target >= 0.60
+                  ? kPrimary
+                  : kWarning;
+              return Padding(
+                padding: EdgeInsets.only(bottom: sw * 0.050),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            name,
+                            style: TextStyle(
+                              fontSize: sw * 0.033,
+                              fontWeight: FontWeight.w800,
+                              color: kInk,
                             ),
                           ),
-                        ],
+                        ),
+                        AnimatedBuilder(
+                          animation: _skillAnims[i],
+                          builder: (_, __) => Text(
+                            '${(_skillAnims[i].value * pct).toInt()}%',
+                            style: TextStyle(
+                              fontSize: sw * 0.030,
+                              fontWeight: FontWeight.w700,
+                              color: barCol,
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: sw * 0.020),
+                        GestureDetector(
+                          onTap: () => _deleteSkill(i),
+                          child: Icon(
+                            Icons.remove_circle_outline,
+                            size: sw * 0.045,
+                            color: Colors.red.shade300,
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: sw * 0.020),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(6),
+                      child: AnimatedBuilder(
+                        animation: _skillAnims[i],
+                        builder: (_, __) => LinearProgressIndicator(
+                          value: _skillAnims[i].value * target,
+                          minHeight: 8,
+                          backgroundColor: const Color(0xFFE2E8F0),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            barCol,
+                          ),
+                        ),
                       ),
-                    );
-                  }),
+                    ),
+                  ],
                 ),
+              );
+            }),
+          ),
         ),
         SizedBox(height: sw * 0.030),
         GestureDetector(
@@ -2201,11 +2228,11 @@ class _ProfileScreenState extends State<ProfileScreen>
   }
 
   void _textDialog(
-    String title,
-    String initial,
-    int maxLines,
-    Future<void> Function(String) onSave,
-  ) {
+      String title,
+      String initial,
+      int maxLines,
+      Future<void> Function(String) onSave,
+      ) {
     final ctrl = TextEditingController(text: initial);
     final sw = MediaQuery.of(context).size.width;
     showDialog(
@@ -2384,14 +2411,10 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
-  // ─────────────────────────────────────────────
-  //  EDIT CONTACT SHEET  ← fully rewritten
-  // ─────────────────────────────────────────────
   void _editContactSheet() {
     final sw = MediaQuery.of(context).size.width;
     final p = profileState;
 
-    // All six editable fields
     final emailCtrl = TextEditingController(text: p.email);
     final phoneCtrl = TextEditingController(text: p.phone);
     final locCtrl = TextEditingController(text: p.location);
@@ -2446,7 +2469,6 @@ class _ProfileScreenState extends State<ProfileScreen>
                     'linkedin_url': liCtrl.text.trim(),
                     'github_url': ghCtrl.text.trim(),
                   });
-                  // Mirror changes in local state immediately
                   if (ok) {
                     profileState.set(() {
                       profileState.email = emailCtrl.text.trim();
@@ -2544,7 +2566,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                         if (nameCtrl.text.trim().isEmpty) return;
                         Navigator.pop(context);
                         profileState.set(
-                          () => profileState.certifications.add({
+                              () => profileState.certifications.add({
                             'certificate_id': '',
                             'name': nameCtrl.text.trim(),
                             'issuer': issuerCtrl.text.trim(),
@@ -2638,7 +2660,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                         if (titleCtrl.text.trim().isEmpty) return;
                         Navigator.pop(context);
                         profileState.set(
-                          () => profileState.projects.add({
+                              () => profileState.projects.add({
                             'project_id': null,
                             'title': titleCtrl.text.trim(),
                             'desc': descCtrl.text.trim(),
@@ -2681,12 +2703,12 @@ class _ProfileScreenState extends State<ProfileScreen>
   }
 
   Widget _field(
-    TextEditingController ctrl,
-    String hint,
-    double sw, {
-    TextInputType type = TextInputType.text,
-    int maxLines = 1,
-  }) {
+      TextEditingController ctrl,
+      String hint,
+      double sw, {
+        TextInputType type = TextInputType.text,
+        int maxLines = 1,
+      }) {
     return TextField(
       controller: ctrl,
       keyboardType: type,

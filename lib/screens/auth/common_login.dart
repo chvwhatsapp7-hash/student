@@ -8,6 +8,8 @@ import 'package:http/http.dart' as http;
 import 'package:jwt_decoder/jwt_decoder.dart';
 
 import '../../api_services/authservice.dart';
+import '../premium/premium_bottom_sheet.dart'; // ✅ NEW
+import '../premium/premium_helper.dart';        // ✅ NEW
 
 // ─────────────────────────────────────────────
 //  DESIGN TOKENS
@@ -335,7 +337,6 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
   }
 
   // ── SIGN IN ─────────────────────────────────
-  // (logic completely unchanged)
 
   Future<void> _signIn() async {
     if (_emailCtrl.text.trim().isEmpty && _passCtrl.text.trim().isEmpty) {
@@ -376,11 +377,16 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
         final Map<String, dynamic> payload = JwtDecoder.decode(accessToken);
         debugPrint("📦 JWT Payload: $payload");
 
+        // ✅ Declare ALL variables FIRST before using them
         final String userId = payload['user_id'].toString();
         final int roleId = payload['role_id'] is int
             ? payload['role_id']
             : int.tryParse(payload['role_id'].toString()) ?? 0;
         final String userName = payload['full_name'] ?? '';
+
+        // ✅ Now safe to print
+        debugPrint("🎯 roleId = $roleId (type: ${roleId.runtimeType})");
+        debugPrint("✅ User ID: $userId, Role: $roleId, Name: $userName");
 
         await AuthService().saveTokens(
           access: accessToken,
@@ -389,8 +395,6 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
           role_id: roleId.toString(),
           full_name: userName,
         );
-
-        debugPrint("✅ User ID: $userId, Role: $roleId, Name: $userName");
 
         if (!mounted) return;
 
@@ -414,16 +418,32 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
           ),
         );
 
+        // ✅ Premium check wrapped in try/catch so it never blocks navigation
+        if ((roleId == 3 || roleId == 4) && mounted) {
+          try {
+            final show = await PremiumHelper.shouldShow(onLogin: true);
+            if (show && mounted) {
+              await showPremiumSheet(context);
+            }
+          } catch (e) {
+            debugPrint("⚠️ PremiumHelper error (non-fatal): $e");
+          }
+        }
+
+        if (!mounted) return;
+
+        // ✅ Fixed fallback — '/' has no route so use '/engineering' instead
         if (roleId == 3 || roleId == 4) {
           context.go('/engineering');
         } else if (roleId == 2) {
           context.go('/school/layout');
         } else {
-          context.go('/');
+          debugPrint("⚠️ Unknown roleId: $roleId — check JWT payload above");
+          context.go('/engineering');
         }
       } else {
         _showNoAccountDialog();
-        debugPrint("❌ ${data["message"]}");
+        debugPrint("❌ Login failed: ${data["message"]}");
       }
     } catch (e) {
       _showErrorSnack('Something went wrong. Please try again.');
@@ -619,7 +639,6 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Badge (same style as landing page)
         FadeTransition(
           opacity: _badgeFade,
           child: Container(
@@ -658,7 +677,6 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
           ),
         ),
         SizedBox(height: sh * 0.022),
-        // Gradient headline
         RichText(
           text: TextSpan(
             style: TextStyle(
@@ -723,7 +741,6 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Card header
           Row(
             children: [
               Container(
@@ -763,7 +780,6 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
           ),
           SizedBox(height: sw * 0.05),
 
-          // Fields
           _field(
             ctrl: _emailCtrl,
             label: 'Email Address',
@@ -789,7 +805,6 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
           ),
           SizedBox(height: sw * 0.025),
 
-          // Forgot password
           Align(
             alignment: Alignment.centerRight,
             child: GestureDetector(
@@ -806,12 +821,10 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
           ),
           SizedBox(height: sw * 0.045),
 
-          // Sign in button
           _buildSubmitBtn(sw),
 
           SizedBox(height: sw * 0.045),
 
-          // Divider
           Row(
             children: [
               Expanded(child: Container(height: 1, color: kBorder)),
@@ -827,7 +840,6 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
           ),
           SizedBox(height: sw * 0.035),
 
-          // Social buttons
           Row(
             children: [
               Expanded(child: _socialBtn('Google', '🅖', sw, isGoogle: true)),

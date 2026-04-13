@@ -8,8 +8,11 @@ import 'package:http/http.dart' as http;
 import 'package:jwt_decoder/jwt_decoder.dart';
 
 import '../../api_services/authservice.dart';
-import '../premium/premium_bottom_sheet.dart'; // ✅ NEW
-import '../premium/premium_helper.dart';        // ✅ NEW
+import '../premium/premium_bottom_sheet.dart';
+import '../premium/premium_helper.dart';
+import 'package:internship_app/services/fcm_token_service.dart';
+// REMOVED: import 'package:internship_app/services/auth_service.dart';
+
 
 // ─────────────────────────────────────────────
 //  DESIGN TOKENS
@@ -377,14 +380,12 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
         final Map<String, dynamic> payload = JwtDecoder.decode(accessToken);
         debugPrint("📦 JWT Payload: $payload");
 
-        // ✅ Declare ALL variables FIRST before using them
         final String userId = payload['user_id'].toString();
         final int roleId = payload['role_id'] is int
             ? payload['role_id']
             : int.tryParse(payload['role_id'].toString()) ?? 0;
         final String userName = payload['full_name'] ?? '';
 
-        // ✅ Now safe to print
         debugPrint("🎯 roleId = $roleId (type: ${roleId.runtimeType})");
         debugPrint("✅ User ID: $userId, Role: $roleId, Name: $userName");
 
@@ -395,6 +396,19 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
           role_id: roleId.toString(),
           full_name: userName,
         );
+
+        // ── ✅ FCM TOKEN — send to backend after saving tokens ──────────
+        // This registers the device for push notifications (job alerts,
+        // class reminders, etc.). Wrapped in try/catch so a FCM failure
+        // never blocks the user from logging in.
+        try {
+          await FcmTokenService.sendTokenToBackend(accessToken);
+          FcmTokenService.listenToTokenRefresh(accessToken);
+          debugPrint("🔔 FCM token sent successfully.");
+        } catch (e) {
+          debugPrint("⚠️ FCM token upload failed (non-fatal): $e");
+        }
+        // ────────────────────────────────────────────────────────────────
 
         if (!mounted) return;
 
@@ -418,7 +432,7 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
           ),
         );
 
-        // ✅ Premium check wrapped in try/catch so it never blocks navigation
+        // ✅ Premium check — non-fatal
         if ((roleId == 3 || roleId == 4) && mounted) {
           try {
             final show = await PremiumHelper.shouldShow(onLogin: true);
@@ -432,7 +446,6 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
 
         if (!mounted) return;
 
-        // ✅ Fixed fallback — '/' has no route so use '/engineering' instead
         if (roleId == 3 || roleId == 4) {
           context.go('/engineering');
         } else if (roleId == 2) {

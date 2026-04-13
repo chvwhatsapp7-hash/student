@@ -224,7 +224,6 @@ class _CommonSignupScreenState extends State<CommonSignupScreen>
   }
 
   // ── Open bottom sheet role picker ─────────────
-  // Replaces the congested DropdownButton — spacious tiles, no overflow
   void _openRoleSheet() {
     HapticFeedback.lightImpact();
     showModalBottomSheet(
@@ -242,8 +241,7 @@ class _CommonSignupScreenState extends State<CommonSignupScreen>
     );
   }
 
-  // ── SIGNUP — API body exactly as original ─────
-  // !! No changes made here — only UI was modified !!
+  // ── SIGNUP ─────────────────────────────────
   Future<void> _signup() async {
     if (_passCtrl.text != _confirmCtrl.text) {
       ScaffoldMessenger.of(
@@ -272,7 +270,6 @@ class _CommonSignupScreenState extends State<CommonSignupScreen>
         roleId = 3;
     }
 
-    // Build request body dynamically based on role
     final body = {
       "full_name": _nameCtrl.text.trim(),
       "email": _emailCtrl.text.trim(),
@@ -320,9 +317,27 @@ class _CommonSignupScreenState extends State<CommonSignupScreen>
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text("Something went wrong")));
-      print("❌ Exception: $e");
+      debugPrint("❌ Exception: $e");
     }
     setState(() => _isLoading = false);
+  }
+
+  // ── GOOGLE SIGN UP ─────────────────────────
+  // TODO: replace body with your Google OAuth / firebase_auth call
+  Future<void> _signUpWithGoogle() async {
+    HapticFeedback.lightImpact();
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Google sign-up coming soon")),
+    );
+  }
+
+  // ── LINKEDIN SIGN UP ───────────────────────
+  // TODO: replace body with your LinkedIn OAuth call
+  Future<void> _signUpWithLinkedIn() async {
+    HapticFeedback.lightImpact();
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("LinkedIn sign-up coming soon")),
+    );
   }
 
   // ── build ──────────────────────────────────
@@ -388,25 +403,22 @@ class _CommonSignupScreenState extends State<CommonSignupScreen>
                     ),
                     SizedBox(height: sw * 0.055),
 
-                    // ── Role selector tile (taps to open sheet) ──────────
-                    // CHANGED: replaced congested DropdownButton with
-                    // a clean tap-to-open tile + bottom sheet picker
+                    // ── Role selector tile ────────────────────────────────
                     FadeTransition(
                       opacity: CurvedAnimation(
                         parent: _dropAnim,
                         curve: Curves.easeOut,
                       ),
                       child: SlideTransition(
-                        position:
-                            Tween<Offset>(
-                              begin: const Offset(0, 0.12),
-                              end: Offset.zero,
-                            ).animate(
-                              CurvedAnimation(
-                                parent: _dropAnim,
-                                curve: Curves.easeOut,
-                              ),
-                            ),
+                        position: Tween<Offset>(
+                          begin: const Offset(0, 0.12),
+                          end: Offset.zero,
+                        ).animate(
+                          CurvedAnimation(
+                            parent: _dropAnim,
+                            curve: Curves.easeOut,
+                          ),
+                        ),
                         child: _buildRoleSelector(sw),
                       ),
                     ),
@@ -452,6 +464,72 @@ class _CommonSignupScreenState extends State<CommonSignupScreen>
                       ),
                     ),
                     SizedBox(height: sw * 0.070),
+
+                    // ── Divider ───────────────────────────────────────────
+                    FadeTransition(
+                      opacity: _fieldsFade,
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Container(
+                              height: 1,
+                              color: Colors.white.withOpacity(0.12),
+                            ),
+                          ),
+                          Padding(
+                            padding: EdgeInsets.symmetric(
+                                horizontal: sw * 0.030),
+                            child: Text(
+                              'or sign up with',
+                              style: TextStyle(
+                                fontSize: sw * 0.028,
+                                color: Colors.white.withOpacity(0.40),
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: Container(
+                              height: 1,
+                              color: Colors.white.withOpacity(0.12),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: sw * 0.035),
+
+                    // ── Social buttons ────────────────────────────────────
+                    FadeTransition(
+                      opacity: _fieldsFade,
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: _socialBtn(
+                              label: 'Google',
+                              onTap: _signUpWithGoogle,
+                              sw: sw,
+                              iconWidget:
+                              _GoogleIcon(size: sw * 0.048),
+                              borderColor: const Color(0xFF4285F4)
+                                  .withOpacity(0.45),
+                            ),
+                          ),
+                          SizedBox(width: sw * 0.025),
+                          Expanded(
+                            child: _socialBtn(
+                              label: 'LinkedIn',
+                              onTap: _signUpWithLinkedIn,
+                              sw: sw,
+                              iconWidget:
+                              _LinkedInIcon(size: sw * 0.048),
+                              borderColor: const Color(0xFF0A66C2)
+                                  .withOpacity(0.45),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: sw * 0.050),
                   ],
                 ),
               ),
@@ -549,9 +627,6 @@ class _CommonSignupScreenState extends State<CommonSignupScreen>
   }
 
   // ── ROLE SELECTOR TILE ────────────────────
-  // Collapsed tile — shows selected role, taps to open sheet.
-  // CHANGED: replaced _buildRoleDropdown() (DropdownButton — congested)
-  //          with this tap-to-open tile + _RolePickerSheet
   Widget _buildRoleSelector(double sw) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -591,7 +666,6 @@ class _CommonSignupScreenState extends State<CommonSignupScreen>
             ),
             child: Row(
               children: [
-                // Emoji tile — animates on role change
                 AnimatedContainer(
                   duration: const Duration(milliseconds: 250),
                   width: sw * 0.115,
@@ -608,8 +682,6 @@ class _CommonSignupScreenState extends State<CommonSignupScreen>
                   ),
                 ),
                 SizedBox(width: sw * 0.035),
-
-                // Label + subtitle — swap animation on role change
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -632,15 +704,14 @@ class _CommonSignupScreenState extends State<CommonSignupScreen>
                         child: Text(
                           _role.subtitle,
                           key: ValueKey('sub_${_role.value}'),
-                          style: TextStyle(fontSize: sw * 0.030, color: kMuted),
+                          style:
+                          TextStyle(fontSize: sw * 0.030, color: kMuted),
                         ),
                       ),
                     ],
                   ),
                 ),
                 SizedBox(width: sw * 0.025),
-
-                // Chevron — colour matches role accent
                 AnimatedContainer(
                   duration: const Duration(milliseconds: 250),
                   padding: EdgeInsets.all(sw * 0.015),
@@ -663,9 +734,6 @@ class _CommonSignupScreenState extends State<CommonSignupScreen>
   }
 
   // ── FORM CARD ─────────────────────────────
-  // CHANGED: role-specific fields section removed from view.
-  // Controllers, constants and _buildRoleFields() kept but commented
-  // so they can be re-enabled easily when client needs them.
   Widget _buildFormCard(double sw) {
     return Container(
       padding: EdgeInsets.all(sw * 0.055),
@@ -719,7 +787,6 @@ class _CommonSignupScreenState extends State<CommonSignupScreen>
           ),
           SizedBox(height: sw * 0.045),
 
-          // ── 5 common fields only ──────────────────────────────────────
           _field(
             ctrl: _nameCtrl,
             label: 'Full Name',
@@ -781,53 +848,17 @@ class _CommonSignupScreenState extends State<CommonSignupScreen>
           // controllers/constants at the top of this class.
           //
           // const SizedBox(height: 4),
-          // Row(
-          //   children: [
-          //     Expanded(child: Divider(color: kBorder, thickness: 1.5)),
-          //     const SizedBox(width: 10),
-          //     Container(
-          //       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-          //       decoration: BoxDecoration(
-          //         color: _role.bg,
-          //         borderRadius: BorderRadius.circular(20),
-          //       ),
-          //       child: Text(
-          //         '${_role.emoji}  ${_role.label} Details',
-          //         style: TextStyle(
-          //           fontSize: 11,
-          //           fontWeight: FontWeight.w700,
-          //           color: _role.accent,
-          //         ),
-          //       ),
-          //     ),
-          //     const SizedBox(width: 10),
-          //     Expanded(child: Divider(color: kBorder, thickness: 1.5)),
-          //   ],
-          // ),
-          // const SizedBox(height: 16),
+          // Row( ... role divider ... ),
           // FadeTransition(
           //   opacity: _roleSwapFade,
           //   child: SlideTransition(
           //     position: _roleSwapSlide,
           //     child: AnimatedSwitcher(
           //       duration: const Duration(milliseconds: 300),
-          //       switchInCurve: Curves.easeOut,
-          //       switchOutCurve: Curves.easeIn,
-          //       transitionBuilder: (child, anim) => FadeTransition(
-          //         opacity: anim,
-          //         child: SlideTransition(
-          //           position: Tween<Offset>(
-          //             begin: const Offset(0, 0.06),
-          //             end: Offset.zero,
-          //           ).animate(anim),
-          //           child: child,
-          //         ),
-          //       ),
           //       child: _buildRoleFields(),
           //     ),
           //   ),
           // ),
-          // const SizedBox(height: 16),
 
           // Terms
           Row(
@@ -858,138 +889,12 @@ class _CommonSignupScreenState extends State<CommonSignupScreen>
   // Kept intact for future use — currently not shown in the form.
   // To re-enable, uncomment the _buildRoleFields() call in _buildFormCard().
 
-  // Widget _buildRoleFields() {
-  //   switch (_role.value) {
-  //     case 'engineering':
-  //       return Column(
-  //         key: const ValueKey('engineering'),
-  //         children: [
-  //           _field(ctrl: _collegeCtrl, label: 'College Name',
-  //               icon: Icons.account_balance_outlined),
-  //           const SizedBox(height: 12),
-  //           _field(ctrl: _branchCtrl,
-  //               label: 'Branch / Department (e.g. CSE)',
-  //               icon: Icons.school_outlined),
-  //           const SizedBox(height: 12),
-  //           _dropdownField(
-  //             label: 'Current Year',
-  //             icon: Icons.calendar_today_outlined,
-  //             value: _selectedYear,
-  //             items: _engYears,
-  //             onChanged: (v) => setState(() => _selectedYear = v),
-  //           ),
-  //           const SizedBox(height: 12),
-  //           _field(ctrl: _rollCtrl,
-  //               label: 'Roll Number / Register No.',
-  //               icon: Icons.badge_outlined),
-  //         ],
-  //       );
-  //     case 'postgrad':
-  //       return Column(
-  //         key: const ValueKey('postgrad'),
-  //         children: [
-  //           _field(ctrl: _collegeCtrl, label: 'University / Institution',
-  //               icon: Icons.account_balance_outlined),
-  //           const SizedBox(height: 12),
-  //           _field(ctrl: _branchCtrl, label: 'Specialisation / Department',
-  //               icon: Icons.school_outlined),
-  //           const SizedBox(height: 12),
-  //           _dropdownField(
-  //             label: 'Current Year (PG)',
-  //             icon: Icons.calendar_today_outlined,
-  //             value: _selectedYear,
-  //             items: _pgYears,
-  //             onChanged: (v) => setState(() => _selectedYear = v),
-  //           ),
-  //           const SizedBox(height: 12),
-  //           _field(ctrl: _rollCtrl, label: 'Register / Enrolment No.',
-  //               icon: Icons.badge_outlined),
-  //         ],
-  //       );
-  //     case 'school':
-  //       return Column(
-  //         key: const ValueKey('school'),
-  //         children: [
-  //           _field(ctrl: _schoolCtrl, label: 'School Name',
-  //               icon: Icons.location_city_outlined),
-  //           const SizedBox(height: 12),
-  //           _dropdownField(
-  //             label: 'Grade / Class',
-  //             icon: Icons.class_outlined,
-  //             value: _selectedGrade,
-  //             items: _grades,
-  //             onChanged: (v) => setState(() => _selectedGrade = v),
-  //           ),
-  //           const SizedBox(height: 12),
-  //           _field(ctrl: _parentCtrl, label: "Parent's Full Name",
-  //               icon: Icons.supervisor_account_outlined),
-  //           const SizedBox(height: 12),
-  //           _field(ctrl: _parentPhoneCtrl, label: "Parent's Phone Number",
-  //               icon: Icons.phone_outlined, type: TextInputType.phone),
-  //           const SizedBox(height: 10),
-  //           Container(
-  //             padding: const EdgeInsets.all(12),
-  //             decoration: BoxDecoration(
-  //               color: const Color(0xFFFFFDE7),
-  //               borderRadius: BorderRadius.circular(14),
-  //               border: Border.all(color: const Color(0xFFFFEE58), width: 1.5),
-  //             ),
-  //             child: const Row(
-  //               crossAxisAlignment: CrossAxisAlignment.start,
-  //               children: [
-  //                 Text('👨\u200d👩\u200d👧', style: TextStyle(fontSize: 18)),
-  //                 SizedBox(width: 10),
-  //                 Expanded(
-  //                   child: Text(
-  //                     'Parent details are used only for class reminders.\nSunday is a holiday — no classes!',
-  //                     style: TextStyle(fontSize: 11, color: Color(0xFF795548),
-  //                         height: 1.5, fontWeight: FontWeight.w600),
-  //                   ),
-  //                 ),
-  //               ],
-  //             ),
-  //           ),
-  //         ],
-  //       );
-  //     default:
-  //       return const SizedBox.shrink(key: ValueKey('empty'));
-  //   }
-  // }
+  // Widget _buildRoleFields() { ... }
 
   // ── DROPDOWN FIELD ────────────────────────
   // Kept for role-specific fields when they are re-enabled.
 
-  // Widget _dropdownField({
-  //   required String label,
-  //   required IconData icon,
-  //   required String? value,
-  //   required List<String> items,
-  //   required ValueChanged<String?> onChanged,
-  // }) {
-  //   return DropdownButtonFormField<String>(
-  //     value: value,
-  //     decoration: InputDecoration(
-  //       labelText: label,
-  //       labelStyle: const TextStyle(fontSize: 13, color: kMuted,
-  //           fontWeight: FontWeight.w600),
-  //       prefixIcon: Icon(icon, color: kMuted, size: 18),
-  //       filled: true,
-  //       fillColor: kInputFill,
-  //       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
-  //       border: OutlineInputBorder(borderRadius: BorderRadius.circular(14),
-  //           borderSide: const BorderSide(color: kBorder, width: 1.5)),
-  //       enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14),
-  //           borderSide: const BorderSide(color: kBorder, width: 1.5)),
-  //       focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14),
-  //           borderSide: BorderSide(color: _role.accent, width: 2)),
-  //     ),
-  //     style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: kInk),
-  //     dropdownColor: kCardBg,
-  //     icon: Icon(Icons.keyboard_arrow_down_rounded, color: _role.accent, size: 20),
-  //     items: items.map((i) => DropdownMenuItem(value: i, child: Text(i))).toList(),
-  //     onChanged: onChanged,
-  //   );
-  // }
+  // Widget _dropdownField({ ... }) { ... }
 
   // ── TEXT FIELD ─────────────────────────────
   Widget _field({
@@ -1069,40 +974,77 @@ class _CommonSignupScreenState extends State<CommonSignupScreen>
             boxShadow: _btnPressed
                 ? null
                 : [
-                    BoxShadow(
-                      color: _role.accent.withOpacity(0.35),
-                      blurRadius: 16,
-                      offset: const Offset(0, 6),
-                    ),
-                  ],
+              BoxShadow(
+                color: _role.accent.withOpacity(0.35),
+                blurRadius: 16,
+                offset: const Offset(0, 6),
+              ),
+            ],
           ),
           child: Center(
             child: _isLoading
                 ? SizedBox(
-                    width: sw * 0.055,
-                    height: sw * 0.055,
-                    child: const CircularProgressIndicator(
-                      strokeWidth: 2.5,
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                    ),
-                  )
+              width: sw * 0.055,
+              height: sw * 0.055,
+              child: const CircularProgressIndicator(
+                strokeWidth: 2.5,
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              ),
+            )
                 : Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(_role.emoji, style: TextStyle(fontSize: sw * 0.040)),
-                      SizedBox(width: sw * 0.020),
-                      Text(
-                        'Create Account',
-                        style: TextStyle(
-                          fontSize: sw * 0.038,
-                          fontWeight: FontWeight.w800,
-                          color: Colors.white,
-                          letterSpacing: 0.2,
-                        ),
-                      ),
-                    ],
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(_role.emoji,
+                    style: TextStyle(fontSize: sw * 0.040)),
+                SizedBox(width: sw * 0.020),
+                Text(
+                  'Create Account',
+                  style: TextStyle(
+                    fontSize: sw * 0.038,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                    letterSpacing: 0.2,
                   ),
+                ),
+              ],
+            ),
           ),
+        ),
+      ),
+    );
+  }
+
+  // ── SOCIAL BUTTON ──────────────────────────
+  Widget _socialBtn({
+    required String label,
+    required VoidCallback onTap,
+    required double sw,
+    required Widget iconWidget,
+    required Color borderColor,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: EdgeInsets.symmetric(vertical: sw * 0.038),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.06),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: borderColor, width: 1.5),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            iconWidget,
+            SizedBox(width: sw * 0.020),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: sw * 0.034,
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -1110,9 +1052,150 @@ class _CommonSignupScreenState extends State<CommonSignupScreen>
 }
 
 // ─────────────────────────────────────────────
+//  GOOGLE ICON  (pure CustomPainter — no assets needed)
+// ─────────────────────────────────────────────
+class _GoogleIcon extends StatelessWidget {
+  final double size;
+  const _GoogleIcon({required this.size});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: size,
+      height: size,
+      child: CustomPaint(painter: _GooglePainter()),
+    );
+  }
+}
+
+class _GooglePainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final double s = size.width;
+    final double cx = s / 2, cy = s / 2, r = s / 2;
+
+    // White circle background
+    canvas.drawCircle(
+      Offset(cx, cy),
+      r,
+      Paint()..color = Colors.white,
+    );
+
+    final rect =
+    Rect.fromCircle(center: Offset(cx, cy), radius: r * 0.76);
+
+    // Four colour arcs
+    canvas.drawArc(rect, 3.38, 1.75, true,
+        Paint()..color = const Color(0xFFEA4335));
+    canvas.drawArc(rect, 5.13, 1.57, true,
+        Paint()..color = const Color(0xFF4285F4));
+    canvas.drawArc(rect, 0.52, 1.48, true,
+        Paint()..color = const Color(0xFF34A853));
+    canvas.drawArc(rect, 1.96, 1.42, true,
+        Paint()..color = const Color(0xFFFBBC05));
+
+    // Inner white donut
+    canvas.drawCircle(
+      Offset(cx, cy),
+      r * 0.46,
+      Paint()..color = Colors.white,
+    );
+
+    // Blue right-side tab (the horizontal bar in the "G")
+    canvas.drawRect(
+      Rect.fromLTWH(cx, cy - r * 0.20, r * 0.76, r * 0.40),
+      Paint()..color = const Color(0xFF4285F4),
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter _) => false;
+}
+
+// ─────────────────────────────────────────────
+//  LINKEDIN ICON  (pure CustomPainter — no assets needed)
+// ─────────────────────────────────────────────
+class _LinkedInIcon extends StatelessWidget {
+  final double size;
+  const _LinkedInIcon({required this.size});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: size,
+      height: size,
+      child: CustomPaint(painter: _LinkedInPainter()),
+    );
+  }
+}
+
+class _LinkedInPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final double s = size.width;
+    final Paint bg = Paint()..color = const Color(0xFF0A66C2);
+    final Paint white = Paint()..color = Colors.white;
+
+    // Rounded square background
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(0, 0, s, s),
+        Radius.circular(s * 0.22),
+      ),
+      bg,
+    );
+
+    final double pad = s * 0.18;
+    final double dotR = s * 0.09;
+
+    // Top-left dot
+    canvas.drawCircle(Offset(pad + dotR, pad + dotR), dotR, white);
+
+    // Left vertical bar
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(
+            pad, pad + dotR * 2 + s * 0.04, dotR * 2, s * 0.38),
+        Radius.circular(dotR),
+      ),
+      white,
+    );
+
+    // Right vertical bar
+    final double rx = s - pad - dotR * 2;
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(
+            rx, pad + dotR * 2 + s * 0.10, dotR * 2, s * 0.32),
+        Radius.circular(dotR),
+      ),
+      white,
+    );
+
+    // Arch connector (top of right bar)
+    canvas.drawArc(
+      Rect.fromLTWH(
+        pad + dotR * 2,
+        pad + dotR * 2 + s * 0.04,
+        (rx - pad - dotR * 2) * 2,
+        s * 0.28,
+      ),
+      3.14159,
+      3.14159,
+      false,
+      Paint()
+        ..color = Colors.white
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = dotR * 2,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter _) => false;
+}
+
+// ─────────────────────────────────────────────
 //  ROLE PICKER BOTTOM SHEET
-//  Spacious custom sheet — no DropdownButton constraints,
-//  no overflow, generous padding on every tile.
 // ─────────────────────────────────────────────
 class _RolePickerSheet extends StatelessWidget {
   final List<_Role> roles;
@@ -1194,7 +1277,7 @@ class _RolePickerSheet extends StatelessWidget {
           ),
           SizedBox(height: sw * 0.055),
 
-          // Role tiles — spacious, animated, no overflow possible
+          // Role tiles
           ...roles.map((r) {
             final isSelected = r.value == selectedRole.value;
             return GestureDetector(
@@ -1220,7 +1303,6 @@ class _RolePickerSheet extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                    // Emoji tile
                     AnimatedContainer(
                       duration: const Duration(milliseconds: 220),
                       width: sw * 0.130,
@@ -1239,8 +1321,6 @@ class _RolePickerSheet extends StatelessWidget {
                       ),
                     ),
                     SizedBox(width: sw * 0.040),
-
-                    // Role text
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1267,8 +1347,6 @@ class _RolePickerSheet extends StatelessWidget {
                       ),
                     ),
                     SizedBox(width: sw * 0.030),
-
-                    // Animated check circle
                     AnimatedContainer(
                       duration: const Duration(milliseconds: 220),
                       width: sw * 0.065,
@@ -1285,10 +1363,10 @@ class _RolePickerSheet extends StatelessWidget {
                       ),
                       child: isSelected
                           ? Icon(
-                              Icons.check_rounded,
-                              color: Colors.white,
-                              size: sw * 0.035,
-                            )
+                        Icons.check_rounded,
+                        color: Colors.white,
+                        size: sw * 0.035,
+                      )
                           : null,
                     ),
                   ],

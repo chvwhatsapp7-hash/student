@@ -4,15 +4,14 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
+import 'package:internship_app/services/fcm_token_service.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 
 import '../../api_services/authservice.dart';
 import '../premium/premium_bottom_sheet.dart';
 import '../premium/premium_helper.dart';
-import 'package:internship_app/services/fcm_token_service.dart';
-// REMOVED: import 'package:internship_app/services/auth_service.dart';
-
 
 // ─────────────────────────────────────────────
 //  DESIGN TOKENS
@@ -49,10 +48,38 @@ class _Orb {
 }
 
 const _orbs = [
-  _Orb(x: 0.85, y: 0.04, size: 200, color: Color(0xFF1D4ED8), phase: 0.0, speed: 0.6),
-  _Orb(x: 0.05, y: 0.10, size: 160, color: Color(0xFF7C3AED), phase: 1.2, speed: 0.8),
-  _Orb(x: 0.90, y: 0.38, size: 110, color: Color(0xFF38BDF8), phase: 2.4, speed: 0.5),
-  _Orb(x: 0.02, y: 0.46, size: 90,  color: Color(0xFFF43F5E), phase: 0.7, speed: 0.7),
+  _Orb(
+    x: 0.85,
+    y: 0.04,
+    size: 200,
+    color: Color(0xFF1D4ED8),
+    phase: 0.0,
+    speed: 0.6,
+  ),
+  _Orb(
+    x: 0.05,
+    y: 0.10,
+    size: 160,
+    color: Color(0xFF7C3AED),
+    phase: 1.2,
+    speed: 0.8,
+  ),
+  _Orb(
+    x: 0.90,
+    y: 0.38,
+    size: 110,
+    color: Color(0xFF38BDF8),
+    phase: 2.4,
+    speed: 0.5,
+  ),
+  _Orb(
+    x: 0.02,
+    y: 0.46,
+    size: 90,
+    color: Color(0xFFF43F5E),
+    phase: 0.7,
+    speed: 0.7,
+  ),
 ];
 
 class _Particle {
@@ -91,6 +118,7 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
     with TickerProviderStateMixin {
   bool _showPass = false;
   bool _isLoading = false;
+  bool _isGoogleLoading = false; // ✅ NEW
   bool _btnPressed = false;
 
   final _emailCtrl = TextEditingController();
@@ -116,7 +144,6 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
       vsync: this,
       duration: const Duration(seconds: 7),
     )..repeat();
-
     _particleCtrl = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 5),
@@ -126,9 +153,10 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
       vsync: this,
       duration: const Duration(milliseconds: 1200),
     )..repeat(reverse: true);
-    _pulse = Tween<double>(begin: 0.85, end: 1.15).animate(
-      CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOut),
-    );
+    _pulse = Tween<double>(
+      begin: 0.85,
+      end: 1.15,
+    ).animate(CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOut));
 
     _heroCtrl = AnimationController(
       vsync: this,
@@ -148,9 +176,10 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
       vsync: this,
       duration: const Duration(milliseconds: 150),
     );
-    _btnScale = Tween<double>(begin: 1.0, end: 0.96).animate(
-      CurvedAnimation(parent: _btnCtrl, curve: Curves.easeInOut),
-    );
+    _btnScale = Tween<double>(
+      begin: 1.0,
+      end: 0.96,
+    ).animate(CurvedAnimation(parent: _btnCtrl, curve: Curves.easeInOut));
 
     Future.delayed(const Duration(milliseconds: 100), () {
       if (mounted) _heroCtrl.forward();
@@ -176,12 +205,19 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.error_outline_rounded, color: Colors.white, size: 18),
+            const Icon(
+              Icons.error_outline_rounded,
+              color: Colors.white,
+              size: 18,
+            ),
             const SizedBox(width: 10),
             Expanded(
               child: Text(
                 message,
-                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                style: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13,
+                ),
               ),
             ),
           ],
@@ -238,7 +274,10 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: const Color(0xFFFFF1F2),
-                        border: Border.all(color: const Color(0xFFFCA5A5), width: 2),
+                        border: Border.all(
+                          color: const Color(0xFFFCA5A5),
+                          width: 2,
+                        ),
                       ),
                       child: Center(
                         child: Icon(
@@ -262,7 +301,11 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
                     Text(
                       'We couldn\'t find an account with these credentials.\nPlease create an account first to sign in.',
                       textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: sw * 0.033, color: kMuted, height: 1.6),
+                      style: TextStyle(
+                        fontSize: sw * 0.033,
+                        color: kMuted,
+                        height: 1.6,
+                      ),
                     ),
                     SizedBox(height: sw * 0.055),
                     GestureDetector(
@@ -292,7 +335,11 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.person_add_rounded, color: Colors.white, size: sw * 0.045),
+                              Icon(
+                                Icons.person_add_rounded,
+                                color: Colors.white,
+                                size: sw * 0.045,
+                              ),
                               SizedBox(width: sw * 0.02),
                               Text(
                                 'Create Account',
@@ -362,14 +409,16 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
     );
 
     try {
-      final response = await http.post(
-        url,
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode({
-          "email": _emailCtrl.text.trim(),
-          "password": _passCtrl.text.trim(),
-        }),
-      );
+      final response = await http
+          .post(
+            url,
+            headers: {"Content-Type": "application/json"},
+            body: jsonEncode({
+              "email": _emailCtrl.text.trim(),
+              "password": _passCtrl.text.trim(),
+            }),
+          )
+          .timeout(const Duration(seconds: 15));
 
       final data = jsonDecode(response.body);
 
@@ -386,7 +435,7 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
             : int.tryParse(payload['role_id'].toString()) ?? 0;
         final String userName = payload['full_name'] ?? '';
 
-        debugPrint("🎯 roleId = $roleId (type: ${roleId.runtimeType})");
+        debugPrint("🎯 roleId = $roleId");
         debugPrint("✅ User ID: $userId, Role: $roleId, Name: $userName");
 
         await AuthService().saveTokens(
@@ -397,10 +446,6 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
           full_name: userName,
         );
 
-        // ── ✅ FCM TOKEN — send to backend after saving tokens ──────────
-        // This registers the device for push notifications (job alerts,
-        // class reminders, etc.). Wrapped in try/catch so a FCM failure
-        // never blocks the user from logging in.
         try {
           await FcmTokenService.sendTokenToBackend(accessToken);
           FcmTokenService.listenToTokenRefresh(accessToken);
@@ -408,7 +453,6 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
         } catch (e) {
           debugPrint("⚠️ FCM token upload failed (non-fatal): $e");
         }
-        // ────────────────────────────────────────────────────────────────
 
         if (!mounted) return;
 
@@ -426,19 +470,18 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
             ),
             backgroundColor: const Color(0xFF16A34A),
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
             margin: const EdgeInsets.all(16),
             duration: const Duration(seconds: 2),
           ),
         );
 
-        // ✅ Premium check — non-fatal
         if ((roleId == 3 || roleId == 4) && mounted) {
           try {
             final show = await PremiumHelper.shouldShow(onLogin: true);
-            if (show && mounted) {
-              await showPremiumSheet(context);
-            }
+            if (show && mounted) await showPremiumSheet(context);
           } catch (e) {
             debugPrint("⚠️ PremiumHelper error (non-fatal): $e");
           }
@@ -451,7 +494,6 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
         } else if (roleId == 2) {
           context.go('/school/layout');
         } else {
-          debugPrint("⚠️ Unknown roleId: $roleId — check JWT payload above");
           context.go('/engineering');
         }
       } else {
@@ -464,6 +506,133 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
     }
 
     if (mounted) setState(() => _isLoading = false);
+  }
+
+  // ── GOOGLE SIGN IN ───────────────────────────
+
+  // ── GOOGLE SIGN IN ───────────────────────────
+
+  Future<void> _handleGoogleSignIn() async {
+    try {
+      setState(() => _isGoogleLoading = true);
+
+      final GoogleSignIn googleSignIn = GoogleSignIn(scopes: ['email']);
+
+      // ✅ Forces account picker every time
+      await googleSignIn.disconnect().catchError((_) {});
+
+      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+
+      if (googleUser == null) {
+        if (mounted) setState(() => _isGoogleLoading = false);
+        return;
+      }
+
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
+
+      final String? idToken = googleAuth.idToken;
+
+      if (idToken == null) {
+        _showErrorSnack("Could not get ID token. Try again.");
+        if (mounted) setState(() => _isGoogleLoading = false);
+        return;
+      }
+
+      debugPrint("✅ Got idToken: ${idToken.substring(0, 20)}...");
+
+      final url = Uri.parse(
+        'https://studenthub-backend-woad.vercel.app/api/auth/google-login',
+      );
+
+      final response = await http
+          .post(
+            url,
+            headers: {
+              "Authorization": "Bearer $idToken",
+              "Content-Type": "application/json",
+            },
+          )
+          .timeout(const Duration(seconds: 15));
+
+      final data = jsonDecode(response.body);
+      debugPrint("📦 Google Login Response: $data");
+
+      if (response.statusCode == 200) {
+        final String accessToken = data["data"]["accessToken"];
+        final String refreshToken = data["data"]["refreshToken"];
+        final user = data["user"];
+
+        await AuthService().saveTokens(
+          access: accessToken,
+          refresh: refreshToken,
+          user_id: user["user_id"].toString(),
+          role_id: user["role_id"].toString(),
+          full_name: user["full_name"] ?? '',
+        );
+
+        try {
+          await FcmTokenService.sendTokenToBackend(accessToken);
+          FcmTokenService.listenToTokenRefresh(accessToken);
+          debugPrint("🔔 FCM token sent successfully.");
+        } catch (e) {
+          debugPrint("⚠️ FCM token upload failed (non-fatal): $e");
+        }
+
+        if (!mounted) return;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: const [
+                Icon(Icons.check_circle_rounded, color: Colors.white, size: 18),
+                SizedBox(width: 10),
+                Text(
+                  'Google Sign-In Successful!',
+                  style: TextStyle(fontWeight: FontWeight.w700),
+                ),
+              ],
+            ),
+            backgroundColor: const Color(0xFF16A34A),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
+            margin: const EdgeInsets.all(16),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+
+        final int roleId = int.tryParse(user["role_id"].toString()) ?? 0;
+        if (!mounted) return;
+
+        // ✅ ADDED: Show premium sheet for students — same as credential login
+        if (roleId == 3 || roleId == 4) {
+          try {
+            final show = await PremiumHelper.shouldShow(onLogin: true);
+            if (show && mounted) await showPremiumSheet(context);
+          } catch (e) {
+            debugPrint("⚠️ PremiumHelper error (non-fatal): $e");
+          }
+        }
+
+        // ✅ ADDED: Guard after async showPremiumSheet
+        if (!mounted) return;
+
+        if (roleId == 2) {
+          context.go('/school/layout');
+        } else {
+          context.go('/engineering');
+        }
+      } else {
+        _showErrorSnack(data["message"] ?? "Google login failed");
+      }
+    } catch (e) {
+      debugPrint("❌ Google Sign-In Error: $e");
+      _showErrorSnack("Google Sign-In failed. Please try again.");
+    }
+
+    if (mounted) setState(() => _isGoogleLoading = false);
   }
 
   // ─────────────────────────────────────────────
@@ -482,13 +651,12 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
         resizeToAvoidBottomInset: true,
         body: Stack(
           children: [
-            // ── Animated orbs ─────────────────
             ..._orbs.map((orb) => _buildOrb(orb, sw, sh)),
-            // ── Floating particles ────────────
             ..._particles.map((p) => _buildParticle(p, sw, sh)),
-            // ── Bottom fade overlay ───────────
             Positioned(
-              bottom: 0, left: 0, right: 0,
+              bottom: 0,
+              left: 0,
+              right: 0,
               height: sh * 0.22,
               child: IgnorePointer(
                 child: Container(
@@ -502,7 +670,6 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
                 ),
               ),
             ),
-            // ── Main scrollable content ───────
             SafeArea(
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
@@ -536,8 +703,6 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
       ),
     );
   }
-
-  // ── Orb & particle helpers ─────────────────
 
   Widget _buildOrb(_Orb orb, double sw, double sh) {
     return AnimatedBuilder(
@@ -577,8 +742,6 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
       },
     );
   }
-
-  // ── Nav bar ────────────────────────────────
 
   Widget _buildNavBar(double sw) {
     return Row(
@@ -646,8 +809,6 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
     );
   }
 
-  // ── Hero text + badge ──────────────────────
-
   Widget _buildHero(double sw, double sh) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -662,7 +823,10 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
             decoration: BoxDecoration(
               color: kPrimary.withValues(alpha: 0.22),
               borderRadius: BorderRadius.circular(30),
-              border: Border.all(color: kAccent.withValues(alpha: 0.40), width: 1),
+              border: Border.all(
+                color: kAccent.withValues(alpha: 0.40),
+                width: 1,
+              ),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -672,7 +836,10 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
                   child: Container(
                     width: sw * 0.018,
                     height: sw * 0.018,
-                    decoration: const BoxDecoration(color: kAccent, shape: BoxShape.circle),
+                    decoration: const BoxDecoration(
+                      color: kAccent,
+                      shape: BoxShape.circle,
+                    ),
                   ),
                 ),
                 SizedBox(width: sw * 0.020),
@@ -734,8 +901,6 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
     );
   }
 
-  // ── Form card ─────────────────────────────
-
   Widget _buildFormCard(double sw) {
     return Container(
       padding: EdgeInsets.all(sw * 0.055),
@@ -767,7 +932,11 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
                   ),
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: Icon(Icons.shield_rounded, color: Colors.white, size: sw * 0.055),
+                child: Icon(
+                  Icons.shield_rounded,
+                  color: Colors.white,
+                  size: sw * 0.055,
+                ),
               ),
               SizedBox(width: sw * 0.030),
               Expanded(
@@ -792,7 +961,6 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
             ],
           ),
           SizedBox(height: sw * 0.05),
-
           _field(
             ctrl: _emailCtrl,
             label: 'Email Address',
@@ -809,7 +977,9 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
             sw: sw,
             suffix: IconButton(
               icon: Icon(
-                _showPass ? Icons.visibility_off_rounded : Icons.visibility_rounded,
+                _showPass
+                    ? Icons.visibility_off_rounded
+                    : Icons.visibility_rounded,
                 color: kMuted,
                 size: sw * 0.045,
               ),
@@ -817,7 +987,6 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
             ),
           ),
           SizedBox(height: sw * 0.025),
-
           Align(
             alignment: Alignment.centerRight,
             child: GestureDetector(
@@ -833,11 +1002,8 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
             ),
           ),
           SizedBox(height: sw * 0.045),
-
           _buildSubmitBtn(sw),
-
           SizedBox(height: sw * 0.045),
-
           Row(
             children: [
               Expanded(child: Container(height: 1, color: kBorder)),
@@ -852,12 +1018,11 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
             ],
           ),
           SizedBox(height: sw * 0.035),
-
           Row(
             children: [
-              Expanded(child: _socialBtn('Google', '🅖', sw, isGoogle: true)),
+              Expanded(child: _socialBtn('Google', 'G', sw, isGoogle: true)),
               SizedBox(width: sw * 0.025),
-              Expanded(child: _socialBtn('LinkedIn', '🔗', sw)),
+              Expanded(child: _socialBtn('LinkedIn', 'in', sw)),
             ],
           ),
         ],
@@ -865,36 +1030,71 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
     );
   }
 
-  Widget _socialBtn(String label, String icon, double sw, {bool isGoogle = false}) {
-    return Container(
-      height: sw * 0.115,
-      decoration: BoxDecoration(
-        color: kInputFill,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: kBorder, width: 1.5),
-      ),
-      child: Center(
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              isGoogle ? 'G' : 'in',
-              style: TextStyle(
-                fontSize: sw * 0.038,
-                fontWeight: FontWeight.w800,
-                color: isGoogle ? const Color(0xFF4285F4) : const Color(0xFF0A66C2),
-              ),
-            ),
-            SizedBox(width: sw * 0.018),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: sw * 0.033,
-                fontWeight: FontWeight.w700,
-                color: kSlate,
-              ),
-            ),
-          ],
+  // ✅ UPDATED — shows spinner only on Google button
+  Widget _socialBtn(
+    String label,
+    String icon,
+    double sw, {
+    bool isGoogle = false,
+  }) {
+    final bool isThisLoading = isGoogle && _isGoogleLoading;
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(14),
+      onTap: (_isLoading || _isGoogleLoading)
+          ? null
+          : () async {
+              if (isGoogle) {
+                await _handleGoogleSignIn();
+              } else {
+                debugPrint("LinkedIn clicked");
+              }
+            },
+      child: Container(
+        height: sw * 0.115,
+        decoration: BoxDecoration(
+          color: kInputFill,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: kBorder, width: 1.5),
+        ),
+        child: Center(
+          child: isThisLoading
+              ? SizedBox(
+                  width: sw * 0.045,
+                  height: sw * 0.045,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.5,
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      isGoogle
+                          ? const Color(0xFF4285F4)
+                          : const Color(0xFF0A66C2),
+                    ),
+                  ),
+                )
+              : Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      isGoogle ? 'G' : 'in',
+                      style: TextStyle(
+                        fontSize: sw * 0.038,
+                        fontWeight: FontWeight.w800,
+                        color: isGoogle
+                            ? const Color(0xFF4285F4)
+                            : const Color(0xFF0A66C2),
+                      ),
+                    ),
+                    SizedBox(width: sw * 0.018),
+                    Text(
+                      label,
+                      style: TextStyle(
+                        fontSize: sw * 0.033,
+                        fontWeight: FontWeight.w700,
+                        color: kSlate,
+                      ),
+                    ),
+                  ],
+                ),
         ),
       ),
     );
@@ -975,57 +1175,57 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
             gradient: _btnPressed
                 ? null
                 : const LinearGradient(
-              colors: [kPrimary, kViolet],
-              begin: Alignment.centerLeft,
-              end: Alignment.centerRight,
-            ),
+                    colors: [kPrimary, kViolet],
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                  ),
             color: _btnPressed ? kPrimary : null,
             borderRadius: BorderRadius.circular(16),
             boxShadow: _btnPressed
                 ? null
                 : [
-              BoxShadow(
-                color: kPrimary.withValues(alpha: 0.38),
-                blurRadius: 18,
-                offset: const Offset(0, 7),
-              ),
-              BoxShadow(
-                color: kViolet.withValues(alpha: 0.22),
-                blurRadius: 28,
-                offset: const Offset(0, 14),
-              ),
-            ],
+                    BoxShadow(
+                      color: kPrimary.withValues(alpha: 0.38),
+                      blurRadius: 18,
+                      offset: const Offset(0, 7),
+                    ),
+                    BoxShadow(
+                      color: kViolet.withValues(alpha: 0.22),
+                      blurRadius: 28,
+                      offset: const Offset(0, 14),
+                    ),
+                  ],
           ),
           child: Center(
             child: _isLoading
                 ? SizedBox(
-              width: sw * 0.055,
-              height: sw * 0.055,
-              child: const CircularProgressIndicator(
-                strokeWidth: 2.5,
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-              ),
-            )
+                    width: sw * 0.055,
+                    height: sw * 0.055,
+                    child: const CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
+                  )
                 : Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.shield_rounded,
-                  color: Colors.white,
-                  size: sw * 0.048,
-                ),
-                SizedBox(width: sw * 0.022),
-                Text(
-                  'Sign In',
-                  style: TextStyle(
-                    fontSize: sw * 0.040,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.white,
-                    letterSpacing: 0.2,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.shield_rounded,
+                        color: Colors.white,
+                        size: sw * 0.048,
+                      ),
+                      SizedBox(width: sw * 0.022),
+                      Text(
+                        'Sign In',
+                        style: TextStyle(
+                          fontSize: sw * 0.040,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                          letterSpacing: 0.2,
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ],
-            ),
           ),
         ),
       ),

@@ -12,7 +12,20 @@
           "package_name": "com.intership.yourapp"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "710479367870-k5l0ksoadstbmkgrp6ffhlmon7jptjtl.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.intership.yourapp",
+            "certificate_hash": "319e1c1e5289ababfddd62098370e02cdd1425d7"
+          }
+        },
+        {
+          "client_id": "710479367870-micu0jc76s5aqg2vfbu80k26b1k65mje.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyA8ajdv-6nuMU2W3fh25c4v7-CIoL494lY"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "710479367870-micu0jc76s5aqg2vfbu80k26b1k65mje.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

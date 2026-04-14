@@ -1,5 +1,4 @@
 import 'package:go_router/go_router.dart';
-import '../screens/school/school_notifications_screen.dart';
 
 /// ── AUTH ─────────────────────────────────────────────────────────────────────
 import '../screens/auth/common_login.dart';
@@ -14,23 +13,22 @@ import '../screens/hackathons/hackathons_screen.dart';
 import '../screens/internships/internships_screen.dart';
 import '../screens/jobs/jobs_screen.dart';
 
+/// ── PREMIUM ──────────────────────────────────────────────────────────────────
+import '../screens/premium/premium_payment_screen.dart'; // ✅ NEW
 /// ── OTHER SCREENS ────────────────────────────────────────────────────────────
 import '../screens/profile/profile_screen.dart';
-import '../screens/school/school_profile_screen.dart';
 import '../screens/school/school_courses_screen.dart';
 import '../screens/school/school_dashboard_screen.dart';
 
 /// ── SCHOOL PORTAL ────────────────────────────────────────────────────────────
 import '../screens/school/school_layout_screen.dart';
-
-/// ── PREMIUM ──────────────────────────────────────────────────────────────────
-import '../screens/premium/premium_payment_screen.dart'; // ✅ NEW
+import '../screens/school/school_notifications_screen.dart';
+import '../screens/school/school_profile_screen.dart';
 
 final GoRouter router = GoRouter(
   initialLocation: '/login',
 
   routes: [
-
     /// ── COMMON AUTH ────────────────────────────────────────────────────────
     GoRoute(
       path: '/login',
@@ -44,7 +42,7 @@ final GoRouter router = GoRouter(
 
     /// ── SAFETY NETS ────────────────────────────────────────────────────────
     GoRoute(path: '/school', redirect: (context, state) => '/school/layout'),
-    GoRoute(path: '/school/login',  redirect: (context, state) => '/login'),
+    GoRoute(path: '/school/login', redirect: (context, state) => '/login'),
     GoRoute(path: '/school/signup', redirect: (context, state) => '/signup'),
 
     /// ── ENGINEERING / POST-GRAD PORTAL ─────────────────────────────────────
@@ -53,10 +51,7 @@ final GoRouter router = GoRouter(
       builder: (context, state) => const MainDashboard(),
     ),
 
-    GoRoute(
-      path: '/jobs',
-      builder: (context, state) => const JobsScreen(),
-    ),
+    GoRoute(path: '/jobs', builder: (context, state) => const JobsScreen()),
 
     GoRoute(
       path: '/internships',

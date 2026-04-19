@@ -13,10 +13,7 @@ import '../../api_services/authservice.dart';
 import '../premium/premium_bottom_sheet.dart';
 import '../premium/premium_helper.dart';
 
-// ─────────────────────────────────────────────
-//  DESIGN TOKENS
-// ─────────────────────────────────────────────
-
+// ── DESIGN TOKENS ────────────────────────────────────────────────────────────
 const kInk = Color(0xFF0A0F1E);
 const kSlate = Color(0xFF334155);
 const kMuted = Color(0xFF64748B);
@@ -30,14 +27,11 @@ const kRose = Color(0xFFF43F5E);
 const kSelectedBg = Color(0xFFEFF6FF);
 const kInputFill = Color(0xFFF8FAFC);
 
-// ─────────────────────────────────────────────
-//  ORB MODEL
-// ─────────────────────────────────────────────
-
-class _Orb {
+// ── ORB MODEL ────────────────────────────────────────────────────────────────
+class Orb {
   final double x, y, size, phase, speed;
   final Color color;
-  const _Orb({
+  const Orb({
     required this.x,
     required this.y,
     required this.size,
@@ -47,8 +41,8 @@ class _Orb {
   });
 }
 
-const _orbs = [
-  _Orb(
+const orbs = [
+  Orb(
     x: 0.85,
     y: 0.04,
     size: 200,
@@ -56,7 +50,7 @@ const _orbs = [
     phase: 0.0,
     speed: 0.6,
   ),
-  _Orb(
+  Orb(
     x: 0.05,
     y: 0.10,
     size: 160,
@@ -64,7 +58,7 @@ const _orbs = [
     phase: 1.2,
     speed: 0.8,
   ),
-  _Orb(
+  Orb(
     x: 0.90,
     y: 0.38,
     size: 110,
@@ -72,7 +66,7 @@ const _orbs = [
     phase: 2.4,
     speed: 0.5,
   ),
-  _Orb(
+  Orb(
     x: 0.02,
     y: 0.46,
     size: 90,
@@ -82,10 +76,10 @@ const _orbs = [
   ),
 ];
 
-class _Particle {
+class Particle {
   final String emoji;
   final double x, y, size, phase, amplitude;
-  const _Particle({
+  const Particle({
     required this.emoji,
     required this.x,
     required this.y,
@@ -95,18 +89,15 @@ class _Particle {
   });
 }
 
-const _particles = [
-  _Particle(emoji: '💻', x: 0.05, y: 0.20, size: 18, phase: 0.0, amplitude: 12),
-  _Particle(emoji: '🤖', x: 0.88, y: 0.14, size: 20, phase: 1.1, amplitude: 16),
-  _Particle(emoji: '⭐', x: 0.84, y: 0.40, size: 15, phase: 0.5, amplitude: 14),
-  _Particle(emoji: '🎮', x: 0.06, y: 0.48, size: 17, phase: 2.2, amplitude: 10),
-  _Particle(emoji: '🌟', x: 0.48, y: 0.04, size: 14, phase: 0.8, amplitude: 18),
+const particles = [
+  Particle(emoji: '🎓', x: 0.05, y: 0.20, size: 18, phase: 0.0, amplitude: 12),
+  Particle(emoji: '💼', x: 0.88, y: 0.14, size: 20, phase: 1.1, amplitude: 16),
+  Particle(emoji: '🚀', x: 0.84, y: 0.40, size: 15, phase: 0.5, amplitude: 14),
+  Particle(emoji: '⭐', x: 0.06, y: 0.48, size: 17, phase: 2.2, amplitude: 10),
+  Particle(emoji: '💡', x: 0.48, y: 0.04, size: 14, phase: 0.8, amplitude: 18),
 ];
 
-// ─────────────────────────────────────────────
-//  SCREEN
-// ─────────────────────────────────────────────
-
+// ── SCREEN ───────────────────────────────────────────────────────────────────
 class CommonLoginScreen extends StatefulWidget {
   const CommonLoginScreen({super.key});
 
@@ -116,91 +107,81 @@ class CommonLoginScreen extends StatefulWidget {
 
 class _CommonLoginScreenState extends State<CommonLoginScreen>
     with TickerProviderStateMixin {
-  bool _showPass = false;
-  bool _isLoading = false;
-  bool _isGoogleLoading = false; // ✅ NEW
-  bool _btnPressed = false;
+  bool showPass = false;
+  bool isLoading = false;
+  bool isGoogleLoading = false;
+  bool btnPressed = false;
 
-  final _emailCtrl = TextEditingController();
-  final _passCtrl = TextEditingController();
+  final emailCtrl = TextEditingController();
+  final passCtrl = TextEditingController();
 
-  late AnimationController _orbCtrl;
-  late AnimationController _particleCtrl;
-  late AnimationController _pulseCtrl;
-  late AnimationController _heroCtrl;
-  late AnimationController _btnCtrl;
+  // ✅ CHANGE 1: class-level instance — NOT inside the method
+  final _googleSignIn = GoogleSignIn(scopes: ['email']);
 
-  late Animation<double> _heroFade;
-  late Animation<Offset> _heroSlide;
-  late Animation<double> _badgeFade;
-  late Animation<double> _pulse;
-  late Animation<double> _btnScale;
+  late AnimationController orbCtrl, particleCtrl, pulseCtrl, heroCtrl, btnCtrl;
+  late Animation<double> heroFade, badgeFade, pulse, btnScale;
+  late Animation<Offset> heroSlide;
 
   @override
   void initState() {
     super.initState();
-
-    _orbCtrl = AnimationController(
+    orbCtrl = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 7),
     )..repeat();
-    _particleCtrl = AnimationController(
+    particleCtrl = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 5),
     )..repeat();
-
-    _pulseCtrl = AnimationController(
+    pulseCtrl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1200),
     )..repeat(reverse: true);
-    _pulse = Tween<double>(
+    pulse = Tween<double>(
       begin: 0.85,
       end: 1.15,
-    ).animate(CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOut));
-
-    _heroCtrl = AnimationController(
+    ).animate(CurvedAnimation(parent: pulseCtrl, curve: Curves.easeInOut));
+    heroCtrl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 800),
     );
-    _heroFade = CurvedAnimation(parent: _heroCtrl, curve: Curves.easeOut);
-    _heroSlide = Tween<Offset>(
+    heroFade = CurvedAnimation(parent: heroCtrl, curve: Curves.easeOut);
+    heroSlide = Tween<Offset>(
       begin: const Offset(0, 0.14),
       end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _heroCtrl, curve: Curves.easeOut));
-    _badgeFade = CurvedAnimation(
-      parent: _heroCtrl,
+    ).animate(CurvedAnimation(parent: heroCtrl, curve: Curves.easeOut));
+    badgeFade = CurvedAnimation(
+      parent: heroCtrl,
       curve: const Interval(0.0, 0.6, curve: Curves.easeOut),
     );
-
-    _btnCtrl = AnimationController(
+    btnCtrl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 150),
     );
-    _btnScale = Tween<double>(
+    btnScale = Tween<double>(
       begin: 1.0,
       end: 0.96,
-    ).animate(CurvedAnimation(parent: _btnCtrl, curve: Curves.easeInOut));
+    ).animate(CurvedAnimation(parent: btnCtrl, curve: Curves.easeInOut));
 
     Future.delayed(const Duration(milliseconds: 100), () {
-      if (mounted) _heroCtrl.forward();
+      if (mounted) heroCtrl.forward();
     });
   }
 
   @override
   void dispose() {
-    _orbCtrl.dispose();
-    _particleCtrl.dispose();
-    _pulseCtrl.dispose();
-    _heroCtrl.dispose();
-    _btnCtrl.dispose();
-    _emailCtrl.dispose();
-    _passCtrl.dispose();
+    orbCtrl.dispose();
+    particleCtrl.dispose();
+    pulseCtrl.dispose();
+    heroCtrl.dispose();
+    btnCtrl.dispose();
+    emailCtrl.dispose();
+    passCtrl.dispose();
     super.dispose();
   }
 
-  // ── VALIDATION HELPERS ──────────────────────
-
-  void _showErrorSnack(String message) {
+  // ── VALIDATION HELPERS ───────────────────────────────────────────────────
+  void showErrorSnack(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -231,7 +212,7 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
     );
   }
 
-  void _showNoAccountDialog() {
+  void showNoAccountDialog() {
     final sw = MediaQuery.of(context).size.width;
     showDialog(
       context: context,
@@ -299,7 +280,7 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
                     ),
                     SizedBox(height: sw * 0.02),
                     Text(
-                      'We couldn\'t find an account with these credentials.\nPlease create an account first to sign in.',
+                      'We couldn\'t find an account with these credentials. Create an account first to sign in.',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: sw * 0.033,
@@ -386,58 +367,57 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
     );
   }
 
-  // ── SIGN IN ─────────────────────────────────
+  // ── SIGN IN ──────────────────────────────────────────────────────────────
+  Future<void> signIn() async {
+    if (emailCtrl.text.trim().isEmpty && passCtrl.text.trim().isEmpty) {
+      showErrorSnack('Please enter your email and password to sign in.');
+      return;
+    }
+    if (emailCtrl.text.trim().isEmpty) {
+      showErrorSnack('Email address is required.');
+      return;
+    }
+    if (passCtrl.text.trim().isEmpty) {
+      showErrorSnack('Password is required.');
+      return;
+    }
 
-  Future<void> _signIn() async {
-    if (_emailCtrl.text.trim().isEmpty && _passCtrl.text.trim().isEmpty) {
-      _showErrorSnack('Please enter your email and password to sign in.');
-      return;
-    }
-    if (_emailCtrl.text.trim().isEmpty) {
-      _showErrorSnack('Email address is required.');
-      return;
-    }
-    if (_passCtrl.text.trim().isEmpty) {
-      _showErrorSnack('Password is required.');
-      return;
-    }
-
-    setState(() => _isLoading = true);
+    setState(() => isLoading = true);
 
     final url = Uri.parse(
       'https://studenthub-backend-woad.vercel.app/api/auth/login',
     );
-
     try {
       final response = await http
           .post(
             url,
-            headers: {"Content-Type": "application/json"},
+            headers: {'Content-Type': 'application/json'},
             body: jsonEncode({
-              "email": _emailCtrl.text.trim(),
-              "password": _passCtrl.text.trim(),
+              'email': emailCtrl.text.trim(),
+              'password': passCtrl.text.trim(),
             }),
           )
           .timeout(const Duration(seconds: 15));
 
       final data = jsonDecode(response.body);
 
-      if (response.statusCode == 200 && data["success"] == true) {
-        final String accessToken = data["data"]["accessToken"];
-        final String refreshToken = data["data"]["refreshToken"];
-
+      if (response.statusCode == 200 && data['success'] == true) {
+        final String accessToken = data['data']['accessToken'];
+        final String refreshToken = data['data']['refreshToken'];
         final Map<String, dynamic> payload = JwtDecoder.decode(accessToken);
-        debugPrint("📦 JWT Payload: $payload");
+        debugPrint('JWT Payload: $payload');
 
+        // ✅ FIX 1: was 'userid', correct key is 'user_id'
         final String userId = payload['user_id'].toString();
         final int roleId = payload['role_id'] is int
             ? payload['role_id']
             : int.tryParse(payload['role_id'].toString()) ?? 0;
         final String userName = payload['full_name'] ?? '';
 
-        debugPrint("🎯 roleId = $roleId");
-        debugPrint("✅ User ID: $userId, Role: $roleId, Name: $userName");
+        debugPrint('roleId: $roleId');
+        debugPrint('User ID: $userId, Role: $roleId, Name: $userName');
 
+        // ✅ FIX 2: param names match — user_id, role_id, full_name
         await AuthService().saveTokens(
           access: accessToken,
           refresh: refreshToken,
@@ -449,17 +429,17 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
         try {
           await FcmTokenService.sendTokenToBackend(accessToken);
           FcmTokenService.listenToTokenRefresh(accessToken);
-          debugPrint("🔔 FCM token sent successfully.");
+          debugPrint('FCM token sent successfully.');
         } catch (e) {
-          debugPrint("⚠️ FCM token upload failed (non-fatal): $e");
+          debugPrint('FCM token upload failed (non-fatal): $e');
         }
 
         if (!mounted) return;
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Row(
-              children: const [
+            content: const Row(
+              children: [
                 Icon(Icons.check_circle_rounded, color: Colors.white, size: 18),
                 SizedBox(width: 10),
                 Text(
@@ -478,12 +458,14 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
           ),
         );
 
-        if ((roleId == 3 || roleId == 4) && mounted) {
-          try {
-            final show = await PremiumHelper.shouldShow(onLogin: true);
-            if (show && mounted) await showPremiumSheet(context);
-          } catch (e) {
-            debugPrint("⚠️ PremiumHelper error (non-fatal): $e");
+        if (roleId == 3 || roleId == 4) {
+          if (mounted) {
+            try {
+              final show = await PremiumHelper.shouldShow(onLogin: true);
+              if (show && mounted) await showPremiumSheet(context);
+            } catch (e) {
+              debugPrint('PremiumHelper error (non-fatal): $e');
+            }
           }
         }
 
@@ -497,94 +479,87 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
           context.go('/engineering');
         }
       } else {
-        _showNoAccountDialog();
-        debugPrint("❌ Login failed: ${data["message"]}");
+        showNoAccountDialog();
+        debugPrint('Login failed: ${data['message']}');
       }
     } catch (e) {
-      _showErrorSnack('Something went wrong. Please try again.');
-      debugPrint("❌ Sign In Error: $e");
+      showErrorSnack('Something went wrong. Please try again.');
+      debugPrint('Sign In Error: $e');
     }
 
-    if (mounted) setState(() => _isLoading = false);
+    if (mounted) setState(() => isLoading = false);
   }
 
-  // ── GOOGLE SIGN IN ───────────────────────────
-
-  // ── GOOGLE SIGN IN ───────────────────────────
-
-  Future<void> _handleGoogleSignIn() async {
+  // ── GOOGLE SIGN IN ───────────────────────────────────────────────────────
+  Future<void> handleGoogleSignIn() async {
     try {
-      setState(() => _isGoogleLoading = true);
+      setState(() => isGoogleLoading = true);
 
-      final GoogleSignIn googleSignIn = GoogleSignIn(scopes: ['email']);
-
-      // ✅ Forces account picker every time
-      await googleSignIn.disconnect().catchError((_) {});
-
-      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+      // ✅ FIX: always show account picker — removed signInSilently()
+      await _googleSignIn
+          .signOut(); // clears cached account so picker always appears
+      GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
 
       if (googleUser == null) {
-        if (mounted) setState(() => _isGoogleLoading = false);
+        if (mounted) setState(() => isGoogleLoading = false);
         return;
       }
 
       final GoogleSignInAuthentication googleAuth =
           await googleUser.authentication;
-
       final String? idToken = googleAuth.idToken;
 
       if (idToken == null) {
-        _showErrorSnack("Could not get ID token. Try again.");
-        if (mounted) setState(() => _isGoogleLoading = false);
+        showErrorSnack('Could not get ID token. Try again.');
+        if (mounted) setState(() => isGoogleLoading = false);
         return;
       }
 
-      debugPrint("✅ Got idToken: ${idToken.substring(0, 20)}...");
+      debugPrint('Got idToken: ${idToken.substring(0, 20)}...');
 
       final url = Uri.parse(
         'https://studenthub-backend-woad.vercel.app/api/auth/google-login',
       );
-
       final response = await http
           .post(
             url,
             headers: {
-              "Authorization": "Bearer $idToken",
-              "Content-Type": "application/json",
+              'Authorization': 'Bearer $idToken',
+              'Content-Type': 'application/json',
             },
           )
           .timeout(const Duration(seconds: 15));
 
       final data = jsonDecode(response.body);
-      debugPrint("📦 Google Login Response: $data");
+      debugPrint('Google Login Response: $data');
 
       if (response.statusCode == 200) {
-        final String accessToken = data["data"]["accessToken"];
-        final String refreshToken = data["data"]["refreshToken"];
-        final user = data["user"];
+        final String accessToken = data['data']['accessToken'];
+        final String refreshToken = data['data']['refreshToken'];
+        final user = data['user'];
 
         await AuthService().saveTokens(
           access: accessToken,
           refresh: refreshToken,
-          user_id: user["user_id"].toString(),
-          role_id: user["role_id"].toString(),
-          full_name: user["full_name"] ?? '',
+          user_id: user['user_id'].toString(),
+          role_id: user['role_id'].toString(),
+          full_name: user['full_name'] ?? '',
         );
 
         try {
           await FcmTokenService.sendTokenToBackend(accessToken);
           FcmTokenService.listenToTokenRefresh(accessToken);
-          debugPrint("🔔 FCM token sent successfully.");
+          debugPrint('FCM token sent successfully.');
         } catch (e) {
-          debugPrint("⚠️ FCM token upload failed (non-fatal): $e");
+          debugPrint('FCM token upload failed (non-fatal): $e');
         }
 
         if (!mounted) return;
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Row(
-              children: const [
+            content: const Row(
+              children: [
                 Icon(Icons.check_circle_rounded, color: Colors.white, size: 18),
                 SizedBox(width: 10),
                 Text(
@@ -603,42 +578,44 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
           ),
         );
 
-        final int roleId = int.tryParse(user["role_id"].toString()) ?? 0;
+        // ✅ FIX: was user['roleid'] — correct key is role_id
+        final int roleId = int.tryParse(user['role_id'].toString()) ?? 0;
         if (!mounted) return;
 
-        // ✅ ADDED: Show premium sheet for students — same as credential login
         if (roleId == 3 || roleId == 4) {
           try {
             final show = await PremiumHelper.shouldShow(onLogin: true);
             if (show && mounted) await showPremiumSheet(context);
           } catch (e) {
-            debugPrint("⚠️ PremiumHelper error (non-fatal): $e");
+            debugPrint('PremiumHelper error (non-fatal): $e');
           }
         }
 
-        // ✅ ADDED: Guard after async showPremiumSheet
         if (!mounted) return;
 
-        if (roleId == 2) {
+        if (roleId == 0) {
+          context.go('/select-role');
+        }
+        // ✅ SCHOOL
+        else if (roleId == 2) {
           context.go('/school/layout');
-        } else {
+        }
+        // ✅ ENGINEERING
+        else if (roleId == 3 || roleId == 4) {
           context.go('/engineering');
         }
       } else {
-        _showErrorSnack(data["message"] ?? "Google login failed");
+        showErrorSnack(data['message'] ?? 'Google login failed');
       }
     } catch (e) {
-      debugPrint("❌ Google Sign-In Error: $e");
-      _showErrorSnack("Google Sign-In failed. Please try again.");
+      debugPrint('Google Sign-In Error: $e');
+      showErrorSnack('Google Sign-In failed. Please try again.');
     }
 
-    if (mounted) setState(() => _isGoogleLoading = false);
+    if (mounted) setState(() => isGoogleLoading = false);
   }
 
-  // ─────────────────────────────────────────────
-  //  BUILD
-  // ─────────────────────────────────────────────
-
+  // ── BUILD ────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
     final sw = MediaQuery.of(context).size.width;
@@ -651,8 +628,8 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
         resizeToAvoidBottomInset: true,
         body: Stack(
           children: [
-            ..._orbs.map((orb) => _buildOrb(orb, sw, sh)),
-            ..._particles.map((p) => _buildParticle(p, sw, sh)),
+            ...orbs.map((orb) => _buildOrb(orb, sw, sh)),
+            ...particles.map((p) => _buildParticle(p, sw, sh)),
             Positioned(
               bottom: 0,
               left: 0,
@@ -678,9 +655,9 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
                   vertical: sh * 0.018,
                 ),
                 child: FadeTransition(
-                  opacity: _heroFade,
+                  opacity: heroFade,
                   child: SlideTransition(
-                    position: _heroSlide,
+                    position: heroSlide,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -704,12 +681,12 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
     );
   }
 
-  Widget _buildOrb(_Orb orb, double sw, double sh) {
+  Widget _buildOrb(Orb orb, double sw, double sh) {
     return AnimatedBuilder(
-      animation: _orbCtrl,
+      animation: orbCtrl,
       builder: (_, __) {
-        final dy = sin(_orbCtrl.value * 2 * pi + orb.phase) * 26 * orb.speed;
-        final dx = cos(_orbCtrl.value * 2 * pi * 0.4 + orb.phase) * 12;
+        final dy = sin(orbCtrl.value * 2 * pi * orb.phase) * 26 * orb.speed;
+        final dx = cos(orbCtrl.value * 2 * pi * 0.4 * orb.phase) * 12;
         return Positioned(
           left: sw * orb.x + dx - orb.size / 2,
           top: sh * orb.y + dy - orb.size / 2,
@@ -726,11 +703,11 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
     );
   }
 
-  Widget _buildParticle(_Particle p, double sw, double sh) {
+  Widget _buildParticle(Particle p, double sw, double sh) {
     return AnimatedBuilder(
-      animation: _particleCtrl,
+      animation: particleCtrl,
       builder: (_, __) {
-        final dy = sin(_particleCtrl.value * 2 * pi + p.phase) * p.amplitude;
+        final dy = sin(particleCtrl.value * 2 * pi * p.phase) * p.amplitude;
         return Positioned(
           left: sw * p.x,
           top: sh * p.y + dy,
@@ -779,7 +756,7 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
             ),
           ),
           child: Center(
-            child: Text('⚡', style: TextStyle(fontSize: sw * 0.042)),
+            child: Text('🎓', style: TextStyle(fontSize: sw * 0.042)),
           ),
         ),
         SizedBox(width: sw * 0.028),
@@ -814,7 +791,7 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         FadeTransition(
-          opacity: _badgeFade,
+          opacity: badgeFade,
           child: Container(
             padding: EdgeInsets.symmetric(
               horizontal: sw * 0.032,
@@ -832,7 +809,7 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
               mainAxisSize: MainAxisSize.min,
               children: [
                 ScaleTransition(
-                  scale: _pulse,
+                  scale: pulse,
                   child: Container(
                     width: sw * 0.018,
                     height: sw * 0.018,
@@ -962,7 +939,7 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
           ),
           SizedBox(height: sw * 0.05),
           _field(
-            ctrl: _emailCtrl,
+            ctrl: emailCtrl,
             label: 'Email Address',
             icon: Icons.alternate_email_rounded,
             type: TextInputType.emailAddress,
@@ -970,20 +947,20 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
           ),
           SizedBox(height: sw * 0.030),
           _field(
-            ctrl: _passCtrl,
+            ctrl: passCtrl,
             label: 'Password',
             icon: Icons.lock_outline_rounded,
-            obscure: !_showPass,
+            obscure: !showPass,
             sw: sw,
             suffix: IconButton(
               icon: Icon(
-                _showPass
+                showPass
                     ? Icons.visibility_off_rounded
                     : Icons.visibility_rounded,
                 color: kMuted,
                 size: sw * 0.045,
               ),
-              onPressed: () => setState(() => _showPass = !_showPass),
+              onPressed: () => setState(() => showPass = !showPass),
             ),
           ),
           SizedBox(height: sw * 0.025),
@@ -1006,7 +983,7 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
           SizedBox(height: sw * 0.045),
           Row(
             children: [
-              Expanded(child: Container(height: 1, color: kBorder)),
+              const Expanded(child: Divider(color: kBorder)),
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: sw * 0.03),
                 child: Text(
@@ -1014,7 +991,7 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
                   style: TextStyle(fontSize: sw * 0.028, color: kHint),
                 ),
               ),
-              Expanded(child: Container(height: 1, color: kBorder)),
+              const Expanded(child: Divider(color: kBorder)),
             ],
           ),
           SizedBox(height: sw * 0.035),
@@ -1030,25 +1007,22 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
     );
   }
 
-  // ✅ UPDATED — shows spinner only on Google button
   Widget _socialBtn(
     String label,
     String icon,
     double sw, {
     bool isGoogle = false,
   }) {
-    final bool isThisLoading = isGoogle && _isGoogleLoading;
-
+    final isThisLoading = isGoogle ? isGoogleLoading : false;
     return InkWell(
       borderRadius: BorderRadius.circular(14),
-      onTap: (_isLoading || _isGoogleLoading)
+      onTap: isLoading || isGoogleLoading
           ? null
           : () async {
-              if (isGoogle) {
-                await _handleGoogleSignIn();
-              } else {
-                debugPrint("LinkedIn clicked");
-              }
+              if (isGoogle)
+                await handleGoogleSignIn();
+              else
+                debugPrint('LinkedIn clicked');
             },
       child: Container(
         height: sw * 0.115,
@@ -1152,36 +1126,36 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
   Widget _buildSubmitBtn(double sw) {
     return GestureDetector(
       onTapDown: (_) {
-        _btnCtrl.forward();
-        setState(() => _btnPressed = true);
+        btnCtrl.forward();
+        setState(() => btnPressed = true);
         HapticFeedback.mediumImpact();
       },
       onTapUp: (_) {
-        _btnCtrl.reverse();
-        setState(() => _btnPressed = false);
-        _signIn();
+        btnCtrl.reverse();
+        setState(() => btnPressed = false);
+        signIn();
       },
       onTapCancel: () {
-        _btnCtrl.reverse();
-        setState(() => _btnPressed = false);
+        btnCtrl.reverse();
+        setState(() => btnPressed = false);
       },
       child: ScaleTransition(
-        scale: _btnScale,
+        scale: btnScale,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
           width: double.infinity,
           padding: EdgeInsets.symmetric(vertical: sw * 0.040),
           decoration: BoxDecoration(
-            gradient: _btnPressed
+            gradient: btnPressed
                 ? null
                 : const LinearGradient(
                     colors: [kPrimary, kViolet],
                     begin: Alignment.centerLeft,
                     end: Alignment.centerRight,
                   ),
-            color: _btnPressed ? kPrimary : null,
+            color: btnPressed ? kPrimary : null,
             borderRadius: BorderRadius.circular(16),
-            boxShadow: _btnPressed
+            boxShadow: btnPressed
                 ? null
                 : [
                     BoxShadow(
@@ -1197,11 +1171,11 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
                   ],
           ),
           child: Center(
-            child: _isLoading
-                ? SizedBox(
-                    width: sw * 0.055,
-                    height: sw * 0.055,
-                    child: const CircularProgressIndicator(
+            child: isLoading
+                ? const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
                       strokeWidth: 2.5,
                       valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                     ),
@@ -1238,7 +1212,7 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            "Don't have an account? ",
+            'Don\'t have an account? ',
             style: TextStyle(
               fontSize: sw * 0.033,
               color: Colors.white.withValues(alpha: 0.48),

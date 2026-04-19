@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:jwt_decoder/jwt_decoder.dart';
 
 import '../services/api_config.dart';
 
@@ -11,7 +12,7 @@ class AuthService {
   final _storage = const FlutterSecureStorage();
 
   late final Dio dio;
-  Dio get client => dio; // expose this for widget calls
+  Dio get client => dio;
 
   String? accessToken;
   String? refreshToken;
@@ -19,16 +20,14 @@ class AuthService {
   String? roleId;
   String? fullName;
 
-  /// Initialize once when app starts; loads tokens and sets up Dio.
+  /// Call once in main() before runApp.
   Future<void> init() async {
-    // Load saved tokens from storage
     accessToken = await _storage.read(key: 'accessToken');
     refreshToken = await _storage.read(key: 'refreshToken');
     userId = await _storage.read(key: 'user_id');
     roleId = await _storage.read(key: 'role_id');
     fullName = await _storage.read(key: 'full_name');
 
-    // Setup Dio
     dio = Dio(
       BaseOptions(
         baseUrl: ApiConfig.baseUrl,
@@ -37,7 +36,6 @@ class AuthService {
       ),
     );
 
-    // Auth interceptor
     dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) {
@@ -50,7 +48,6 @@ class AuthService {
           final response = err.response;
           final requestOptions = err.requestOptions;
 
-          // Avoid infinite loops when calling /auth/refresh
           if (requestOptions.path.contains('/auth/refresh')) {
             await clearTokens();
             handler.next(err);
@@ -60,7 +57,6 @@ class AuthService {
           if (response?.statusCode == 401 && refreshToken != null) {
             final success = await refreshTokens();
             if (success) {
-              // Retry the original request with new token
               final newOptions = requestOptions.copyWith(
                 headers: {
                   ...requestOptions.headers,
@@ -68,8 +64,8 @@ class AuthService {
                 },
               );
               try {
-                final response = await dio.fetch(newOptions);
-                handler.resolve(response);
+                final retried = await dio.fetch(newOptions);
+                handler.resolve(retried);
               } on DioException catch (e) {
                 handler.reject(e);
               }
@@ -85,7 +81,21 @@ class AuthService {
     );
   }
 
-  /// Reload tokens from storage into memory (use after login / init).
+  /// Returns true if the user has a valid, non-expired access token stored.
+  Future<bool> isAuthenticated() async {
+    final token = await _storage.read(key: 'accessToken');
+    final uid = await _storage.read(key: 'user_id');
+    if (token == null || token.isEmpty || uid == null || uid.isEmpty) {
+      return false;
+    }
+    try {
+      return !JwtDecoder.isExpired(token);
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Reload tokens from storage into memory.
   Future<void> loadTokens() async {
     accessToken = await _storage.read(key: 'accessToken');
     refreshToken = await _storage.read(key: 'refreshToken');
@@ -94,7 +104,8 @@ class AuthService {
     fullName = await _storage.read(key: 'full_name');
   }
 
-  /// Save tokens to storage + update in‑memory state.
+  /// Save tokens to storage + update in-memory state.
+  /// Named params match all existing callers in common_login_screen.dart.
   Future<void> saveTokens({
     required String access,
     String? refresh,
@@ -123,7 +134,7 @@ class AuthService {
     }
   }
 
-  /// Call /auth/refresh endpoint to get new tokens.
+  /// Try to refresh the access token using the stored refresh token.
   Future<bool> refreshTokens() async {
     if (refreshToken == null) {
       await clearTokens();
@@ -158,16 +169,15 @@ class AuthService {
     } on DioException {
       await clearTokens();
       return false;
-    } catch (e) {
+    } catch (_) {
       await clearTokens();
       return false;
     }
   }
 
-  /// Log out the user (clear tokens).
+  /// Log out: clear all tokens from memory and storage.
   Future<void> logout() async {
     await clearTokens();
-    // TODO: route to /login (e.g., context.go('/login'))
   }
 
   /// Clear tokens in memory and storage.
@@ -177,24 +187,25 @@ class AuthService {
     userId = null;
     roleId = null;
     fullName = null;
-
     await _storage.deleteAll();
   }
 
-  /// Whether user is logged in (token + user_id present).
+  /// Quick in-memory check (use isAuthenticated() for startup checks).
   bool get isLoggedIn => accessToken != null && userId != null;
 
-  // Convenience wrappers around dio
-  Future<Response> get(
-    String path, {
-    Map<String, dynamic>? queryParameters,
-  }) async => dio.get(path, queryParameters: queryParameters);
+  // Convenience wrappers
+  Future<Response> get(String path, {Map<String, dynamic>? queryParameters}) =>
+      dio.get(path, queryParameters: queryParameters);
 
-  Future<Response> post(String path, dynamic data) async =>
+  Future<Response> post(String path, dynamic data) =>
       dio.post(path, data: data);
-
-  Future<Response> put(String path, dynamic data) async =>
-      dio.put(path, data: data);
-
-  Future<Response> delete(String path) async => dio.delete(path);
+  Future<Response> put(String path, dynamic data) => dio.put(path, data: data);
+  Future<Response> delete(String path, Map<String, int> body) =>
+      dio.delete(path);
+  // ── NEW: called by RoleSelectionScreen after a successful /auth/update-role ── /// Updates role_id in both memory and secure storage without touching /
+  // any other stored value (tokens, userId, fullName stay unchanged).
+  Future<void> updateRoleId(String newRoleId) async {
+    roleId = newRoleId;
+    await _storage.write(key: 'role_id', value: newRoleId);
+  }
 }

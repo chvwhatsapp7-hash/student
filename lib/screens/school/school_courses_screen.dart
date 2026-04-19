@@ -2,9 +2,42 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../services/school_api_service.dart';
 import 'school_data.dart';
 import 'school_state.dart';
-import '../../services/school_api_service.dart';
+
+// ─────────────────────────────────────────────
+//  RESPONSIVE HELPER
+// ─────────────────────────────────────────────
+
+class _R {
+  final BuildContext ctx;
+  const _R(this.ctx);
+
+  double get w => MediaQuery.sizeOf(ctx).width;
+  double get h => MediaQuery.sizeOf(ctx).height;
+  double get ts => MediaQuery.textScalerOf(ctx).scale(1.0);
+
+  bool get isTablet => w >= 600;
+  bool get isLarge => w >= 900;
+
+  // Fluid font helpers
+  double fs(double mobile, {double? tablet, double? large}) {
+    if (isLarge && large != null) return large / ts.clamp(1.0, 1.3);
+    if (isTablet && tablet != null) return tablet / ts.clamp(1.0, 1.3);
+    return mobile / ts.clamp(1.0, 1.3);
+  }
+
+  // Responsive horizontal padding
+  double get hPad => isLarge
+      ? w * 0.08
+      : isTablet
+      ? w * 0.05
+      : 16.0;
+
+  // Card columns
+  int get cardCols => isLarge ? 2 : 1;
+}
 
 // ─────────────────────────────────────────────
 //  COURSES SCREEN
@@ -24,8 +57,8 @@ class _SchoolCoursesScreenState extends State<SchoolCoursesScreen>
   bool _isLoading = true;
 
   late AnimationController _headerAnim;
-  late Animation<double>   _headerFade;
-  late Animation<Offset>   _headerSlide;
+  late Animation<double> _headerFade;
+  late Animation<Offset> _headerSlide;
 
   List<Course> get _filtered => _ageFilter == 'All'
       ? _courses
@@ -36,11 +69,14 @@ class _SchoolCoursesScreenState extends State<SchoolCoursesScreen>
     super.initState();
     _loadCourses();
     _headerAnim = AnimationController(
-      vsync: this, duration: const Duration(milliseconds: 600),
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
     )..forward();
-    _headerFade  = CurvedAnimation(parent: _headerAnim, curve: Curves.easeOut);
-    _headerSlide = Tween<Offset>(begin: const Offset(0, -0.15), end: Offset.zero)
-        .animate(CurvedAnimation(parent: _headerAnim, curve: Curves.easeOut));
+    _headerFade = CurvedAnimation(parent: _headerAnim, curve: Curves.easeOut);
+    _headerSlide = Tween<Offset>(
+      begin: const Offset(0, -0.15),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _headerAnim, curve: Curves.easeOut));
   }
 
   Future<void> _loadCourses() async {
@@ -54,7 +90,10 @@ class _SchoolCoursesScreenState extends State<SchoolCoursesScreen>
   }
 
   @override
-  void dispose() { _headerAnim.dispose(); super.dispose(); }
+  void dispose() {
+    _headerAnim.dispose();
+    super.dispose();
+  }
 
   void _openDetail(Course course, SchoolStateNotifier state) {
     HapticFeedback.lightImpact();
@@ -77,29 +116,29 @@ class _SchoolCoursesScreenState extends State<SchoolCoursesScreen>
   @override
   Widget build(BuildContext context) {
     final state = SchoolStateProvider.of(context);
+    final r = _R(context);
+
     return Scaffold(
       backgroundColor: kBgPage,
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildHeader(state),
-          _buildFilterBar(),
+          _buildHeader(state, r),
+          _buildFilterBar(r),
           const SizedBox(height: 6),
           Expanded(
-            child: _isLoading 
-              ? const Center(child: CircularProgressIndicator()) 
-              : _buildCourseList(state)
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _buildCourseList(state, r),
           ),
         ],
       ),
     );
   }
 
-  // ── Header — overflow fixed ────────────────
-  // Root cause: enrolled chip had no Flexible wrapper.
-  // Fix: use ConstrainedBox + FittedBox on the chip.
+  // ── Header ─────────────────────────────────
 
-  Widget _buildHeader(SchoolStateNotifier state) {
+  Widget _buildHeader(SchoolStateNotifier state, _R r) {
     return FadeTransition(
       opacity: _headerFade,
       child: SlideTransition(
@@ -108,59 +147,70 @@ class _SchoolCoursesScreenState extends State<SchoolCoursesScreen>
           decoration: const BoxDecoration(
             gradient: LinearGradient(
               colors: [kPrimaryBlue, kDeepBlue],
-              begin: Alignment.topLeft, end: Alignment.bottomRight,
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
           ),
           child: SafeArea(
             bottom: false,
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 14, 16, 20),
+              padding: EdgeInsets.fromLTRB(r.hPad, 14, r.hPad, 20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // ── Title row — OVERFLOW FIX ──────────
+                  // ── Title row ──────────────────────────
                   Row(
                     children: [
-                      // Back button
                       GestureDetector(
                         onTap: () {
                           HapticFeedback.lightImpact();
-                          if (context.canPop()) context.pop();
-                          else context.go('/school/layout');
+                          if (context.canPop())
+                            context.pop();
+                          else
+                            context.go('/school/layout');
                         },
                         child: Container(
-                          width: 36, height: 36,
+                          width: r.isTablet ? 42 : 36,
+                          height: r.isTablet ? 42 : 36,
                           margin: const EdgeInsets.only(right: 10),
                           decoration: BoxDecoration(
                             color: Colors.white.withValues(alpha: 0.18),
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          child: const Icon(Icons.arrow_back_ios_new_rounded,
-                              size: 15, color: Colors.white),
-                        ),
-                      ),
-                      // Title — Expanded so it never overflows
-                      const Expanded(
-                        child: Text(
-                          'Our Courses',
-                          style: TextStyle(
-                            fontSize: 20, fontWeight: FontWeight.w800,
-                            color: Colors.white, letterSpacing: -0.3,
+                          child: Icon(
+                            Icons.arrow_back_ios_new_rounded,
+                            size: r.isTablet ? 18 : 15,
+                            color: Colors.white,
                           ),
                         ),
                       ),
-                      // Enrolled chip — constrained so it never overflows
+                      Expanded(
+                        child: Text(
+                          'Our Courses',
+                          style: TextStyle(
+                            fontSize: r.fs(20, tablet: 24, large: 26),
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                            letterSpacing: -0.3,
+                          ),
+                        ),
+                      ),
+                      // Enrolled chip
                       AnimatedBuilder(
                         animation: state,
                         builder: (_, __) {
                           final n = state.enrolledCount;
                           if (n == 0) return const SizedBox.shrink();
                           return ConstrainedBox(
-                            constraints: const BoxConstraints(maxWidth: 110),
+                            constraints: BoxConstraints(
+                              maxWidth: r.isTablet ? 140 : 110,
+                            ),
                             child: AnimatedContainer(
                               duration: const Duration(milliseconds: 300),
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 10, vertical: 5),
+                              padding: EdgeInsets.symmetric(
+                                horizontal: r.isTablet ? 14 : 10,
+                                vertical: r.isTablet ? 7 : 5,
+                              ),
                               decoration: BoxDecoration(
                                 color: Colors.white.withValues(alpha: 0.22),
                                 borderRadius: BorderRadius.circular(20),
@@ -168,8 +218,9 @@ class _SchoolCoursesScreenState extends State<SchoolCoursesScreen>
                               child: FittedBox(
                                 child: Text(
                                   '$n Enrolled',
-                                  style: const TextStyle(
-                                    fontSize: 12, fontWeight: FontWeight.w700,
+                                  style: TextStyle(
+                                    fontSize: r.fs(12, tablet: 14),
+                                    fontWeight: FontWeight.w700,
                                     color: Colors.white,
                                   ),
                                 ),
@@ -183,16 +234,19 @@ class _SchoolCoursesScreenState extends State<SchoolCoursesScreen>
                   const SizedBox(height: 6),
                   Text(
                     'Fun tech learning for school students!',
-                    style: TextStyle(fontSize: 13,
-                        color: Colors.white.withValues(alpha: 0.78)),
+                    style: TextStyle(
+                      fontSize: r.fs(13, tablet: 15),
+                      color: Colors.white.withValues(alpha: 0.78),
+                    ),
                   ),
                   const SizedBox(height: 16),
                   Wrap(
-                    spacing: 10, runSpacing: 8,
+                    spacing: 10,
+                    runSpacing: 8,
                     children: [
-                      _statChip('🎓', '${_courses.length} Courses'),
-                      _statChip('👦', 'Ages 8–17'),
-                      _statChip('⭐', '4.8 Avg Rating'),
+                      _statChip('🎓', '${_courses.length} Courses', r),
+                      _statChip('👦', 'Ages 8–17', r),
+                      _statChip('⭐', '4.8 Avg Rating', r),
                     ],
                   ),
                 ],
@@ -204,35 +258,52 @@ class _SchoolCoursesScreenState extends State<SchoolCoursesScreen>
     );
   }
 
-  Widget _statChip(String icon, String label) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
+  Widget _statChip(String icon, String label, _R r) => Container(
+    padding: EdgeInsets.symmetric(
+      horizontal: r.isTablet ? 14 : 11,
+      vertical: r.isTablet ? 8 : 6,
+    ),
     decoration: BoxDecoration(
       color: Colors.white.withValues(alpha: 0.15),
       borderRadius: BorderRadius.circular(20),
     ),
-    child: Row(mainAxisSize: MainAxisSize.min, children: [
-      Text(icon, style: const TextStyle(fontSize: 13)),
-      const SizedBox(width: 5),
-      Text(label, style: const TextStyle(fontSize: 12,
-          fontWeight: FontWeight.w700, color: Colors.white)),
-    ]),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(icon, style: TextStyle(fontSize: r.fs(13, tablet: 15))),
+        const SizedBox(width: 5),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: r.fs(12, tablet: 14),
+            fontWeight: FontWeight.w700,
+            color: Colors.white,
+          ),
+        ),
+      ],
+    ),
   );
 
   // ── Filter bar ─────────────────────────────
 
-  Widget _buildFilterBar() {
+  Widget _buildFilterBar(_R r) {
     return Container(
       color: kCardBg,
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+      padding: EdgeInsets.fromLTRB(r.hPad, 12, r.hPad, 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Filter by Age Group',
-              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700,
-                  color: kTextMuted)),
+          Text(
+            'Filter by Age Group',
+            style: TextStyle(
+              fontSize: r.fs(12, tablet: 13),
+              fontWeight: FontWeight.w700,
+              color: kTextMuted,
+            ),
+          ),
           const SizedBox(height: 10),
           SizedBox(
-            height: 36,
+            height: r.isTablet ? 42 : 36,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               itemCount: kAgeFilters.length,
@@ -245,19 +316,26 @@ class _SchoolCoursesScreenState extends State<SchoolCoursesScreen>
                   onTap: () => setState(() => _ageFilter = f),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 260),
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: r.isTablet ? 20 : 16,
+                    ),
                     decoration: BoxDecoration(
                       color: selected ? kPrimaryBlue : const Color(0xFFF0F4FF),
                       borderRadius: BorderRadius.circular(30),
                       border: Border.all(
-                          color: selected ? kPrimaryBlue : kCardBorder,
-                          width: 1.5),
+                        color: selected ? kPrimaryBlue : kCardBorder,
+                        width: 1.5,
+                      ),
                     ),
                     child: Center(
-                      child: Text(label,
-                          style: TextStyle(fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                              color: selected ? Colors.white : kTextMuted)),
+                      child: Text(
+                        label,
+                        style: TextStyle(
+                          fontSize: r.fs(13, tablet: 14),
+                          fontWeight: FontWeight.w700,
+                          color: selected ? Colors.white : kTextMuted,
+                        ),
+                      ),
                     ),
                   ),
                 );
@@ -271,40 +349,83 @@ class _SchoolCoursesScreenState extends State<SchoolCoursesScreen>
 
   // ── Course list ────────────────────────────
 
-  Widget _buildCourseList(SchoolStateNotifier state) {
+  Widget _buildCourseList(SchoolStateNotifier state, _R r) {
     final list = _filtered;
     if (list.isEmpty) {
       return Center(
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-          const Text('🔍', style: TextStyle(fontSize: 48)),
-          const SizedBox(height: 12),
-          const Text('No courses for this age group yet.',
-              style: TextStyle(color: kTextMuted, fontSize: 14)),
-          const SizedBox(height: 8),
-          GestureDetector(
-            onTap: () => setState(() => _ageFilter = 'All'),
-            child: const Text('Show all courses',
-                style: TextStyle(color: kPrimaryBlue, fontWeight: FontWeight.w700)),
-          ),
-        ]),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('🔍', style: TextStyle(fontSize: r.fs(48, tablet: 56))),
+            const SizedBox(height: 12),
+            Text(
+              'No courses for this age group yet.',
+              style: TextStyle(
+                color: kTextMuted,
+                fontSize: r.fs(14, tablet: 16),
+              ),
+            ),
+            const SizedBox(height: 8),
+            GestureDetector(
+              onTap: () => setState(() => _ageFilter = 'All'),
+              child: Text(
+                'Show all courses',
+                style: TextStyle(
+                  color: kPrimaryBlue,
+                  fontWeight: FontWeight.w700,
+                  fontSize: r.fs(14, tablet: 15),
+                ),
+              ),
+            ),
+          ],
+        ),
       );
     }
+
     return AnimatedBuilder(
       animation: state,
-      builder: (_, __) => ListView.builder(
-        padding: const EdgeInsets.fromLTRB(16, 10, 16, 24),
-        itemCount: list.length,
-        itemBuilder: (_, i) {
-          final course = list[i];
-          return _AnimatedCourseCard(
-            course: course,
-            index: i,
-            status: state.statusOf(course.id),
-            onTap: () => _openDetail(course, state),
-            onStatus: (s) => state.setStatus(course.id, s),
+      builder: (_, __) {
+        // Two-column grid on large screens
+        if (r.cardCols > 1) {
+          return GridView.builder(
+            padding: EdgeInsets.fromLTRB(r.hPad, 10, r.hPad, 24),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: r.cardCols,
+              mainAxisSpacing: 14,
+              crossAxisSpacing: 14,
+              // Let cards size themselves; childAspectRatio tuned for content
+              childAspectRatio: 0.78,
+            ),
+            itemCount: list.length,
+            itemBuilder: (_, i) {
+              final course = list[i];
+              return _AnimatedCourseCard(
+                course: course,
+                index: i,
+                status: state.statusOf(course.id),
+                onTap: () => _openDetail(course, state),
+                onStatus: (s) => state.setStatus(course.id, s),
+              );
+            },
           );
-        },
-      ),
+        }
+
+        // Single-column list on phone / small tablet
+        return ListView.builder(
+          padding: EdgeInsets.fromLTRB(r.hPad, 10, r.hPad, 24),
+          itemCount: list.length,
+          itemBuilder: (_, i) {
+            final course = list[i];
+            return _AnimatedCourseCard(
+              course: course,
+              index: i,
+              status: state.statusOf(course.id),
+              onTap: () => _openDetail(course, state),
+              onStatus: (s) => state.setStatus(course.id, s),
+            );
+          },
+        );
+      },
     );
   }
 }
@@ -314,15 +435,18 @@ class _SchoolCoursesScreenState extends State<SchoolCoursesScreen>
 // ─────────────────────────────────────────────
 
 class _AnimatedCourseCard extends StatefulWidget {
-  final Course       course;
-  final int          index;
+  final Course course;
+  final int index;
   final CourseStatus status;
   final VoidCallback onTap;
   final ValueChanged<CourseStatus> onStatus;
 
   const _AnimatedCourseCard({
-    required this.course, required this.index, required this.status,
-    required this.onTap,  required this.onStatus,
+    required this.course,
+    required this.index,
+    required this.status,
+    required this.onTap,
+    required this.onStatus,
   });
 
   @override
@@ -332,49 +456,66 @@ class _AnimatedCourseCard extends StatefulWidget {
 class _AnimatedCourseCardState extends State<_AnimatedCourseCard>
     with SingleTickerProviderStateMixin {
   late AnimationController _ctrl;
-  late Animation<double>   _fade;
-  late Animation<Offset>   _slide;
+  late Animation<double> _fade;
+  late Animation<Offset> _slide;
   bool _pressed = false;
 
   @override
   void initState() {
     super.initState();
-    _ctrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 480));
-    _fade  = CurvedAnimation(parent: _ctrl, curve: Curves.easeOut);
-    _slide = Tween<Offset>(begin: const Offset(0, 0.14), end: Offset.zero)
-        .animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOut));
-    Future.delayed(Duration(milliseconds: 60 + widget.index * 90),
-            () { if (mounted) _ctrl.forward(); });
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 480),
+    );
+    _fade = CurvedAnimation(parent: _ctrl, curve: Curves.easeOut);
+    _slide = Tween<Offset>(
+      begin: const Offset(0, 0.14),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOut));
+    Future.delayed(Duration(milliseconds: 60 + widget.index * 90), () {
+      if (mounted) _ctrl.forward();
+    });
   }
 
   @override
-  void dispose() { _ctrl.dispose(); super.dispose(); }
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
 
   Color get _borderColor {
     switch (widget.status) {
-      case CourseStatus.enrolled:   return kEnrolledGreen;
-      case CourseStatus.interested: return kInterestedAmber;
-      case CourseStatus.none:       return kCardBorder;
+      case CourseStatus.enrolled:
+        return kEnrolledGreen;
+      case CourseStatus.interested:
+        return kInterestedAmber;
+      case CourseStatus.none:
+        return kCardBorder;
     }
   }
 
   Color get _bgColor {
     switch (widget.status) {
-      case CourseStatus.enrolled:   return const Color(0xFFF1FBF3);
-      case CourseStatus.interested: return const Color(0xFFFFF8F2);
-      case CourseStatus.none:       return kCardBg;
+      case CourseStatus.enrolled:
+        return const Color(0xFFF1FBF3);
+      case CourseStatus.interested:
+        return const Color(0xFFFFF8F2);
+      case CourseStatus.none:
+        return kCardBg;
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final c = widget.course;
+    final r = _R(context);
+
     return FadeTransition(
       opacity: _fade,
       child: SlideTransition(
         position: _slide,
         child: GestureDetector(
-          onTapDown:  (_) => setState(() => _pressed = true),
+          onTapDown: (_) => setState(() => _pressed = true),
           onTapCancel: () => setState(() => _pressed = false),
           onTapUp: (_) {
             setState(() => _pressed = false);
@@ -385,14 +526,19 @@ class _AnimatedCourseCardState extends State<_AnimatedCourseCard>
             duration: const Duration(milliseconds: 130),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 350),
-              margin: const EdgeInsets.only(bottom: 14),
+              margin: EdgeInsets.only(bottom: r.cardCols > 1 ? 0 : 14),
               decoration: BoxDecoration(
                 color: _bgColor,
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(color: _borderColor, width: 1.8),
                 boxShadow: widget.status != CourseStatus.none
-                    ? [BoxShadow(color: _borderColor.withValues(alpha: 0.15),
-                    blurRadius: 12, offset: const Offset(0, 4))]
+                    ? [
+                        BoxShadow(
+                          color: _borderColor.withValues(alpha: 0.15),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                        ),
+                      ]
                     : [],
               ),
               child: Column(
@@ -401,44 +547,75 @@ class _AnimatedCourseCardState extends State<_AnimatedCourseCard>
                   if (widget.status != CourseStatus.none)
                     _StatusBanner(status: widget.status),
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                    padding: EdgeInsets.fromLTRB(
+                      r.isTablet ? 18 : 16,
+                      16,
+                      r.isTablet ? 18 : 16,
+                      0,
+                    ),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Container(
-                          width: 58, height: 58,
+                          width: r.isTablet ? 66 : 58,
+                          height: r.isTablet ? 66 : 58,
                           decoration: BoxDecoration(
-                              color: c.bgColor,
-                              borderRadius: BorderRadius.circular(16)),
-                          child: Center(child: Text(c.emoji,
-                              style: const TextStyle(fontSize: 28))),
+                            color: c.bgColor,
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Center(
+                            child: Text(
+                              c.emoji,
+                              style: TextStyle(fontSize: r.fs(28, tablet: 32)),
+                            ),
+                          ),
                         ),
                         const SizedBox(width: 14),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Row(children: [
-                                Expanded(
-                                  child: Text(c.title,
-                                      style: const TextStyle(fontSize: 15,
-                                          fontWeight: FontWeight.w800, color: kTextDark)),
-                                ),
-                                const SizedBox(width: 8),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 9, vertical: 3),
-                                  decoration: BoxDecoration(
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      c.title,
+                                      style: TextStyle(
+                                        fontSize: r.fs(15, tablet: 16),
+                                        fontWeight: FontWeight.w800,
+                                        color: kTextDark,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 9,
+                                      vertical: 3,
+                                    ),
+                                    decoration: BoxDecoration(
                                       color: c.tagBg,
-                                      borderRadius: BorderRadius.circular(20)),
-                                  child: Text(c.tag,
-                                      style: TextStyle(fontSize: 10,
-                                          fontWeight: FontWeight.w700, color: c.tagColor)),
-                                ),
-                              ]),
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    child: Text(
+                                      c.tag,
+                                      style: TextStyle(
+                                        fontSize: r.fs(10, tablet: 11),
+                                        fontWeight: FontWeight.w700,
+                                        color: c.tagColor,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                               const SizedBox(height: 4),
-                              Text(c.desc, style: const TextStyle(
-                                  fontSize: 12, color: kTextMuted)),
+                              Text(
+                                c.desc,
+                                style: TextStyle(
+                                  fontSize: r.fs(12, tablet: 13),
+                                  color: kTextMuted,
+                                ),
+                              ),
                             ],
                           ),
                         ),
@@ -447,65 +624,124 @@ class _AnimatedCourseCardState extends State<_AnimatedCourseCard>
                   ),
                   // Meta chips
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                    padding: EdgeInsets.fromLTRB(
+                      r.isTablet ? 18 : 16,
+                      12,
+                      r.isTablet ? 18 : 16,
+                      0,
+                    ),
                     child: Wrap(
-                      spacing: 8, runSpacing: 6,
+                      spacing: 8,
+                      runSpacing: 6,
                       children: [
-                        _metaChip(Icons.schedule_rounded,     c.duration),
-                        _metaChip(Icons.people_alt_rounded,   '${c.students} students'),
-                        _metaChip(Icons.child_care_rounded,   'Ages ${c.age}'),
+                        _metaChip(Icons.schedule_rounded, c.duration, r),
+                        _metaChip(
+                          Icons.people_alt_rounded,
+                          '${c.students} students',
+                          r,
+                        ),
+                        _metaChip(Icons.child_care_rounded, 'Ages ${c.age}', r),
                       ],
                     ),
                   ),
-                  Container(margin: const EdgeInsets.fromLTRB(16, 14, 16, 0),
-                      height: 1, color: const Color(0xFFF0F4FF)),
-                  // Bottom: rating + level + price on row 1, buttons on row 2
+                  Container(
+                    margin: EdgeInsets.fromLTRB(
+                      r.isTablet ? 18 : 16,
+                      14,
+                      r.isTablet ? 18 : 16,
+                      0,
+                    ),
+                    height: 1,
+                    color: const Color(0xFFF0F4FF),
+                  ),
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+                    padding: EdgeInsets.fromLTRB(
+                      r.isTablet ? 18 : 16,
+                      12,
+                      r.isTablet ? 18 : 16,
+                      16,
+                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(children: [
-                          const Icon(Icons.star_rounded,
-                              size: 18, color: Color(0xFFFFB300)),
-                          const SizedBox(width: 4),
-                          Text(c.rating, style: const TextStyle(fontSize: 13,
-                              fontWeight: FontWeight.w700, color: kTextDark)),
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 9, vertical: 3),
-                            decoration: BoxDecoration(
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.star_rounded,
+                              size: 18,
+                              color: Color(0xFFFFB300),
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              c.rating,
+                              style: TextStyle(
+                                fontSize: r.fs(13, tablet: 14),
+                                fontWeight: FontWeight.w700,
+                                color: kTextDark,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 9,
+                                vertical: 3,
+                              ),
+                              decoration: BoxDecoration(
                                 color: const Color(0xFFE8F1FE),
-                                borderRadius: BorderRadius.circular(20)),
-                            child: Text(c.level, style: const TextStyle(
-                                fontSize: 11, fontWeight: FontWeight.w700,
-                                color: kPrimaryBlue)),
-                          ),
-                          const Spacer(),
-                          Text(c.price, style: const TextStyle(fontSize: 16,
-                              fontWeight: FontWeight.w800, color: kTextDark)),
-                        ]),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                c.level,
+                                style: TextStyle(
+                                  fontSize: r.fs(11, tablet: 12),
+                                  fontWeight: FontWeight.w700,
+                                  color: kPrimaryBlue,
+                                ),
+                              ),
+                            ),
+                            const Spacer(),
+                            Text(
+                              c.price,
+                              style: TextStyle(
+                                fontSize: r.fs(16, tablet: 18),
+                                fontWeight: FontWeight.w800,
+                                color: kTextDark,
+                              ),
+                            ),
+                          ],
+                        ),
                         const SizedBox(height: 10),
-                        Row(children: [
-                          Expanded(child: _InterestedButton(
-                            status: widget.status,
-                            onTap: () {
-                              HapticFeedback.selectionClick();
-                              widget.onStatus(widget.status == CourseStatus.interested
-                                  ? CourseStatus.none : CourseStatus.interested);
-                            },
-                          )),
-                          const SizedBox(width: 8),
-                          Expanded(child: _EnrollButton(
-                            status: widget.status,
-                            onTap: () {
-                              HapticFeedback.mediumImpact();
-                              widget.onStatus(widget.status == CourseStatus.enrolled
-                                  ? CourseStatus.none : CourseStatus.enrolled);
-                            },
-                          )),
-                        ]),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _InterestedButton(
+                                status: widget.status,
+                                onTap: () {
+                                  HapticFeedback.selectionClick();
+                                  widget.onStatus(
+                                    widget.status == CourseStatus.interested
+                                        ? CourseStatus.none
+                                        : CourseStatus.interested,
+                                  );
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: _EnrollButton(
+                                status: widget.status,
+                                onTap: () {
+                                  HapticFeedback.mediumImpact();
+                                  widget.onStatus(
+                                    widget.status == CourseStatus.enrolled
+                                        ? CourseStatus.none
+                                        : CourseStatus.enrolled,
+                                  );
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
                       ],
                     ),
                   ),
@@ -518,17 +754,30 @@ class _AnimatedCourseCardState extends State<_AnimatedCourseCard>
     );
   }
 
-  Widget _metaChip(IconData icon, String label) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+  Widget _metaChip(IconData icon, String label, _R r) => Container(
+    padding: EdgeInsets.symmetric(
+      horizontal: r.isTablet ? 11 : 9,
+      vertical: r.isTablet ? 6 : 5,
+    ),
     decoration: BoxDecoration(
-        color: const Color(0xFFF0F4FF),
-        borderRadius: BorderRadius.circular(20)),
-    child: Row(mainAxisSize: MainAxisSize.min, children: [
-      Icon(icon, size: 12, color: kTextMuted),
-      const SizedBox(width: 4),
-      Text(label, style: const TextStyle(fontSize: 11,
-          fontWeight: FontWeight.w700, color: kTextMuted)),
-    ]),
+      color: const Color(0xFFF0F4FF),
+      borderRadius: BorderRadius.circular(20),
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: r.isTablet ? 14 : 12, color: kTextMuted),
+        const SizedBox(width: 4),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: r.fs(11, tablet: 12),
+            fontWeight: FontWeight.w700,
+            color: kTextMuted,
+          ),
+        ),
+      ],
+    ),
   );
 }
 
@@ -541,6 +790,7 @@ class _StatusBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isEnrolled = status == CourseStatus.enrolled;
+    final r = _R(context);
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 7),
@@ -550,16 +800,30 @@ class _StatusBanner extends StatelessWidget {
             : kInterestedAmber.withValues(alpha: 0.10),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
       ),
-      child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-        Icon(isEnrolled ? Icons.check_circle_rounded : Icons.bookmark_rounded,
-            size: 14, color: isEnrolled ? kEnrolledGreen : kInterestedAmber),
-        const SizedBox(width: 6),
-        Text(
-          isEnrolled ? 'You\'re enrolled in this course' : 'Saved as interested',
-          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700,
-              color: isEnrolled ? kEnrolledGreen : kInterestedAmber),
-        ),
-      ]),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            isEnrolled ? Icons.check_circle_rounded : Icons.bookmark_rounded,
+            size: r.isTablet ? 16 : 14,
+            color: isEnrolled ? kEnrolledGreen : kInterestedAmber,
+          ),
+          const SizedBox(width: 6),
+          Flexible(
+            child: Text(
+              isEnrolled
+                  ? "You're enrolled in this course"
+                  : 'Saved as interested',
+              style: TextStyle(
+                fontSize: r.fs(12, tablet: 13),
+                fontWeight: FontWeight.w700,
+                color: isEnrolled ? kEnrolledGreen : kInterestedAmber,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -581,33 +845,55 @@ class _InterestedButtonState extends State<_InterestedButton> {
   @override
   Widget build(BuildContext context) {
     final active = widget.status == CourseStatus.interested;
+    final r = _R(context);
     return GestureDetector(
-      onTapDown:  (_) => setState(() => _pressed = true),
+      onTapDown: (_) => setState(() => _pressed = true),
       onTapCancel: () => setState(() => _pressed = false),
-      onTapUp: (_) { setState(() => _pressed = false); widget.onTap(); },
+      onTapUp: (_) {
+        setState(() => _pressed = false);
+        widget.onTap();
+      },
       child: AnimatedScale(
         scale: _pressed ? 0.92 : 1.0,
         duration: const Duration(milliseconds: 120),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 280),
           width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          padding: EdgeInsets.symmetric(
+            horizontal: r.isTablet ? 16 : 12,
+            vertical: r.isTablet ? 12 : 10,
+          ),
           decoration: BoxDecoration(
-              color: active ? kInterestedAmber.withValues(alpha: 0.12)
-                  : const Color(0xFFF0F4FF),
-              borderRadius: BorderRadius.circular(30),
-              border: Border.all(
-                  color: active ? kInterestedAmber : kCardBorder, width: 1.5)),
+            color: active
+                ? kInterestedAmber.withValues(alpha: 0.12)
+                : const Color(0xFFF0F4FF),
+            borderRadius: BorderRadius.circular(30),
+            border: Border.all(
+              color: active ? kInterestedAmber : kCardBorder,
+              width: 1.5,
+            ),
+          ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(active ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
-                  size: 14, color: active ? kInterestedAmber : kTextMuted),
+              Icon(
+                active ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
+                size: r.isTablet ? 16 : 14,
+                color: active ? kInterestedAmber : kTextMuted,
+              ),
               const SizedBox(width: 4),
-              Text(active ? 'Saved' : 'Interested',
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700,
-                      color: active ? kInterestedAmber : kTextMuted)),
+              Flexible(
+                child: Text(
+                  active ? 'Saved' : 'Interested',
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: r.fs(12, tablet: 13),
+                    fontWeight: FontWeight.w700,
+                    color: active ? kInterestedAmber : kTextMuted,
+                  ),
+                ),
+              ),
             ],
           ),
         ),
@@ -633,34 +919,58 @@ class _EnrollButtonState extends State<_EnrollButton> {
   @override
   Widget build(BuildContext context) {
     final active = widget.status == CourseStatus.enrolled;
+    final r = _R(context);
     return GestureDetector(
-      onTapDown:  (_) => setState(() => _pressed = true),
+      onTapDown: (_) => setState(() => _pressed = true),
       onTapCancel: () => setState(() => _pressed = false),
-      onTapUp: (_) { setState(() => _pressed = false); widget.onTap(); },
+      onTapUp: (_) {
+        setState(() => _pressed = false);
+        widget.onTap();
+      },
       child: AnimatedScale(
         scale: _pressed ? 0.93 : 1.0,
         duration: const Duration(milliseconds: 120),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 300),
           width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          padding: EdgeInsets.symmetric(
+            horizontal: r.isTablet ? 20 : 16,
+            vertical: r.isTablet ? 12 : 10,
+          ),
           decoration: BoxDecoration(
-              gradient: active ? null : const LinearGradient(
-                  colors: [kPrimaryBlue, kDeepBlue],
-                  begin: Alignment.centerLeft, end: Alignment.centerRight),
-              color: active ? const Color(0xFFE6F4EA) : null,
-              borderRadius: BorderRadius.circular(30)),
+            gradient: active
+                ? null
+                : const LinearGradient(
+                    colors: [kPrimaryBlue, kDeepBlue],
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                  ),
+            color: active ? const Color(0xFFE6F4EA) : null,
+            borderRadius: BorderRadius.circular(30),
+          ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
             children: [
               if (active) ...[
-                const Icon(Icons.check_rounded, size: 14, color: kEnrolledGreen),
+                Icon(
+                  Icons.check_rounded,
+                  size: r.isTablet ? 16 : 14,
+                  color: kEnrolledGreen,
+                ),
                 const SizedBox(width: 4),
               ],
-              Text(active ? 'Enrolled' : 'Enroll Now',
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800,
-                      color: active ? kEnrolledGreen : Colors.white)),
+              Flexible(
+                child: Text(
+                  active ? 'Enrolled' : 'Enroll Now',
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: r.fs(12, tablet: 13),
+                    fontWeight: FontWeight.w800,
+                    color: active ? kEnrolledGreen : Colors.white,
+                  ),
+                ),
+              ),
             ],
           ),
         ),
@@ -674,12 +984,14 @@ class _EnrollButtonState extends State<_EnrollButton> {
 // ─────────────────────────────────────────────
 
 class _CourseDetailSheet extends StatefulWidget {
-  final Course       course;
+  final Course course;
   final CourseStatus status;
   final ValueChanged<CourseStatus> onStatus;
 
   const _CourseDetailSheet({
-    required this.course, required this.status, required this.onStatus,
+    required this.course,
+    required this.status,
+    required this.onStatus,
   });
 
   @override
@@ -690,7 +1002,10 @@ class _CourseDetailSheetState extends State<_CourseDetailSheet> {
   late CourseStatus _status;
 
   @override
-  void initState() { super.initState(); _status = widget.status; }
+  void initState() {
+    super.initState();
+    _status = widget.status;
+  }
 
   void _setStatus(CourseStatus s) {
     setState(() => _status = s);
@@ -699,257 +1014,562 @@ class _CourseDetailSheetState extends State<_CourseDetailSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final c  = widget.course;
+    final c = widget.course;
     final mq = MediaQuery.of(context);
-    return Container(
-      height: mq.size.height * 0.88,
-      decoration: const BoxDecoration(
-          color: kCardBg,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
-      child: Column(children: [
-        const SizedBox(height: 12),
-        Container(width: 40, height: 4,
-            decoration: BoxDecoration(color: const Color(0xFFDDE3F0),
-                borderRadius: BorderRadius.circular(2))),
-        _buildSheetHeader(c),
-        Expanded(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 40),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              _buildInfoRow(c),
-              const SizedBox(height: 22),
-              _sectionLabel('About this Course'),
-              const SizedBox(height: 8),
-              Text(c.fullDescription,
-                  style: const TextStyle(fontSize: 13.5, color: kTextMuted, height: 1.65)),
-              const SizedBox(height: 22),
-              _buildInstructorCard(c.instructor),
-              const SizedBox(height: 22),
-              _sectionLabel('Technologies Covered'),
-              const SizedBox(height: 10),
-              Wrap(spacing: 8, runSpacing: 8,
-                  children: c.technologies.map((t) => _techChip(t)).toList()),
-              const SizedBox(height: 22),
-              _sectionLabel('What You\'ll Achieve'),
-              const SizedBox(height: 10),
-              ...c.outcomes.map((o) => _outcomeRow(o)),
-              const SizedBox(height: 22),
-              _buildScheduleCard(c),
-              const SizedBox(height: 28),
-              _buildActionButtons(c),
-            ]),
+    final r = _R(context);
+
+    // On large screens show as a centered dialog-style sheet
+    final sheetWidth = r.isLarge
+        ? mq.size.width * 0.55
+        : r.isTablet
+        ? mq.size.width * 0.75
+        : mq.size.width;
+
+    final sheetHeight = r.isTablet
+        ? mq.size.height * 0.82
+        : mq.size.height * 0.88;
+
+    return Align(
+      alignment: r.isTablet ? Alignment.bottomCenter : Alignment.bottomCenter,
+      child: SizedBox(
+        width: sheetWidth,
+        height: sheetHeight,
+        child: Container(
+          decoration: const BoxDecoration(
+            color: kCardBg,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+          ),
+          child: Column(
+            children: [
+              const SizedBox(height: 12),
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFDDE3F0),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              _buildSheetHeader(c, r),
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.fromLTRB(r.hPad, 0, r.hPad, 40),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildInfoRow(c, r),
+                      const SizedBox(height: 22),
+                      _sectionLabel('About this Course', r),
+                      const SizedBox(height: 8),
+                      Text(
+                        c.fullDescription,
+                        style: TextStyle(
+                          fontSize: r.fs(13.5, tablet: 14.5),
+                          color: kTextMuted,
+                          height: 1.65,
+                        ),
+                      ),
+                      const SizedBox(height: 22),
+                      _buildInstructorCard(c.instructor, r),
+                      const SizedBox(height: 22),
+                      _sectionLabel('Technologies Covered', r),
+                      const SizedBox(height: 10),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: c.technologies
+                            .map((t) => _techChip(t, r))
+                            .toList(),
+                      ),
+                      const SizedBox(height: 22),
+                      _sectionLabel("What You'll Achieve", r),
+                      const SizedBox(height: 10),
+                      ...c.outcomes.map((o) => _outcomeRow(o, r)),
+                      const SizedBox(height: 22),
+                      _buildScheduleCard(c, r),
+                      const SizedBox(height: 28),
+                      _buildActionButtons(c, r),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
-      ]),
+      ),
     );
   }
 
-  Widget _buildSheetHeader(Course c) {
+  Widget _buildSheetHeader(Course c, _R r) {
     return Container(
-      margin: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(color: c.bgColor, borderRadius: BorderRadius.circular(20)),
-      child: Row(children: [
-        Text(c.emoji, style: const TextStyle(fontSize: 40)),
-        const SizedBox(width: 16),
-        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(c.title, style: const TextStyle(fontSize: 18,
-              fontWeight: FontWeight.w800, color: kTextDark)),
-          const SizedBox(height: 4),
-          Row(children: [
-            const Icon(Icons.star_rounded, size: 15, color: Color(0xFFFFB300)),
-            const SizedBox(width: 3),
-            Text(c.rating, style: const TextStyle(fontSize: 13,
-                fontWeight: FontWeight.w700, color: kTextDark)),
-            const SizedBox(width: 10),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-              decoration: BoxDecoration(color: c.tagBg, borderRadius: BorderRadius.circular(20)),
-              child: Text(c.tag, style: TextStyle(fontSize: 10,
-                  fontWeight: FontWeight.w700, color: c.tagColor)),
+      margin: EdgeInsets.fromLTRB(r.hPad, 16, r.hPad, 0),
+      padding: EdgeInsets.all(r.isTablet ? 22 : 18),
+      decoration: BoxDecoration(
+        color: c.bgColor,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        children: [
+          Text(c.emoji, style: TextStyle(fontSize: r.fs(40, tablet: 48))),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  c.title,
+                  style: TextStyle(
+                    fontSize: r.fs(18, tablet: 20),
+                    fontWeight: FontWeight.w800,
+                    color: kTextDark,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.star_rounded,
+                      size: 15,
+                      color: Color(0xFFFFB300),
+                    ),
+                    const SizedBox(width: 3),
+                    Text(
+                      c.rating,
+                      style: TextStyle(
+                        fontSize: r.fs(13, tablet: 14),
+                        fontWeight: FontWeight.w700,
+                        color: kTextDark,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: c.tagBg,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        c.tag,
+                        style: TextStyle(
+                          fontSize: r.fs(10, tablet: 11),
+                          fontWeight: FontWeight.w700,
+                          color: c.tagColor,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  c.price,
+                  style: TextStyle(
+                    fontSize: r.fs(20, tablet: 24),
+                    fontWeight: FontWeight.w900,
+                    color: kTextDark,
+                  ),
+                ),
+              ],
             ),
-          ]),
-          const SizedBox(height: 6),
-          Text(c.price, style: const TextStyle(fontSize: 20,
-              fontWeight: FontWeight.w900, color: kTextDark)),
-        ])),
-      ]),
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _buildInfoRow(Course c) {
+  Widget _buildInfoRow(Course c, _R r) {
     return Padding(
       padding: const EdgeInsets.only(top: 18),
-      child: Row(children: [
-        Expanded(child: _infoTile(Icons.schedule_rounded,   'Duration', c.duration)),
-        const SizedBox(width: 10),
-        Expanded(child: _infoTile(Icons.menu_book_rounded,  'Lessons',  c.totalLessons)),
-        const SizedBox(width: 10),
-        Expanded(child: _infoTile(Icons.child_care_rounded, 'Age',      'Ages ${c.age}')),
-      ]),
+      child: Row(
+        children: [
+          Expanded(
+            child: _infoTile(Icons.schedule_rounded, 'Duration', c.duration, r),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: _infoTile(
+              Icons.menu_book_rounded,
+              'Lessons',
+              c.totalLessons,
+              r,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: _infoTile(
+              Icons.child_care_rounded,
+              'Age',
+              'Ages ${c.age}',
+              r,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _infoTile(IconData icon, String label, String value) => Container(
-    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
-    decoration: BoxDecoration(color: const Color(0xFFF4F7FF),
-        borderRadius: BorderRadius.circular(14)),
-    child: Column(children: [
-      Icon(icon, size: 18, color: kPrimaryBlue),
-      const SizedBox(height: 6),
-      Text(label, style: const TextStyle(fontSize: 10,
-          color: kTextMuted, fontWeight: FontWeight.w600)),
-      const SizedBox(height: 2),
-      Text(value, textAlign: TextAlign.center, style: const TextStyle(fontSize: 11,
-          fontWeight: FontWeight.w800, color: kTextDark)),
-    ]),
-  );
+  Widget _infoTile(IconData icon, String label, String value, _R r) =>
+      Container(
+        padding: EdgeInsets.symmetric(
+          vertical: r.isTablet ? 14 : 12,
+          horizontal: r.isTablet ? 14 : 10,
+        ),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF4F7FF),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, size: r.isTablet ? 22 : 18, color: kPrimaryBlue),
+            const SizedBox(height: 6),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: r.fs(10, tablet: 11),
+                color: kTextMuted,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              value,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: r.fs(11, tablet: 12),
+                fontWeight: FontWeight.w800,
+                color: kTextDark,
+              ),
+            ),
+          ],
+        ),
+      );
 
-  Widget _buildInstructorCard(Instructor ins) => Container(
-    padding: const EdgeInsets.all(16),
-    decoration: BoxDecoration(color: const Color(0xFFF4F7FF),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: kCardBorder)),
-    child: Row(children: [
-      Container(width: 52, height: 52,
-          decoration: BoxDecoration(color: const Color(0xFFE8F1FE),
-              borderRadius: BorderRadius.circular(14)),
-          child: Center(child: Text(ins.avatar,
-              style: const TextStyle(fontSize: 26)))),
-      const SizedBox(width: 14),
-      Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Row(children: [
-          const Icon(Icons.person_rounded, size: 13, color: kTextMuted),
-          const SizedBox(width: 4),
-          const Text('Your Instructor', style: TextStyle(fontSize: 11,
-              fontWeight: FontWeight.w600, color: kTextMuted)),
-        ]),
-        const SizedBox(height: 4),
-        Text(ins.name, style: const TextStyle(fontSize: 14,
-            fontWeight: FontWeight.w800, color: kTextDark)),
-        const SizedBox(height: 2),
-        Text(ins.role, style: const TextStyle(fontSize: 12, color: kTextMuted)),
-        const SizedBox(height: 4),
-        Row(children: [
-          const Icon(Icons.workspace_premium_rounded, size: 12, color: kPrimaryBlue),
-          const SizedBox(width: 4),
-          Expanded(child: Text(ins.experience, style: const TextStyle(fontSize: 11,
-              fontWeight: FontWeight.w700, color: kPrimaryBlue))),
-        ]),
-      ])),
-    ]),
-  );
-
-  Widget _techChip(String label) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-    decoration: BoxDecoration(color: const Color(0xFFE8F1FE),
-        borderRadius: BorderRadius.circular(20), border: Border.all(color: kCardBorder)),
-    child: Text(label, style: const TextStyle(fontSize: 12,
-        fontWeight: FontWeight.w700, color: kPrimaryBlue)),
-  );
-
-  Widget _outcomeRow(String text) => Padding(
-    padding: const EdgeInsets.only(bottom: 10),
-    child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Container(margin: const EdgeInsets.only(top: 3),
-          width: 18, height: 18,
-          decoration: BoxDecoration(
-              color: kEnrolledGreen.withValues(alpha: 0.12), shape: BoxShape.circle),
-          child: const Icon(Icons.check_rounded, size: 12, color: kEnrolledGreen)),
-      const SizedBox(width: 10),
-      Expanded(child: Text(text, style: const TextStyle(fontSize: 13.5,
-          color: kTextDark, fontWeight: FontWeight.w600))),
-    ]),
-  );
-
-  Widget _buildScheduleCard(Course c) => Container(
-    padding: const EdgeInsets.all(16),
+  Widget _buildInstructorCard(Instructor ins, _R r) => Container(
+    padding: EdgeInsets.all(r.isTablet ? 20 : 16),
     decoration: BoxDecoration(
-        gradient: const LinearGradient(colors: [Color(0xFFE8F1FE), Color(0xFFF0F4FF)]),
-        borderRadius: BorderRadius.circular(18), border: Border.all(color: kCardBorder)),
-    child: Column(children: [
-      _scheduleRow(Icons.calendar_month_rounded, 'Schedule',    c.schedule),
-      const SizedBox(height: 10),
-      _scheduleRow(Icons.school_rounded,          'Difficulty',  c.level),
-      const SizedBox(height: 10),
-      _scheduleRow(Icons.workspace_premium_rounded,'Certificate', c.certificate),
-    ]),
+      color: const Color(0xFFF4F7FF),
+      borderRadius: BorderRadius.circular(18),
+      border: Border.all(color: kCardBorder),
+    ),
+    child: Row(
+      children: [
+        Container(
+          width: r.isTablet ? 62 : 52,
+          height: r.isTablet ? 62 : 52,
+          decoration: BoxDecoration(
+            color: const Color(0xFFE8F1FE),
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: Center(
+            child: Text(
+              ins.avatar,
+              style: TextStyle(fontSize: r.fs(26, tablet: 30)),
+            ),
+          ),
+        ),
+        const SizedBox(width: 14),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.person_rounded, size: 13, color: kTextMuted),
+                  const SizedBox(width: 4),
+                  const Text(
+                    'Your Instructor',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: kTextMuted,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Text(
+                ins.name,
+                style: TextStyle(
+                  fontSize: r.fs(14, tablet: 15),
+                  fontWeight: FontWeight.w800,
+                  color: kTextDark,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                ins.role,
+                style: TextStyle(
+                  fontSize: r.fs(12, tablet: 13),
+                  color: kTextMuted,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Row(
+                children: [
+                  const Icon(
+                    Icons.workspace_premium_rounded,
+                    size: 12,
+                    color: kPrimaryBlue,
+                  ),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                      ins.experience,
+                      style: TextStyle(
+                        fontSize: r.fs(11, tablet: 12),
+                        fontWeight: FontWeight.w700,
+                        color: kPrimaryBlue,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
+    ),
   );
 
-  Widget _scheduleRow(IconData icon, String label, String value) =>
-      Row(children: [
-        Container(width: 32, height: 32,
-            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10)),
-            child: Icon(icon, size: 16, color: kPrimaryBlue)),
-        const SizedBox(width: 12),
-        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(label, style: const TextStyle(fontSize: 10,
-              fontWeight: FontWeight.w600, color: kTextMuted)),
-          Text(value, style: const TextStyle(fontSize: 12.5,
-              fontWeight: FontWeight.w700, color: kTextDark)),
-        ])),
-      ]);
+  Widget _techChip(String label, _R r) => Container(
+    padding: EdgeInsets.symmetric(
+      horizontal: r.isTablet ? 14 : 12,
+      vertical: r.isTablet ? 8 : 6,
+    ),
+    decoration: BoxDecoration(
+      color: const Color(0xFFE8F1FE),
+      borderRadius: BorderRadius.circular(20),
+      border: Border.all(color: kCardBorder),
+    ),
+    child: Text(
+      label,
+      style: TextStyle(
+        fontSize: r.fs(12, tablet: 13),
+        fontWeight: FontWeight.w700,
+        color: kPrimaryBlue,
+      ),
+    ),
+  );
 
-  Widget _buildActionButtons(Course c) {
-    final isEnrolled  = _status == CourseStatus.enrolled;
-    final isInterested = _status == CourseStatus.interested;
-    return Column(children: [
-      GestureDetector(
-        onTap: () {
-          HapticFeedback.mediumImpact();
-          _setStatus(isEnrolled ? CourseStatus.none : CourseStatus.enrolled);
-        },
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(vertical: 16),
+  Widget _outcomeRow(String text, _R r) => Padding(
+    padding: const EdgeInsets.only(bottom: 10),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          margin: const EdgeInsets.only(top: 3),
+          width: r.isTablet ? 22 : 18,
+          height: r.isTablet ? 22 : 18,
           decoration: BoxDecoration(
-              gradient: isEnrolled ? null : const LinearGradient(
-                  colors: [kPrimaryBlue, kDeepBlue],
-                  begin: Alignment.centerLeft, end: Alignment.centerRight),
-              color: isEnrolled ? const Color(0xFFE6F4EA) : null,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: isEnrolled ? [] : [BoxShadow(color: kPrimaryBlue.withValues(alpha: 0.35),
-                  blurRadius: 16, offset: const Offset(0, 6))]),
-          child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-            Icon(isEnrolled ? Icons.check_circle_rounded : Icons.rocket_launch_rounded,
-                size: 18, color: isEnrolled ? kEnrolledGreen : Colors.white),
-            const SizedBox(width: 8),
-            Text(isEnrolled ? 'You\'re Enrolled! Tap to undo' : 'Enroll Now — ${c.price}',
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800,
-                    color: isEnrolled ? kEnrolledGreen : Colors.white)),
-          ]),
+            color: kEnrolledGreen.withValues(alpha: 0.12),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            Icons.check_rounded,
+            size: r.isTablet ? 14 : 12,
+            color: kEnrolledGreen,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            text,
+            style: TextStyle(
+              fontSize: r.fs(13.5, tablet: 14.5),
+              color: kTextDark,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+
+  Widget _buildScheduleCard(Course c, _R r) => Container(
+    padding: EdgeInsets.all(r.isTablet ? 20 : 16),
+    decoration: BoxDecoration(
+      gradient: const LinearGradient(
+        colors: [Color(0xFFE8F1FE), Color(0xFFF0F4FF)],
+      ),
+      borderRadius: BorderRadius.circular(18),
+      border: Border.all(color: kCardBorder),
+    ),
+    child: Column(
+      children: [
+        _scheduleRow(Icons.calendar_month_rounded, 'Schedule', c.schedule, r),
+        const SizedBox(height: 10),
+        _scheduleRow(Icons.school_rounded, 'Difficulty', c.level, r),
+        const SizedBox(height: 10),
+        _scheduleRow(
+          Icons.workspace_premium_rounded,
+          'Certificate',
+          c.certificate,
+          r,
+        ),
+      ],
+    ),
+  );
+
+  Widget _scheduleRow(IconData icon, String label, String value, _R r) => Row(
+    children: [
+      Container(
+        width: r.isTablet ? 38 : 32,
+        height: r.isTablet ? 38 : 32,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Icon(icon, size: r.isTablet ? 19 : 16, color: kPrimaryBlue),
+      ),
+      const SizedBox(width: 12),
+      Expanded(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: r.fs(10, tablet: 11),
+                fontWeight: FontWeight.w600,
+                color: kTextMuted,
+              ),
+            ),
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: r.fs(12.5, tablet: 13.5),
+                fontWeight: FontWeight.w700,
+                color: kTextDark,
+              ),
+            ),
+          ],
         ),
       ),
-      const SizedBox(height: 12),
-      GestureDetector(
-        onTap: () {
-          HapticFeedback.selectionClick();
-          _setStatus(isInterested ? CourseStatus.none : CourseStatus.interested);
-        },
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 280),
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(vertical: 14),
-          decoration: BoxDecoration(
-              color: isInterested ? kInterestedAmber.withValues(alpha: 0.10)
+    ],
+  );
+
+  Widget _buildActionButtons(Course c, _R r) {
+    final isEnrolled = _status == CourseStatus.enrolled;
+    final isInterested = _status == CourseStatus.interested;
+    return Column(
+      children: [
+        GestureDetector(
+          onTap: () {
+            HapticFeedback.mediumImpact();
+            _setStatus(isEnrolled ? CourseStatus.none : CourseStatus.enrolled);
+          },
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            width: double.infinity,
+            padding: EdgeInsets.symmetric(vertical: r.isTablet ? 18 : 16),
+            decoration: BoxDecoration(
+              gradient: isEnrolled
+                  ? null
+                  : const LinearGradient(
+                      colors: [kPrimaryBlue, kDeepBlue],
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                    ),
+              color: isEnrolled ? const Color(0xFFE6F4EA) : null,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: isEnrolled
+                  ? []
+                  : [
+                      BoxShadow(
+                        color: kPrimaryBlue.withValues(alpha: 0.35),
+                        blurRadius: 16,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  isEnrolled
+                      ? Icons.check_circle_rounded
+                      : Icons.rocket_launch_rounded,
+                  size: r.isTablet ? 21 : 18,
+                  color: isEnrolled ? kEnrolledGreen : Colors.white,
+                ),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Text(
+                    isEnrolled
+                        ? "You're Enrolled! Tap to undo"
+                        : 'Enroll Now — ${c.price}',
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: r.fs(15, tablet: 16),
+                      fontWeight: FontWeight.w800,
+                      color: isEnrolled ? kEnrolledGreen : Colors.white,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        GestureDetector(
+          onTap: () {
+            HapticFeedback.selectionClick();
+            _setStatus(
+              isInterested ? CourseStatus.none : CourseStatus.interested,
+            );
+          },
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 280),
+            width: double.infinity,
+            padding: EdgeInsets.symmetric(vertical: r.isTablet ? 16 : 14),
+            decoration: BoxDecoration(
+              color: isInterested
+                  ? kInterestedAmber.withValues(alpha: 0.10)
                   : const Color(0xFFF4F7FF),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                  color: isInterested ? kInterestedAmber : kCardBorder, width: 1.5)),
-          child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-            Icon(isInterested ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
-                size: 17, color: isInterested ? kInterestedAmber : kTextMuted),
-            const SizedBox(width: 8),
-            Text(isInterested ? 'Saved as Interested' : 'Mark as Interested',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700,
-                    color: isInterested ? kInterestedAmber : kTextMuted)),
-          ]),
+                color: isInterested ? kInterestedAmber : kCardBorder,
+                width: 1.5,
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  isInterested
+                      ? Icons.bookmark_rounded
+                      : Icons.bookmark_border_rounded,
+                  size: r.isTablet ? 20 : 17,
+                  color: isInterested ? kInterestedAmber : kTextMuted,
+                ),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Text(
+                    isInterested ? 'Saved as Interested' : 'Mark as Interested',
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: r.fs(14, tablet: 15),
+                      fontWeight: FontWeight.w700,
+                      color: isInterested ? kInterestedAmber : kTextMuted,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
-      ),
-    ]);
+      ],
+    );
   }
 
-  Widget _sectionLabel(String text) => Text(text,
-      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: kTextDark));
+  Widget _sectionLabel(String text, _R r) => Text(
+    text,
+    style: TextStyle(
+      fontSize: r.fs(14, tablet: 15),
+      fontWeight: FontWeight.w800,
+      color: kTextDark,
+    ),
+  );
 }

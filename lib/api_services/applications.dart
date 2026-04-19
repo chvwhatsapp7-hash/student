@@ -1,33 +1,32 @@
-import 'dart:convert';
-
+import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:http/http.dart' as http;
 
-import '../services/api_config.dart';
 import 'authservice.dart';
 
 class ApplicationsService {
-  // 🔐 Secure Storage
   static const FlutterSecureStorage _storage = FlutterSecureStorage();
 
-  // 🌐 Base URL
-  static const String baseUrl =
-      "https://studenthub-backend-woad.vercel.app/api";
-
   // ─────────────────────────────────────────────
-  // ✅ GET USER ID FROM STORAGE
+  // GET USER ID FROM STORAGE
   // ─────────────────────────────────────────────
   static Future<int?> getUserId() async {
     final userIdStr = await _storage.read(key: "user_id");
+    debugPrint("🔑 getUserId raw value: $userIdStr");
     if (userIdStr == null) return null;
     return int.tryParse(userIdStr);
   }
 
   // ─────────────────────────────────────────────
-  // ✅ APPLY (POST)
+  // APPLY (POST)
   // ─────────────────────────────────────────────
   static Future<String> apply({int? jobId, int? internshipId}) async {
+    await AuthService().loadTokens(); // ensure token is in memory
     final userId = await getUserId();
+
+    debugPrint("🔑 userId from storage: $userId");
+    debugPrint("🔑 accessToken in memory: ${AuthService().accessToken}");
+
     if (userId == null) return "User not logged in";
 
     final body = {
@@ -35,26 +34,43 @@ class ApplicationsService {
       if (jobId != null) "job_id": jobId,
       if (internshipId != null) "internship_id": internshipId,
     };
+
+    debugPrint("📤 Apply body: $body");
 
     try {
       final res = await AuthService().post('/applications', body);
+      debugPrint("✅ apply response [${res.statusCode}]: ${res.data}");
       if (res.statusCode == 201) return "Applied successfully";
       final data = res.data;
-      return (data is Map && data["message"] != null) ? data["message"] : "Something went wrong";
+      return (data is Map && data["message"] != null)
+          ? data["message"].toString()
+          : "Something went wrong";
+    } on DioException catch (e) {
+      debugPrint("❌ Apply DioException [${e.response?.statusCode}]");
+      debugPrint("❌ Apply response body: ${e.response?.data}");
+      debugPrint("❌ Apply headers sent: ${e.requestOptions.headers}");
+      debugPrint("❌ Apply body sent: ${e.requestOptions.data}");
+      final data = e.response?.data;
+      if (data is Map && data["message"] != null) {
+        return data["message"].toString();
+      }
+      return "Error ${e.response?.statusCode ?? 'unknown'}: ${data ?? e.message}";
     } catch (e) {
+      debugPrint("❌ apply unexpected error: $e");
       return "Error: $e";
     }
   }
 
   // ─────────────────────────────────────────────
-  // ✅ WITHDRAW (DELETE)
+  // WITHDRAW (DELETE)
   // ─────────────────────────────────────────────
   static Future<String> withdraw({int? jobId, int? internshipId}) async {
-    final userId = await getUserId();
-    if (userId == null) return "User not logged in";
     await AuthService().loadTokens();
-    final token = AuthService().accessToken;
-    if (token == null) throw Exception("Token is null. Please login again.");
+    final userId = await getUserId();
+
+    debugPrint("🔑 withdraw userId: $userId");
+
+    if (userId == null) return "User not logged in";
 
     final body = {
       "user_id": userId,
@@ -62,43 +78,71 @@ class ApplicationsService {
       if (internshipId != null) "internship_id": internshipId,
     };
 
+    debugPrint("📤 Withdraw body: $body");
+
     try {
-      final response = await http.delete(
-        Uri.parse("${ApiConfig.baseUrl}/applications"),
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer $token",
-        },
-        body: jsonEncode(body),
-      );
-      final data = jsonDecode(response.body);
-      if (response.statusCode == 200) return "Application withdrawn";
-      return data["message"] ?? "Something went wrong";
+      final res = await AuthService().delete('/applications', body);
+      debugPrint("✅ withdraw response [${res.statusCode}]: ${res.data}");
+      if (res.statusCode == 200) return "Application withdrawn";
+      final data = res.data;
+      return (data is Map && data["message"] != null)
+          ? data["message"].toString()
+          : "Something went wrong";
+    } on DioException catch (e) {
+      debugPrint("❌ Withdraw DioException [${e.response?.statusCode}]");
+      debugPrint("❌ Withdraw response body: ${e.response?.data}");
+      debugPrint("❌ Withdraw headers sent: ${e.requestOptions.headers}");
+      debugPrint("❌ Withdraw body sent: ${e.requestOptions.data}");
+      final data = e.response?.data;
+      if (data is Map && data["message"] != null) {
+        return data["message"].toString();
+      }
+      return "Error ${e.response?.statusCode ?? 'unknown'}: ${data ?? e.message}";
     } catch (e) {
+      debugPrint("❌ withdraw unexpected error: $e");
       return "Error: $e";
     }
   }
 
   // ─────────────────────────────────────────────
-  // ✅ GET APPLICATIONS (JOB + INTERNSHIP TITLES)
+  // GET APPLICATIONS
   // ─────────────────────────────────────────────
   static Future<Map<String, dynamic>?> getApplications() async {
+    await AuthService().loadTokens();
     final userId = await getUserId();
-    if (userId == null) return null;
+
+    debugPrint("🔑 getApplications userId: $userId");
+
+    if (userId == null) {
+      debugPrint("❌ getApplications: userId is null — not logged in");
+      return null;
+    }
 
     try {
-      final res = await AuthService().get('/applications/$userId');
+      final res = await AuthService().get(
+        '/applications',
+        queryParameters: {'user_id': userId.toString()},
+      );
+      debugPrint("✅ getApplications [${res.statusCode}]: ${res.data}");
       if (res.statusCode == 200) {
-        return res.data is Map<String, dynamic> ? res.data as Map<String, dynamic> : null;
+        return res.data is Map<String, dynamic>
+            ? res.data as Map<String, dynamic>
+            : null;
       }
+      debugPrint("❌ getApplications non-200: ${res.statusCode} — ${res.data}");
+      return null;
+    } on DioException catch (e) {
+      debugPrint("❌ getApplications DioException [${e.response?.statusCode}]");
+      debugPrint("❌ getApplications response body: ${e.response?.data}");
       return null;
     } catch (e) {
+      debugPrint("❌ getApplications unexpected error: $e");
       return null;
     }
   }
 
   // ─────────────────────────────────────────────
-  // ✅ EXTRACT JOB IDS
+  // EXTRACT JOB IDS
   // ─────────────────────────────────────────────
   static List<int> extractJobIds(List data) {
     return data
@@ -108,7 +152,7 @@ class ApplicationsService {
   }
 
   // ─────────────────────────────────────────────
-  // ✅ EXTRACT INTERNSHIP IDS
+  // EXTRACT INTERNSHIP IDS
   // ─────────────────────────────────────────────
   static List<int> extractInternshipIds(List data) {
     return data
@@ -118,30 +162,14 @@ class ApplicationsService {
   }
 
   // ─────────────────────────────────────────────
-  // ✅ CHECK IF JOB APPLIED
+  // CHECK IF JOB APPLIED
   // ─────────────────────────────────────────────
-  static bool isJobApplied(List jobs, int jobId) {
-    return jobs.any((j) => j["job_id"] == jobId);
-  }
+  static bool isJobApplied(List jobs, int jobId) =>
+      jobs.any((j) => j["job_id"] == jobId);
 
   // ─────────────────────────────────────────────
-  // ✅ CHECK IF INTERNSHIP APPLIED
+  // CHECK IF INTERNSHIP APPLIED
   // ─────────────────────────────────────────────
-  static bool isInternshipApplied(List internships, int internshipId) {
-    return internships.any((i) => i["internship_id"] == internshipId);
-  }
-
-  // ─────────────────────────────────────────────
-  // ✅ SAVE USER ID (AFTER LOGIN)
-  // ─────────────────────────────────────────────
-  static Future<void> saveUserId(int userId) async {
-    await _storage.write(key: "user_id", value: userId.toString());
-  }
-
-  // ─────────────────────────────────────────────
-  // ✅ LOGOUT
-  // ─────────────────────────────────────────────
-  static Future<void> logout() async {
-    await _storage.deleteAll();
-  }
+  static bool isInternshipApplied(List internships, int internshipId) =>
+      internships.any((i) => i["internship_id"] == internshipId);
 }

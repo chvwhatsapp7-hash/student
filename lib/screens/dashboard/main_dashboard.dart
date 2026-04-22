@@ -58,16 +58,16 @@ const _navItems = [
     inactiveIcon: Icons.rocket_launch_outlined,
     label: 'Intern',
   ),
-  _NavItem(
-    activeIcon: Icons.business_rounded,
-    inactiveIcon: Icons.business_outlined,
-    label: 'Companies',
-  ),
-  _NavItem(
-    activeIcon: Icons.code_rounded,
-    inactiveIcon: Icons.code_rounded,
-    label: 'Hack',
-  ),
+  // _NavItem(
+  //   activeIcon: Icons.business_rounded,
+  //   inactiveIcon: Icons.business_outlined,
+  //   label: 'Companies',
+  // ),
+  // _NavItem(
+  //   activeIcon: Icons.code_rounded,
+  //   inactiveIcon: Icons.code_rounded,
+  //   label: 'Hack',
+  // ),
   _NavItem(
     activeIcon: Icons.menu_book_rounded,
     inactiveIcon: Icons.menu_book_outlined,
@@ -375,7 +375,10 @@ class _MainDashboardState extends State<MainDashboard>
           duration: const Duration(milliseconds: 280),
           curve: Curves.easeOut,
           padding: EdgeInsets.symmetric(
-            horizontal: isSelected ? sw * 0.035 : sw * 0.025,
+            // CHANGED: removed dynamic horizontal padding (was sw * 0.035 when
+            // selected, sw * 0.025 unselected) — now fixed at sw * 0.025 so
+            // the pill width does not jump when labels are always visible.
+            horizontal: sw * 0.025,
             vertical: sw * 0.020,
           ),
           decoration: BoxDecoration(
@@ -383,7 +386,7 @@ class _MainDashboardState extends State<MainDashboard>
             borderRadius: BorderRadius.circular(30),
             border: isSelected ? Border.all(color: kBorder, width: 1.5) : null,
           ),
-          child: Row(
+          child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               // Icon + optional badge dot
@@ -414,25 +417,38 @@ class _MainDashboardState extends State<MainDashboard>
                     ),
                 ],
               ),
-              // Label — only when selected
-              AnimatedSize(
-                duration: const Duration(milliseconds: 260),
+
+              // ─────────────────────────────────────────────
+              // CHANGED: Label is now ALWAYS visible for every
+              // nav item, not just the selected one.
+              //
+              // BEFORE (labels only showed when selected):
+              //   AnimatedSize(
+              //     ...
+              //     child: isSelected
+              //         ? Row(children: [...Text(item.label)])
+              //         : const SizedBox.shrink(),  // ← this hid all labels
+              //   ),
+              //
+              // AFTER (label always rendered, only style changes):
+              //   AnimatedDefaultTextStyle animates color and weight
+              //   between selected (kPrimary, w800) and
+              //   unselected (kMuted, w600) states smoothly.
+              // ─────────────────────────────────────────────
+              SizedBox(width: sw * 0.015),
+              AnimatedDefaultTextStyle(
+                duration: const Duration(milliseconds: 200),
                 curve: Curves.easeOut,
-                child: isSelected
-                    ? Row(
-                        children: [
-                          SizedBox(width: sw * 0.015),
-                          Text(
-                            item.label,
-                            style: TextStyle(
-                              fontSize: sw * 0.030,
-                              fontWeight: FontWeight.w800,
-                              color: kPrimary,
-                            ),
-                          ),
-                        ],
-                      )
-                    : const SizedBox.shrink(),
+                style: TextStyle(
+                  fontSize: sw * 0.030,
+                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                  color: isSelected ? kPrimary : kMuted,
+                ),
+                child: Text(
+                  item.label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
             ],
           ),

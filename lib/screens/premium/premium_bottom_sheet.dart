@@ -2,16 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 // ─────────────────────────────────────────────
-//  DESIGN TOKENS  (matches login / landing)
+//  DESIGN TOKENS
 // ─────────────────────────────────────────────
 
-const _kInk      = Color(0xFF0A0F1E);
-const _kPrimary  = Color(0xFF1D4ED8);
-const _kViolet   = Color(0xFF4F46E5);
-const _kMuted    = Color(0xFF64748B);
-const _kHint     = Color(0xFF94A3B8);
-const _kBorder   = Color(0xFFE2E8F0);
-const _kFill     = Color(0xFFF8FAFC);
+const _kInk = Color(0xFF0A0A14);
+const _kPrimary = Color(0xFF6366F1);
+const _kDeep = Color(0xFF4338CA);
+const _kGold = Color(0xFFF59E0B);
+const _kMuted = Color(0xFF6B7280);
+const _kHint = Color(0xFF9CA3AF);
+const _kBorder = Color(0xFFE5E7EB);
+const _kFill = Color(0xFFF9FAFB);
+const _kSurface = Color(0xFFFFFFFF);
 
 // ─────────────────────────────────────────────
 //  DATA
@@ -23,17 +25,27 @@ class _Perk {
 }
 
 const _perks = [
-  _Perk('🚀', 'Unlimited applications',       'No daily caps — all 180+ companies'),
-  _Perk('🤖', 'AI resume builder',            'ATS-optimised resumes in minutes'),
-  _Perk('⚡', 'Early hackathon & PPO access', '24-hour head start before free users'),
-  _Perk('🎯', '1-on-1 mentorship sessions',   '2 industry mentor bookings per month'),
-  _Perk('🗺️', 'Full company map access',      'Live hiring status across 180+ companies'),
+  _Perk('🚀', 'Unlimited applications', 'No daily caps — all 180+ companies'),
+  _Perk('🤖', 'AI resume builder', 'ATS-optimised resumes in minutes'),
+  _Perk(
+    '⚡',
+    'Early hackathon & PPO access',
+    '24-hour head start before free users',
+  ),
+  _Perk(
+    '🎯',
+    '1-on-1 mentorship sessions',
+    '2 industry mentor bookings per month',
+  ),
+  _Perk(
+    '🗺️',
+    'Full company map access',
+    'Live hiring status across 180+ companies',
+  ),
 ];
 
 // ─────────────────────────────────────────────
 //  PUBLIC SHOW HELPER
-//  Call from anywhere:
-//    showPremiumSheet(context);
 // ─────────────────────────────────────────────
 
 Future<void> showPremiumSheet(BuildContext context) {
@@ -41,7 +53,7 @@ Future<void> showPremiumSheet(BuildContext context) {
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
-    barrierColor: Colors.black.withValues(alpha: 0.55),
+    barrierColor: Colors.black.withValues(alpha: 0.60),
     builder: (_) => const PremiumBottomSheet(),
   );
 }
@@ -60,25 +72,28 @@ class PremiumBottomSheet extends StatefulWidget {
 class _PremiumBottomSheetState extends State<PremiumBottomSheet>
     with SingleTickerProviderStateMixin {
   late AnimationController _ctrl;
-  late Animation<double>   _fade;
-  late Animation<Offset>   _slide;
+  late Animation<double> _fade;
+  late Animation<Offset> _slide;
 
   @override
   void initState() {
     super.initState();
-    _ctrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 400))
-      ..forward();
-    _fade  = CurvedAnimation(parent: _ctrl, curve: Curves.easeOut);
-    _slide = Tween<Offset>(begin: const Offset(0, 0.06), end: Offset.zero)
-        .animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOut));
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 450),
+    )..forward();
+    _fade = CurvedAnimation(parent: _ctrl, curve: Curves.easeOut);
+    _slide = Tween<Offset>(
+      begin: const Offset(0, 0.08),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOutCubic));
   }
 
   @override
-  void dispose() { _ctrl.dispose(); super.dispose(); }
-
-  // ─────────────────────────────────────────
-  //  BUILD
-  // ─────────────────────────────────────────
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -90,32 +105,37 @@ class _PremiumBottomSheetState extends State<PremiumBottomSheet>
       child: SlideTransition(
         position: _slide,
         child: Container(
-          constraints: BoxConstraints(maxHeight: sh * 0.88),
+          constraints: BoxConstraints(maxHeight: sh * 0.90),
           decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+            color: _kSurface,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Handle bar
+              // Handle
               Container(
-                width: 40, height: 4,
-                margin: const EdgeInsets.only(top: 12),
-                decoration: BoxDecoration(color: _kBorder, borderRadius: BorderRadius.circular(4)),
+                width: 36,
+                height: 4,
+                margin: const EdgeInsets.only(top: 14),
+                decoration: BoxDecoration(
+                  color: _kBorder,
+                  borderRadius: BorderRadius.circular(4),
+                ),
               ),
-
               Flexible(
                 child: SingleChildScrollView(
                   physics: const BouncingScrollPhysics(),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildHeroBanner(sw),
-                      _buildOfferPill(sw),
-                      _buildPerksList(sw),
-                      _buildActionButtons(sw),
-                      SizedBox(height: MediaQuery.of(context).viewInsets.bottom + 20),
+                      _buildHero(sw),
+                      _buildOfferChip(sw),
+                      _buildPerks(sw),
+                      _buildButtons(sw),
+                      SizedBox(
+                        height: MediaQuery.of(context).viewInsets.bottom + 24,
+                      ),
                     ],
                   ),
                 ),
@@ -127,74 +147,134 @@ class _PremiumBottomSheetState extends State<PremiumBottomSheet>
     );
   }
 
-  // ── Hero gradient banner ───────────────────
+  // ── Hero ──────────────────────────────────
 
-  Widget _buildHeroBanner(double sw) {
+  Widget _buildHero(double sw) {
     return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.fromLTRB(16, 14, 16, 0),
-      padding: EdgeInsets.all(sw * 0.055),
+      margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      padding: EdgeInsets.all(sw * 0.052),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF1D4ED8), Color(0xFF4F46E5), Color(0xFF7C3AED)],
+          colors: [Color(0xFF312E81), Color(0xFF4338CA), Color(0xFF6366F1)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(24),
       ),
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          Positioned(top: -24, right: -24,
-              child: Container(width: 110, height: 110,
-                  decoration: BoxDecoration(shape: BoxShape.circle,
-                      color: Colors.white.withValues(alpha: 0.08)))),
-          Positioned(bottom: -28, left: -12,
-              child: Container(width: 76, height: 76,
-                  decoration: BoxDecoration(shape: BoxShape.circle,
-                      color: Colors.white.withValues(alpha: 0.06)))),
+          // Decorative circles
+          Positioned(
+            top: -20,
+            right: -20,
+            child: Container(
+              width: 100,
+              height: 100,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withValues(alpha: 0.07),
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: -30,
+            left: -10,
+            child: Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withValues(alpha: 0.05),
+              ),
+            ),
+          ),
+          // Gold crown accent
+          Positioned(
+            top: 0,
+            right: 0,
+            child: Container(
+              padding: EdgeInsets.symmetric(
+                horizontal: sw * 0.022,
+                vertical: sw * 0.010,
+              ),
+              decoration: BoxDecoration(
+                color: _kGold.withValues(alpha: 0.20),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: _kGold.withValues(alpha: 0.40)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.star_rounded, color: _kGold, size: sw * 0.028),
+                  SizedBox(width: sw * 0.010),
+                  Text(
+                    'PREMIUM',
+                    style: TextStyle(
+                      fontSize: sw * 0.024,
+                      fontWeight: FontWeight.w800,
+                      color: _kGold,
+                      letterSpacing: 0.8,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('👑', style: TextStyle(fontSize: sw * 0.090)),
-              SizedBox(height: sw * 0.018),
+              Text('👑', style: TextStyle(fontSize: sw * 0.085)),
+              SizedBox(height: sw * 0.016),
               Text(
                 'Unlock NextStep\nPremium',
                 style: TextStyle(
-                  fontSize: sw * 0.060,
+                  fontSize: sw * 0.058,
                   fontWeight: FontWeight.w800,
                   color: Colors.white,
-                  height: 1.2,
-                  letterSpacing: -0.5,
+                  height: 1.15,
+                  letterSpacing: -0.6,
                 ),
               ),
-              SizedBox(height: sw * 0.016),
+              SizedBox(height: sw * 0.014),
               Text(
-                'Join 800+ students already accelerating\ntheir careers with full premium access.',
+                'Join 800+ students accelerating\ntheir careers with full access.',
                 style: TextStyle(
-                  fontSize: sw * 0.030,
-                  color: Colors.white.withValues(alpha: 0.72),
+                  fontSize: sw * 0.029,
+                  color: Colors.white.withValues(alpha: 0.70),
                   height: 1.5,
                 ),
               ),
-              SizedBox(height: sw * 0.030),
+              SizedBox(height: sw * 0.028),
               Wrap(
-                spacing: sw * 0.018,
-                runSpacing: sw * 0.014,
-                children: ['Jobs unlocked', 'AI resume', 'Early access', 'Mentorship']
-                    .map((t) => Container(
-                  padding: EdgeInsets.symmetric(
-                      horizontal: sw * 0.026, vertical: sw * 0.012),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
-                  ),
-                  child: Text(t,
-                      style: TextStyle(fontSize: sw * 0.026,
-                          fontWeight: FontWeight.w700, color: Colors.white)),
-                ))
-                    .toList(),
+                spacing: sw * 0.016,
+                runSpacing: sw * 0.012,
+                children:
+                    ['Jobs unlocked', 'AI resume', 'Early access', 'Mentorship']
+                        .map(
+                          (t) => Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: sw * 0.024,
+                              vertical: sw * 0.010,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.14),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.22),
+                              ),
+                            ),
+                            child: Text(
+                              t,
+                              style: TextStyle(
+                                fontSize: sw * 0.025,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        )
+                        .toList(),
               ),
             ],
           ),
@@ -203,29 +283,32 @@ class _PremiumBottomSheetState extends State<PremiumBottomSheet>
     );
   }
 
-  // ── Limited-offer pill ─────────────────────
+  // ── Offer chip ────────────────────────────
 
-  Widget _buildOfferPill(double sw) {
+  Widget _buildOfferChip(double sw) {
     return Padding(
-      padding: EdgeInsets.fromLTRB(sw * 0.045, sw * 0.034, 0, 0),
+      padding: EdgeInsets.fromLTRB(sw * 0.045, sw * 0.030, 0, 0),
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: sw * 0.030, vertical: sw * 0.014),
+        padding: EdgeInsets.symmetric(
+          horizontal: sw * 0.028,
+          vertical: sw * 0.012,
+        ),
         decoration: BoxDecoration(
-          color: const Color(0xFFFEF9C3),
+          color: const Color(0xFFFFFBEB),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: const Color(0xFFFDE047)),
+          border: Border.all(color: const Color(0xFFFCD34D)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('🔥', style: TextStyle(fontSize: sw * 0.030)),
-            SizedBox(width: sw * 0.014),
+            Text('🔥', style: TextStyle(fontSize: sw * 0.028)),
+            SizedBox(width: sw * 0.012),
             Text(
               'Limited offer — 40% off today only',
               style: TextStyle(
-                fontSize: sw * 0.028,
+                fontSize: sw * 0.027,
                 fontWeight: FontWeight.w800,
-                color: const Color(0xFF854D0E),
+                color: const Color(0xFF92400E),
               ),
             ),
           ],
@@ -234,140 +317,202 @@ class _PremiumBottomSheetState extends State<PremiumBottomSheet>
     );
   }
 
-  // ── Perks list ─────────────────────────────
+  // ── Perks ─────────────────────────────────
 
-  Widget _buildPerksList(double sw) {
+  Widget _buildPerks(double sw) {
     return Padding(
-      padding: EdgeInsets.fromLTRB(sw * 0.045, sw * 0.030, sw * 0.045, 0),
-      child: Column(children: _perks.map((p) => _perkRow(p, sw)).toList()),
-    );
-  }
-
-  Widget _perkRow(_Perk p, double sw) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: sw * 0.020),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: sw * 0.090, height: sw * 0.090,
-            decoration: BoxDecoration(
-              color: const Color(0xFFEEF2FF),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Center(child: Text(p.emoji, style: TextStyle(fontSize: sw * 0.038))),
-          ),
-          SizedBox(width: sw * 0.028),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(p.title,
-                          style: TextStyle(fontSize: sw * 0.034,
-                              fontWeight: FontWeight.w700, color: _kInk)),
-                    ),
-                    Container(
-                      width: sw * 0.050, height: sw * 0.050,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFEEF2FF),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Icon(Icons.check_rounded, color: _kViolet, size: sw * 0.028),
-                    ),
-                  ],
-                ),
-                SizedBox(height: sw * 0.006),
-                Text(p.sub,
-                    style: TextStyle(fontSize: sw * 0.027, color: _kMuted, height: 1.4)),
-                SizedBox(height: sw * 0.016),
-                Container(height: 0.5, color: _kBorder),
-              ],
-            ),
-          ),
-        ],
+      padding: EdgeInsets.fromLTRB(sw * 0.045, sw * 0.028, sw * 0.045, 0),
+      child: Column(
+        children: _perks
+            .asMap()
+            .entries
+            .map((e) => _perkRow(e.value, e.key, sw))
+            .toList(),
       ),
     );
   }
 
-  // ── Action buttons ─────────────────────────
+  Widget _perkRow(_Perk p, int idx, double sw) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: 1.0),
+      duration: Duration(milliseconds: 300 + idx * 80),
+      curve: Curves.easeOutCubic,
+      builder: (_, v, child) => Opacity(
+        opacity: v,
+        child: Transform.translate(
+          offset: Offset(0, 12 * (1 - v)),
+          child: child,
+        ),
+      ),
+      child: Padding(
+        padding: EdgeInsets.only(bottom: sw * 0.018),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: sw * 0.088,
+              height: sw * 0.088,
+              decoration: BoxDecoration(
+                color: const Color(0xFFEEF2FF),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Center(
+                child: Text(p.emoji, style: TextStyle(fontSize: sw * 0.036)),
+              ),
+            ),
+            SizedBox(width: sw * 0.026),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          p.title,
+                          style: TextStyle(
+                            fontSize: sw * 0.033,
+                            fontWeight: FontWeight.w700,
+                            color: _kInk,
+                          ),
+                        ),
+                      ),
+                      Container(
+                        width: sw * 0.048,
+                        height: sw * 0.048,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFEEF2FF),
+                          borderRadius: BorderRadius.circular(9),
+                        ),
+                        child: Icon(
+                          Icons.check_rounded,
+                          color: _kPrimary,
+                          size: sw * 0.026,
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: sw * 0.005),
+                  Text(
+                    p.sub,
+                    style: TextStyle(
+                      fontSize: sw * 0.026,
+                      color: _kMuted,
+                      height: 1.4,
+                    ),
+                  ),
+                  SizedBox(height: sw * 0.014),
+                  Container(height: 0.5, color: _kBorder),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
-  Widget _buildActionButtons(double sw) {
+  // ── Buttons ───────────────────────────────
+
+  Widget _buildButtons(double sw) {
     return Padding(
-      padding: EdgeInsets.fromLTRB(sw * 0.045, sw * 0.030, sw * 0.045, 0),
+      padding: EdgeInsets.fromLTRB(sw * 0.045, sw * 0.028, sw * 0.045, 0),
       child: Column(
         children: [
-          // 1 — Get Premium (primary)
+          // Primary CTA
           GestureDetector(
             onTap: () async {
               Navigator.pop(context);
-              await Future.delayed(const Duration(milliseconds: 300));
+              await Future.delayed(const Duration(milliseconds: 250));
               if (context.mounted) context.push('/premium/payment');
             },
             child: Container(
               width: double.infinity,
-              padding: EdgeInsets.symmetric(vertical: sw * 0.042),
+              padding: EdgeInsets.symmetric(vertical: sw * 0.040),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [_kPrimary, _kViolet],
+                  colors: [Color(0xFF4338CA), Color(0xFF6366F1)],
                   begin: Alignment.centerLeft,
                   end: Alignment.centerRight,
                 ),
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(18),
                 boxShadow: [
                   BoxShadow(
-                    color: _kPrimary.withValues(alpha: 0.34),
-                    blurRadius: 16, offset: const Offset(0, 6),
+                    color: _kPrimary.withValues(alpha: 0.38),
+                    blurRadius: 18,
+                    offset: const Offset(0, 8),
                   ),
                 ],
               ),
-              child: Center(
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.star_rounded, color: Colors.white, size: sw * 0.046),
-                    SizedBox(width: sw * 0.018),
-                    Text('Get Premium — View Plans',
-                        style: TextStyle(fontSize: sw * 0.037,
-                            fontWeight: FontWeight.w800, color: Colors.white)),
-                  ],
-                ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(sw * 0.010),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.18),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      Icons.star_rounded,
+                      color: Colors.white,
+                      size: sw * 0.040,
+                    ),
+                  ),
+                  SizedBox(width: sw * 0.016),
+                  Text(
+                    'View Plans & Get Premium',
+                    style: TextStyle(
+                      fontSize: sw * 0.036,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
-          SizedBox(height: sw * 0.020),
+          SizedBox(height: sw * 0.018),
 
-          // 2 — Remind me later (secondary)
+          // Secondary
           GestureDetector(
             onTap: () => Navigator.pop(context),
             child: Container(
               width: double.infinity,
-              padding: EdgeInsets.symmetric(vertical: sw * 0.036),
+              padding: EdgeInsets.symmetric(vertical: sw * 0.034),
               decoration: BoxDecoration(
                 color: _kFill,
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(18),
                 border: Border.all(color: _kBorder, width: 1.5),
               ),
               child: Center(
-                child: Text('Remind me later',
-                    style: TextStyle(fontSize: sw * 0.034,
-                        fontWeight: FontWeight.w700, color: _kMuted)),
+                child: Text(
+                  'Remind me later',
+                  style: TextStyle(
+                    fontSize: sw * 0.033,
+                    fontWeight: FontWeight.w700,
+                    color: _kMuted,
+                  ),
+                ),
               ),
             ),
           ),
-          SizedBox(height: sw * 0.016),
+          SizedBox(height: sw * 0.014),
 
-          // 3 — Skip (tertiary)
+          // Tertiary
           GestureDetector(
             onTap: () => Navigator.pop(context),
             child: Padding(
-              padding: EdgeInsets.symmetric(vertical: sw * 0.014),
+              padding: EdgeInsets.symmetric(vertical: sw * 0.012),
               child: Center(
-                child: Text('No thanks, continue for free',
-                    style: TextStyle(fontSize: sw * 0.029,
-                        fontWeight: FontWeight.w600, color: _kHint)),
+                child: Text(
+                  'No thanks, continue for free',
+                  style: TextStyle(
+                    fontSize: sw * 0.028,
+                    fontWeight: FontWeight.w600,
+                    color: _kHint,
+                  ),
+                ),
               ),
             ),
           ),

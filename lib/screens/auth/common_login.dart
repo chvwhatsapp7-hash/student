@@ -390,13 +390,13 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
     try {
       final response = await http
           .post(
-            url,
-            headers: {'Content-Type': 'application/json'},
-            body: jsonEncode({
-              'email': emailCtrl.text.trim(),
-              'password': passCtrl.text.trim(),
-            }),
-          )
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'email': emailCtrl.text.trim(),
+          'password': passCtrl.text.trim(),
+        }),
+      )
           .timeout(const Duration(seconds: 15));
 
       final data = jsonDecode(response.body);
@@ -506,7 +506,7 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
       }
 
       final GoogleSignInAuthentication googleAuth =
-          await googleUser.authentication;
+      await googleUser.authentication;
       final String? idToken = googleAuth.idToken;
 
       if (idToken == null) {
@@ -522,12 +522,12 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
       );
       final response = await http
           .post(
-            url,
-            headers: {
-              'Authorization': 'Bearer $idToken',
-              'Content-Type': 'application/json',
-            },
-          )
+        url,
+        headers: {
+          'Authorization': 'Bearer $idToken',
+          'Content-Type': 'application/json',
+        },
+      )
           .timeout(const Duration(seconds: 15));
 
       final data = jsonDecode(response.body);
@@ -995,80 +995,65 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
             ],
           ),
           SizedBox(height: sw * 0.035),
-          Row(
-            children: [
-              Expanded(child: _socialBtn('Google', 'G', sw, isGoogle: true)),
-              SizedBox(width: sw * 0.025),
-              Expanded(child: _socialBtn('LinkedIn', 'in', sw)),
-            ],
-          ),
+          // ── ONLY CHANGE: was Row{ Google half + LinkedIn half }
+          //                 now full-width Google button with real "G" logo ──
+          _buildGoogleBtn(sw),
         ],
       ),
     );
   }
 
-  Widget _socialBtn(
-    String label,
-    String icon,
-    double sw, {
-    bool isGoogle = false,
-  }) {
-    final isThisLoading = isGoogle ? isGoogleLoading : false;
+  // ── NEW: full-width Google button, official branding, same onTap ─────────
+  Widget _buildGoogleBtn(double sw) {
     return InkWell(
       borderRadius: BorderRadius.circular(14),
-      onTap: isLoading || isGoogleLoading
-          ? null
-          : () async {
-              if (isGoogle)
-                await handleGoogleSignIn();
-              else
-                debugPrint('LinkedIn clicked');
-            },
+      onTap: isLoading || isGoogleLoading ? null : handleGoogleSignIn,
       child: Container(
-        height: sw * 0.115,
+        width: double.infinity,
+        height: sw * 0.135,
         decoration: BoxDecoration(
-          color: kInputFill,
+          color: Colors.white,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: kBorder, width: 1.5),
+          border: Border.all(color: const Color(0xFFDADCE0), width: 1.5),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.06),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
-        child: Center(
-          child: isThisLoading
-              ? SizedBox(
-                  width: sw * 0.045,
-                  height: sw * 0.045,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2.5,
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      isGoogle
-                          ? const Color(0xFF4285F4)
-                          : const Color(0xFF0A66C2),
-                    ),
-                  ),
-                )
-              : Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      isGoogle ? 'G' : 'in',
-                      style: TextStyle(
-                        fontSize: sw * 0.038,
-                        fontWeight: FontWeight.w800,
-                        color: isGoogle
-                            ? const Color(0xFF4285F4)
-                            : const Color(0xFF0A66C2),
-                      ),
-                    ),
-                    SizedBox(width: sw * 0.018),
-                    Text(
-                      label,
-                      style: TextStyle(
-                        fontSize: sw * 0.033,
-                        fontWeight: FontWeight.w700,
-                        color: kSlate,
-                      ),
-                    ),
-                  ],
-                ),
+        child: isGoogleLoading
+            ? Center(
+          child: SizedBox(
+            width: sw * 0.052,
+            height: sw * 0.052,
+            child: const CircularProgressIndicator(
+              strokeWidth: 2.5,
+              valueColor:
+              AlwaysStoppedAnimation<Color>(Color(0xFF4285F4)),
+            ),
+          ),
+        )
+            : Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Four-colour Google "G" — drawn with canvas, no assets needed
+            CustomPaint(
+              size: Size(sw * 0.058, sw * 0.058),
+              painter: _GoogleGPainter(),
+            ),
+            SizedBox(width: sw * 0.030),
+            Text(
+              'Sign in with Google',
+              style: TextStyle(
+                fontSize: sw * 0.038,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF3C4043),
+                letterSpacing: 0.1,
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -1149,57 +1134,57 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
             gradient: btnPressed
                 ? null
                 : const LinearGradient(
-                    colors: [kPrimary, kViolet],
-                    begin: Alignment.centerLeft,
-                    end: Alignment.centerRight,
-                  ),
+              colors: [kPrimary, kViolet],
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+            ),
             color: btnPressed ? kPrimary : null,
             borderRadius: BorderRadius.circular(16),
             boxShadow: btnPressed
                 ? null
                 : [
-                    BoxShadow(
-                      color: kPrimary.withValues(alpha: 0.38),
-                      blurRadius: 18,
-                      offset: const Offset(0, 7),
-                    ),
-                    BoxShadow(
-                      color: kViolet.withValues(alpha: 0.22),
-                      blurRadius: 28,
-                      offset: const Offset(0, 14),
-                    ),
-                  ],
+              BoxShadow(
+                color: kPrimary.withValues(alpha: 0.38),
+                blurRadius: 18,
+                offset: const Offset(0, 7),
+              ),
+              BoxShadow(
+                color: kViolet.withValues(alpha: 0.22),
+                blurRadius: 28,
+                offset: const Offset(0, 14),
+              ),
+            ],
           ),
           child: Center(
             child: isLoading
                 ? const SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2.5,
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                    ),
-                  )
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(
+                strokeWidth: 2.5,
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              ),
+            )
                 : Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.shield_rounded,
-                        color: Colors.white,
-                        size: sw * 0.048,
-                      ),
-                      SizedBox(width: sw * 0.022),
-                      Text(
-                        'Sign In',
-                        style: TextStyle(
-                          fontSize: sw * 0.040,
-                          fontWeight: FontWeight.w800,
-                          color: Colors.white,
-                          letterSpacing: 0.2,
-                        ),
-                      ),
-                    ],
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.shield_rounded,
+                  color: Colors.white,
+                  size: sw * 0.048,
+                ),
+                SizedBox(width: sw * 0.022),
+                Text(
+                  'Sign In',
+                  style: TextStyle(
+                    fontSize: sw * 0.040,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                    letterSpacing: 0.2,
                   ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -1233,4 +1218,71 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
       ),
     );
   }
+}
+
+// ── GOOGLE "G" PAINTER ───────────────────────────────────────────────────────
+/// Paints the official four-colour Google "G" mark using canvas arcs.
+/// No image assets or external packages required.
+class _GoogleGPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final cx = size.width / 2;
+    final cy = size.height / 2;
+    final r = size.width / 2;
+    final sw = size.width * 0.22;
+    final ir = r - sw / 2;
+    final rect = Rect.fromCircle(center: Offset(cx, cy), radius: ir);
+
+    double rad(double deg) => deg * pi / 180;
+
+    final p = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = sw
+      ..strokeCap = StrokeCap.butt;
+
+    // Red  – top-left  (~246° to 306°)
+    p.color = const Color(0xFFEA4335);
+    canvas.drawArc(rect, rad(246), rad(60), false, p);
+
+    // Blue – right     (~306° to 108°, sweep 162°)
+    p.color = const Color(0xFF4285F4);
+    canvas.drawArc(rect, rad(306), rad(162), false, p);
+
+    // Green – bottom-right (~108° to 180°)
+    p.color = const Color(0xFF34A853);
+    canvas.drawArc(rect, rad(108), rad(72), false, p);
+
+    // Yellow – bottom-left (~180° to 246°)
+    p.color = const Color(0xFFFBBC05);
+    canvas.drawArc(rect, rad(180), rad(66), false, p);
+
+    // White blocker — cuts the right side open for the "G" shape
+    canvas.drawRect(
+      Rect.fromLTRB(cx, cy - sw * 0.55, cx + r + 2, cy + sw * 0.55),
+      Paint()
+        ..color = Colors.white
+        ..style = PaintingStyle.fill,
+    );
+
+    // Blue crossbar — the horizontal bar of the "G"
+    final barH = sw * 0.95;
+    canvas.drawRRect(
+      RRect.fromRectAndCorners(
+        Rect.fromLTRB(
+          cx - sw * 0.05,
+          cy - barH / 2,
+          cx + ir + sw * 0.5,
+          cy + barH / 2,
+        ),
+        topRight: Radius.circular(barH / 2),
+        bottomRight: Radius.circular(barH / 2),
+      ),
+      Paint()
+        ..color = const Color(0xFF4285F4)
+        ..style = PaintingStyle.fill,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

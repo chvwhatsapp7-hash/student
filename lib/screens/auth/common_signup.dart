@@ -606,7 +606,7 @@ class _CommonSignupScreenState extends State<CommonSignupScreen>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Join NextStep',
+          'Join Student Hub',
           style: TextStyle(
             fontSize: sw * 0.070,
             fontWeight: FontWeight.w800,
@@ -616,14 +616,14 @@ class _CommonSignupScreenState extends State<CommonSignupScreen>
           ),
         ),
         SizedBox(height: sw * 0.020),
-        Text(
-          'Select your role and get started in under a minute.',
-          style: TextStyle(
-            fontSize: sw * 0.033,
-            height: 1.5,
-            color: Colors.white.withOpacity(0.55),
-          ),
-        ),
+        // Text(
+        //   'Select your role and get started in under a minute.',
+        //   style: TextStyle(
+        //     fontSize: sw * 0.033,
+        //     height: 1.5,
+        //     color: Colors.white.withOpacity(0.55),
+        //   ),
+        // ),
       ],
     );
   }
@@ -633,15 +633,15 @@ class _CommonSignupScreenState extends State<CommonSignupScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'SELECT YOUR ROLE',
-          style: TextStyle(
-            fontSize: sw * 0.028,
-            fontWeight: FontWeight.w700,
-            color: Colors.white.withOpacity(0.45),
-            letterSpacing: 0.8,
-          ),
-        ),
+        // Text(
+        //   'SELECT YOUR ROLE',
+        //   style: TextStyle(
+        //     fontSize: sw * 0.028,
+        //     fontWeight: FontWeight.w700,
+        //     color: Colors.white.withOpacity(0.45),
+        //     letterSpacing: 0.8,
+        //   ),
+        // ),
         SizedBox(height: sw * 0.025),
         GestureDetector(
           onTap: _openRoleSheet,

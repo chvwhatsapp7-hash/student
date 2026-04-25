@@ -772,14 +772,14 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
                 letterSpacing: -0.3,
               ),
             ),
-            Text(
-              'Welcome back',
-              style: TextStyle(
-                fontSize: sw * 0.025,
-                color: kAccent,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
+            // Text(
+            //   'Welcome back',
+            //   style: TextStyle(
+            //     fontSize: sw * 0.025,
+            //     color: kAccent,
+            //     fontWeight: FontWeight.w600,
+            //   ),
+            // ),
           ],
         ),
       ],
@@ -866,14 +866,14 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
           ),
         ),
         SizedBox(height: sw * 0.022),
-        Text(
-          'Your dashboard is auto-detected after sign in.',
-          style: TextStyle(
-            fontSize: sw * 0.033,
-            height: 1.55,
-            color: Colors.white.withValues(alpha: 0.52),
-          ),
-        ),
+        // Text(
+        //   'Your dashboard is auto-detected after sign in.',
+        //   style: TextStyle(
+        //     fontSize: sw * 0.033,
+        //     height: 1.55,
+        //     color: Colors.white.withValues(alpha: 0.52),
+        //   ),
+        // ),
       ],
     );
   }
@@ -928,10 +928,10 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
                         color: kInk,
                       ),
                     ),
-                    Text(
-                      '256-bit encrypted connection',
-                      style: TextStyle(fontSize: sw * 0.028, color: kMuted),
-                    ),
+                    // Text(
+                    //   '256-bit encrypted connection',
+                    //   style: TextStyle(fontSize: sw * 0.028, color: kMuted),
+                    // ),
                   ],
                 ),
               ),

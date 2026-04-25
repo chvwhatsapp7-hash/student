@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'dart:convert';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -39,21 +41,21 @@ class RecommendedJob {
   final int matchedCount, totalRequired, matchPercentage;
 
   RecommendedJob.fromJson(Map<String, dynamic> j)
-    : jobId = j['job_id'],
-      title = j['title'] ?? '',
-      location = j['location'] ?? '',
-      jobType = j['job_type'] ?? '',
-      applyUrl = j['apply_url'] ?? '',
-      companyName = j['company_name'] ?? '',
-      companyLogo = j['company_logo'],
-      experienceLevel = j['experience_level'],
-      salaryMin = j['salary_min'],
-      salaryMax = j['salary_max'],
-      matchedSkills = List<String>.from(j['matched_skills'] ?? []),
-      requiredSkills = List<String>.from(j['required_skills'] ?? []),
-      matchedCount = j['matched_count'] ?? 0,
-      totalRequired = j['total_required'] ?? 0,
-      matchPercentage = j['match_percentage'] ?? 0;
+      : jobId = j['job_id'],
+        title = j['title'] ?? '',
+        location = j['location'] ?? '',
+        jobType = j['job_type'] ?? '',
+        applyUrl = j['apply_url'] ?? '',
+        companyName = j['company_name'] ?? '',
+        companyLogo = j['company_logo'],
+        experienceLevel = j['experience_level'],
+        salaryMin = j['salary_min'],
+        salaryMax = j['salary_max'],
+        matchedSkills = List<String>.from(j['matched_skills'] ?? []),
+        requiredSkills = List<String>.from(j['required_skills'] ?? []),
+        matchedCount = j['matched_count'] ?? 0,
+        totalRequired = j['total_required'] ?? 0,
+        matchPercentage = j['match_percentage'] ?? 0;
 }
 
 class RecommendedInternship {
@@ -64,21 +66,21 @@ class RecommendedInternship {
   final int matchedCount, totalRequired, matchPercentage;
 
   RecommendedInternship.fromJson(Map<String, dynamic> j)
-    : internshipId = j['internship_id'],
-      title = j['title'] ?? '',
-      location = j['location'] ?? '',
-      applyUrl = j['apply_url'] ?? '',
-      companyName = j['company_name'] ?? '',
-      companyLogo = j['company_logo'],
-      stipend = j['stipend']?.toString(),
-      duration = j['duration'],
-      internshipType = j['internship_type'],
-      startDate = j['start_date'],
-      matchedSkills = List<String>.from(j['matched_skills'] ?? []),
-      requiredSkills = List<String>.from(j['required_skills'] ?? []),
-      matchedCount = j['matched_count'] ?? 0,
-      totalRequired = j['total_required'] ?? 0,
-      matchPercentage = j['match_percentage'] ?? 0;
+      : internshipId = j['internship_id'],
+        title = j['title'] ?? '',
+        location = j['location'] ?? '',
+        applyUrl = j['apply_url'] ?? '',
+        companyName = j['company_name'] ?? '',
+        companyLogo = j['company_logo'],
+        stipend = j['stipend']?.toString(),
+        duration = j['duration'],
+        internshipType = j['internship_type'],
+        startDate = j['start_date'],
+        matchedSkills = List<String>.from(j['matched_skills'] ?? []),
+        requiredSkills = List<String>.from(j['required_skills'] ?? []),
+        matchedCount = j['matched_count'] ?? 0,
+        totalRequired = j['total_required'] ?? 0,
+        matchPercentage = j['match_percentage'] ?? 0;
 }
 
 class RecommendedCourse {
@@ -90,21 +92,21 @@ class RecommendedCourse {
   final int totalSkills, alreadyKnown, gapFillCount;
 
   RecommendedCourse.fromJson(Map<String, dynamic> j)
-    : courseId = j['course_id'],
-      title = j['title'] ?? '',
-      provider = j['provider'] ?? '',
-      category = j['category'] ?? '',
-      level = j['level'] ?? '',
-      description = j['description'],
-      duration = j['duration'],
-      courseUrl = j['course_url'],
-      price = j['price']?.toString(),
-      rating = (j['rating'] as num?)?.toDouble(),
-      courseSkills = List<String>.from(j['course_skills'] ?? []),
-      missingSkills = List<String>.from(j['missing_skills'] ?? []),
-      totalSkills = j['total_skills'] ?? 0,
-      alreadyKnown = j['already_known'] ?? 0,
-      gapFillCount = j['gap_fill_count'] ?? 0;
+      : courseId = j['course_id'],
+        title = j['title'] ?? '',
+        provider = j['provider'] ?? '',
+        category = j['category'] ?? '',
+        level = j['level'] ?? '',
+        description = j['description'],
+        duration = j['duration'],
+        courseUrl = j['course_url'],
+        price = j['price']?.toString(),
+        rating = (j['rating'] as num?)?.toDouble(),
+        courseSkills = List<String>.from(j['course_skills'] ?? []),
+        missingSkills = List<String>.from(j['missing_skills'] ?? []),
+        totalSkills = j['total_skills'] ?? 0,
+        alreadyKnown = j['already_known'] ?? 0,
+        gapFillCount = j['gap_fill_count'] ?? 0;
 }
 
 // ─────────────────────────────────────────────
@@ -130,11 +132,7 @@ _Theme _jobTheme(String title, String company) {
   if (t.contains('data scien') || t.contains('data analyst'))
     return const _Theme(Icons.analytics, Color(0xFF7C3AED), Color(0xFF6366F1));
   if (t.contains('android') || t.contains('mobile') || t.contains('flutter'))
-    return const _Theme(
-      Icons.phone_android,
-      Color(0xFF0284C7),
-      Color(0xFF38BDF8),
-    );
+    return const _Theme(Icons.phone_android, Color(0xFF0284C7), Color(0xFF38BDF8));
   if (t.contains('cloud') || t.contains('aws') || t.contains('devops'))
     return const _Theme(Icons.cloud, Color(0xFF0369A1), Color(0xFF0EA5E9));
   if (t.contains('intern'))
@@ -156,11 +154,7 @@ _Theme _courseTheme(String title, String category) {
   if (t.contains('data') || c == 'data science')
     return const _Theme(Icons.analytics, Color(0xFF7C3AED), Color(0xFF6366F1));
   if (c == 'app dev' || t.contains('android') || t.contains('flutter'))
-    return const _Theme(
-      Icons.phone_android,
-      Color(0xFF0284C7),
-      Color(0xFF38BDF8),
-    );
+    return const _Theme(Icons.phone_android, Color(0xFF0284C7), Color(0xFF38BDF8));
   return const _Theme(Icons.menu_book, Color(0xFF1D4ED8), Color(0xFF6366F1));
 }
 
@@ -204,6 +198,700 @@ _LevelStyle _levelStyle(String level) {
 }
 
 // ─────────────────────────────────────────────
+//  SLIDER ITEM MODEL
+// ─────────────────────────────────────────────
+class _SliderItem {
+  final String title;
+  final String subtitle;
+  final String meta; // location / provider
+  final int matchPercentage;
+  final Color grad1;
+  final Color grad2;
+  final IconData icon;
+  final String type; // 'job' | 'internship' | 'course'
+  final dynamic sourceObject;
+
+  const _SliderItem({
+    required this.title,
+    required this.subtitle,
+    required this.meta,
+    required this.matchPercentage,
+    required this.grad1,
+    required this.grad2,
+    required this.icon,
+    required this.type,
+    required this.sourceObject,
+  });
+}
+
+// ─────────────────────────────────────────────
+//  RECOMMENDED SLIDER  (compact, no overflow)
+// ─────────────────────────────────────────────
+class _RecommendedSlider extends StatefulWidget {
+  final List<_SliderItem> items;
+  final void Function(_SliderItem item) onApplyTap;
+
+  const _RecommendedSlider({required this.items, required this.onApplyTap});
+
+  @override
+  State<_RecommendedSlider> createState() => _RecommendedSliderState();
+}
+
+class _RecommendedSliderState extends State<_RecommendedSlider>
+    with SingleTickerProviderStateMixin {
+  late final PageController _pageController;
+  int _currentPage = 0;
+  Timer? _timer;
+  late AnimationController _shimmerController;
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController(viewportFraction: 0.88);
+    _shimmerController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1800),
+    )..repeat();
+    _startAutoSlide();
+  }
+
+  void _startAutoSlide() {
+    _timer = Timer.periodic(const Duration(seconds: 3), (_) {
+      if (!mounted || widget.items.isEmpty) return;
+      final next = (_currentPage + 1) % widget.items.length;
+      _pageController.animateToPage(
+        next,
+        duration: const Duration(milliseconds: 550),
+        curve: Curves.easeInOut,
+      );
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _pageController.dispose();
+    _shimmerController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.items.isEmpty) return const SizedBox.shrink();
+    final sw = MediaQuery.of(context).size.width;
+    // Fixed compact height — no overflow
+    final cardH = sw * 0.36;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          height: cardH,
+          child: PageView.builder(
+            controller: _pageController,
+            itemCount: widget.items.length,
+            onPageChanged: (i) => setState(() => _currentPage = i),
+            itemBuilder: (ctx, index) {
+              final item = widget.items[index];
+              final isActive = index == _currentPage;
+              return AnimatedScale(
+                scale: isActive ? 1.0 : 0.94,
+                duration: const Duration(milliseconds: 350),
+                curve: Curves.easeOut,
+                child: _buildCard(item, sw, isActive),
+              );
+            },
+          ),
+        ),
+        SizedBox(height: sw * 0.018),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: List.generate(widget.items.length, (i) {
+            final isActive = i == _currentPage;
+            return AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              margin: const EdgeInsets.symmetric(horizontal: 3),
+              width: isActive ? 20 : 6,
+              height: 6,
+              decoration: BoxDecoration(
+                color: isActive ? kPrimary : kBorder,
+                borderRadius: BorderRadius.circular(4),
+              ),
+            );
+          }),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCard(_SliderItem item, double sw, bool isActive) {
+    final matchPct = item.matchPercentage;
+    final matchColor = matchPct >= 90
+        ? kSuccess
+        : matchPct >= 75
+        ? kWarning
+        : kAccent;
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 350),
+      margin: EdgeInsets.symmetric(horizontal: sw * 0.022, vertical: sw * 0.010),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [item.grad1, item.grad2],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: item.grad1.withValues(alpha: isActive ? 0.40 : 0.15),
+            blurRadius: isActive ? 20 : 8,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Stack(
+        children: [
+          // Decorative circles
+          Positioned(
+            top: -sw * 0.06,
+            right: -sw * 0.04,
+            child: Container(
+              width: sw * 0.28,
+              height: sw * 0.28,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withValues(alpha: 0.07),
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: -sw * 0.08,
+            left: -sw * 0.04,
+            child: Container(
+              width: sw * 0.22,
+              height: sw * 0.22,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withValues(alpha: 0.05),
+              ),
+            ),
+          ),
+          // Shimmer sweep on active card
+          if (isActive)
+            Positioned.fill(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: AnimatedBuilder(
+                  animation: _shimmerController,
+                  builder: (_, __) {
+                    return ShaderMask(
+                      blendMode: BlendMode.srcIn,
+                      shaderCallback: (bounds) => LinearGradient(
+                        colors: [
+                          Colors.transparent,
+                          Colors.white.withValues(alpha: 0.06),
+                          Colors.transparent,
+                        ],
+                        stops: const [0.0, 0.5, 1.0],
+                        begin: Alignment(
+                          -1.5 + _shimmerController.value * 3.0,
+                          -0.3,
+                        ),
+                        end: Alignment(
+                          -0.5 + _shimmerController.value * 3.0,
+                          0.3,
+                        ),
+                      ).createShader(bounds),
+                      child: Container(color: Colors.white),
+                    );
+                  },
+                ),
+              ),
+            ),
+          Padding(
+            padding: EdgeInsets.fromLTRB(
+              sw * 0.042,
+              sw * 0.030,
+              sw * 0.042,
+              sw * 0.028,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Row 1: type badge + match badge
+                Row(
+                  children: [
+                    _typeBadge(item.type, sw),
+                    const Spacer(),
+                    _matchBadge(matchPct, matchColor, sw),
+                  ],
+                ),
+                SizedBox(height: sw * 0.022),
+                // Row 2: icon + title/subtitle + meta
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: sw * 0.110,
+                      height: sw * 0.110,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.18),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.25),
+                          width: 1.5,
+                        ),
+                      ),
+                      child: Icon(
+                        item.icon,
+                        size: sw * 0.052,
+                        color: Colors.white,
+                      ),
+                    ),
+                    SizedBox(width: sw * 0.030),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            item.title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: sw * 0.038,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.white,
+                              height: 1.2,
+                              letterSpacing: -0.3,
+                            ),
+                          ),
+                          SizedBox(height: sw * 0.006),
+                          Text(
+                            item.subtitle,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: sw * 0.028,
+                              color: Colors.white.withValues(alpha: 0.82),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          SizedBox(height: sw * 0.004),
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.location_on,
+                                size: sw * 0.026,
+                                color: Colors.white.withValues(alpha: 0.65),
+                              ),
+                              SizedBox(width: sw * 0.006),
+                              Flexible(
+                                child: Text(
+                                  item.meta,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: sw * 0.024,
+                                    color: Colors.white.withValues(alpha: 0.65),
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: sw * 0.022),
+                // Row 3: skill match bar + Apply Now button
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Skill Match',
+                                style: TextStyle(
+                                  fontSize: sw * 0.023,
+                                  color: Colors.white.withValues(alpha: 0.75),
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              Text(
+                                '$matchPct%',
+                                style: TextStyle(
+                                  fontSize: sw * 0.023,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: sw * 0.008),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(4),
+                            child: LinearProgressIndicator(
+                              value: matchPct / 100.0,
+                              minHeight: 5,
+                              backgroundColor: Colors.white.withValues(alpha: 0.20),
+                              valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(width: sw * 0.025),
+                    // Apply Now button
+                    GestureDetector(
+                      onTap: () {
+                        HapticFeedback.lightImpact();
+                        widget.onApplyTap(item);
+                      },
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: sw * 0.032,
+                          vertical: sw * 0.018,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.12),
+                              blurRadius: 8,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.send_rounded,
+                              size: sw * 0.032,
+                              color: item.grad1,
+                            ),
+                            SizedBox(width: sw * 0.010),
+                            Text(
+                              'Apply',
+                              style: TextStyle(
+                                fontSize: sw * 0.026,
+                                fontWeight: FontWeight.w800,
+                                color: item.grad1,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _typeBadge(String type, double sw) {
+    final label = type == 'job'
+        ? '💼 Job'
+        : type == 'internship'
+        ? '🎓 Internship'
+        : '📚 Course';
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: sw * 0.022,
+        vertical: sw * 0.008,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.20),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.30)),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: sw * 0.022,
+          fontWeight: FontWeight.w700,
+          color: Colors.white,
+        ),
+      ),
+    );
+  }
+
+  Widget _matchBadge(int pct, Color color, double sw) {
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: sw * 0.020,
+        vertical: sw * 0.008,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.30),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Text(
+        '$pct% match',
+        style: TextStyle(
+          fontSize: sw * 0.022,
+          fontWeight: FontWeight.w800,
+          color: color,
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────
+//  APP SHOWCASE BANNER  (replaces old _BannerSlider)
+//  Uses local assets: sliding1.jpg – sliding4.jpg
+// ─────────────────────────────────────────────
+class _AppShowcaseBanner extends StatefulWidget {
+  const _AppShowcaseBanner();
+
+  @override
+  State<_AppShowcaseBanner> createState() => _AppShowcaseBannerState();
+}
+
+class _AppShowcaseBannerState extends State<_AppShowcaseBanner>
+    with SingleTickerProviderStateMixin {
+  final PageController _controller = PageController(viewportFraction: 0.92);
+  int _currentPage = 0;
+  Timer? _timer;
+  late AnimationController _fadeCtrl;
+  late Animation<double> _fadeAnim;
+
+  static const List<Map<String, dynamic>> _slides = [
+    {
+      'image': 'assets/images/sliding1.jpg',
+      'title': 'Find Your Dream Job',
+      'sub': 'Personalised matches based on your skills',
+      'tint': Color(0xFF0F172A),
+    },
+    {
+      'image': 'assets/images/sliding2.jpg',
+      'title': 'Ace Every Interview',
+      'sub': 'Mock tests, tips & prep resources inside',
+      'tint': Color(0xFF1D4ED8),
+    },
+    {
+      'image': 'assets/images/sliding3.jpg',
+      'title': 'Upskill in 30 Days',
+      'sub': 'Curated courses to close your skill gaps',
+      'tint': Color(0xFF7C3AED),
+    },
+    {
+      'image': 'assets/images/sliding4.jpg',
+      'title': 'Win Hackathons & Prizes',
+      'sub': 'Build portfolio, compete, stand out',
+      'tint': Color(0xFF0369A1),
+    },
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _fadeCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 400),
+      value: 1.0,
+    );
+    _fadeAnim = CurvedAnimation(parent: _fadeCtrl, curve: Curves.easeInOut);
+    _timer = Timer.periodic(const Duration(seconds: 4), (_) {
+      if (!mounted) return;
+      final next = (_currentPage + 1) % _slides.length;
+      _controller.animateToPage(
+        next,
+        duration: const Duration(milliseconds: 600),
+        curve: Curves.easeInOut,
+      );
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _controller.dispose();
+    _fadeCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final sw = MediaQuery.of(context).size.width;
+    return Column(
+      children: [
+        SizedBox(
+          height: sw * 0.46,
+          child: PageView.builder(
+            controller: _controller,
+            itemCount: _slides.length,
+            onPageChanged: (i) {
+              _fadeCtrl.reset();
+              _fadeCtrl.forward();
+              setState(() => _currentPage = i);
+            },
+            itemBuilder: (ctx, i) => _buildSlide(_slides[i], sw, i),
+          ),
+        ),
+        SizedBox(height: sw * 0.018),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: List.generate(_slides.length, (i) {
+            final isActive = i == _currentPage;
+            return AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              margin: const EdgeInsets.symmetric(horizontal: 3),
+              width: isActive ? 22 : 7,
+              height: 7,
+              decoration: BoxDecoration(
+                color: isActive ? kPrimary : kBorder,
+                borderRadius: BorderRadius.circular(4),
+              ),
+            );
+          }),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSlide(Map<String, dynamic> slide, double sw, int index) {
+    final isActive = index == _currentPage;
+    final tint = slide['tint'] as Color;
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 400),
+      margin: EdgeInsets.symmetric(
+        horizontal: sw * 0.018,
+        vertical: sw * 0.014,
+      ),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(22),
+        boxShadow: [
+          BoxShadow(
+            color: tint.withValues(alpha: isActive ? 0.38 : 0.12),
+            blurRadius: isActive ? 22 : 8,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(22),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            // Asset image
+            Image.asset(
+              slide['image'] as String,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => Container(
+                color: tint,
+                child: Icon(
+                  Icons.image_not_supported_outlined,
+                  color: Colors.white.withValues(alpha: 0.3),
+                  size: sw * 0.10,
+                ),
+              ),
+            ),
+            // Gradient overlay (bottom-up)
+            Positioned.fill(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      tint.withValues(alpha: 0.88),
+                      tint.withValues(alpha: 0.20),
+                      Colors.transparent,
+                    ],
+                    begin: Alignment.bottomCenter,
+                    end: Alignment.topCenter,
+                    stops: const [0.0, 0.55, 1.0],
+                  ),
+                ),
+              ),
+            ),
+            // Slide counter pill
+            Positioned(
+              top: sw * 0.028,
+              right: sw * 0.028,
+              child: Container(
+                padding: EdgeInsets.symmetric(
+                  horizontal: sw * 0.020,
+                  vertical: sw * 0.007,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.35),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  '${index + 1} / ${_slides.length}',
+                  style: TextStyle(
+                    fontSize: sw * 0.021,
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ),
+            // Text content
+            Positioned(
+              bottom: sw * 0.042,
+              left: sw * 0.042,
+              right: sw * 0.042,
+              child: FadeTransition(
+                opacity: isActive ? _fadeAnim : const AlwaysStoppedAnimation(1.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      slide['title'] as String,
+                      style: TextStyle(
+                        fontSize: sw * 0.040,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                        height: 1.2,
+                        letterSpacing: -0.3,
+                      ),
+                    ),
+                    SizedBox(height: sw * 0.008),
+                    Text(
+                      slide['sub'] as String,
+                      style: TextStyle(
+                        fontSize: sw * 0.027,
+                        color: Colors.white.withValues(alpha: 0.80),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────
 //  SCREEN
 // ─────────────────────────────────────────────
 class DashboardScreen extends StatefulWidget {
@@ -236,6 +924,53 @@ class _DashboardScreenState extends State<DashboardScreen>
   final Set<int> _appliedJobIds = {};
   final Set<int> _appliedInternshipIds = {};
 
+  List<_SliderItem> get _sliderItems {
+    final items = <_SliderItem>[];
+    for (final job in _jobs.take(3)) {
+      final theme = _jobTheme(job.title, job.companyName);
+      items.add(_SliderItem(
+        title: job.title,
+        subtitle: job.companyName,
+        meta: job.location,
+        matchPercentage: job.matchPercentage,
+        grad1: theme.grad1,
+        grad2: theme.grad2,
+        icon: theme.icon,
+        type: 'job',
+        sourceObject: job,
+      ));
+    }
+    for (final intern in _internships.take(2)) {
+      final theme = _jobTheme(intern.title, intern.companyName);
+      items.add(_SliderItem(
+        title: intern.title,
+        subtitle: intern.companyName,
+        meta: intern.location,
+        matchPercentage: intern.matchPercentage,
+        grad1: theme.grad1,
+        grad2: theme.grad2,
+        icon: theme.icon,
+        type: 'internship',
+        sourceObject: intern,
+      ));
+    }
+    for (final course in _courses.take(2)) {
+      final theme = _courseTheme(course.title, course.category);
+      items.add(_SliderItem(
+        title: course.title,
+        subtitle: course.provider,
+        meta: course.level,
+        matchPercentage: (course.gapFillCount * 20).clamp(0, 100),
+        grad1: theme.grad1,
+        grad2: theme.grad2,
+        icon: theme.icon,
+        type: 'course',
+        sourceObject: course,
+      ));
+    }
+    return items;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -249,26 +984,20 @@ class _DashboardScreenState extends State<DashboardScreen>
     );
     _xpValue = Tween<double>(begin: 0, end: 0).animate(_xpAnim);
     _sectionAnims = List.generate(
-      8,
-      (_) => AnimationController(
+      10,
+          (_) => AnimationController(
         vsync: this,
         duration: const Duration(milliseconds: 480),
       ),
     );
     _sectionFade = _sectionAnims
-        .map(
-          (c) =>
-              CurvedAnimation(parent: c, curve: Curves.easeOut)
-                  as Animation<double>,
-        )
+        .map((c) => CurvedAnimation(parent: c, curve: Curves.easeOut) as Animation<double>)
         .toList();
     _sectionSlide = _sectionAnims
-        .map(
-          (c) => Tween<Offset>(
-            begin: const Offset(0, 0.10),
-            end: Offset.zero,
-          ).animate(CurvedAnimation(parent: c, curve: Curves.easeOut)),
-        )
+        .map((c) => Tween<Offset>(
+      begin: const Offset(0, 0.10),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: c, curve: Curves.easeOut)))
         .toList();
     profileState.addListener(_onProfileChanged);
     _loadAll();
@@ -306,7 +1035,7 @@ class _DashboardScreenState extends State<DashboardScreen>
       Future.delayed(const Duration(milliseconds: 300), () {
         if (mounted) _xpAnim.forward();
       });
-      for (int i = 0; i < 8; i++) {
+      for (int i = 0; i < 10; i++) {
         Future.delayed(Duration(milliseconds: 80 + i * 80), () {
           if (mounted) _sectionAnims[i].forward();
         });
@@ -346,11 +1075,7 @@ class _DashboardScreenState extends State<DashboardScreen>
   Future<void> _fetchRecommendations() async {
     await AuthService().loadTokens();
     final token = AuthService().accessToken;
-
-    if (token == null) {
-      throw Exception("Token is null. Please login again.");
-    }
-
+    if (token == null) throw Exception("Token is null. Please login again.");
     if (_userId.isEmpty) return;
     final res = await http.get(
       Uri.parse('$_baseUrl/api/profile/recommendations?user_id=$_userId'),
@@ -359,22 +1084,15 @@ class _DashboardScreenState extends State<DashboardScreen>
         "Authorization": "Bearer $token",
       },
     );
-    if (res.statusCode != 200)
-      throw Exception('Failed to load recommendations');
+    if (res.statusCode != 200) throw Exception('Failed to load recommendations');
     final body = jsonDecode(res.body) as Map<String, dynamic>;
     if (body['success'] != true) throw Exception('API error');
     final data = body['data'] as Map<String, dynamic>;
     if (mounted) {
       setState(() {
-        _jobs = (data['jobs'] as List)
-            .map((j) => RecommendedJob.fromJson(j))
-            .toList();
-        _internships = (data['internships'] as List)
-            .map((i) => RecommendedInternship.fromJson(i))
-            .toList();
-        _courses = (data['courses'] as List)
-            .map((c) => RecommendedCourse.fromJson(c))
-            .toList();
+        _jobs = (data['jobs'] as List).map((j) => RecommendedJob.fromJson(j)).toList();
+        _internships = (data['internships'] as List).map((i) => RecommendedInternship.fromJson(i)).toList();
+        _courses = (data['courses'] as List).map((c) => RecommendedCourse.fromJson(c)).toList();
       });
     }
   }
@@ -413,30 +1131,14 @@ class _DashboardScreenState extends State<DashboardScreen>
             children: [
               const Icon(Icons.error_outline, color: Colors.red, size: 48),
               const SizedBox(height: 16),
-              Text(
-                _error!,
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: kSlate),
-              ),
+              Text(_error!, textAlign: TextAlign.center, style: const TextStyle(color: kSlate)),
               const SizedBox(height: 16),
               GestureDetector(
                 onTap: _loadAll,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 12,
-                  ),
-                  decoration: BoxDecoration(
-                    color: kPrimary,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Text(
-                    'Retry',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  decoration: BoxDecoration(color: kPrimary, borderRadius: BorderRadius.circular(12)),
+                  child: const Text('Retry', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800)),
                 ),
               ),
             ],
@@ -459,92 +1161,63 @@ class _DashboardScreenState extends State<DashboardScreen>
               child: ListView(
                 padding: EdgeInsets.fromLTRB(
                   sw * 0.040,
-                  sw * 0.040,
+                  sw * 0.036,
                   sw * 0.040,
                   sw * 0.080,
                 ),
                 children: [
+                  // ── Top Picks Slider (compact, no overflow)
+                  if (_sliderItems.isNotEmpty) ...[
+                    _fs(8, _sectionHeader('Top Picks For You', sub: 'Your best matches today', sw: sw)),
+                    SizedBox(height: sw * 0.018),
+                    _fs(8, _RecommendedSlider(items: _sliderItems, onApplyTap: _handleSliderApply)),
+                    SizedBox(height: sw * 0.045),
+                  ],
+
                   _fs(0, _buildStatsGrid(sw)),
-                  SizedBox(height: sw * 0.040),
+                  SizedBox(height: sw * 0.038),
                   _fs(1, _buildProfileStrength(sw)),
-                  SizedBox(height: sw * 0.055),
+                  SizedBox(height: sw * 0.050),
                   _fs(2, _buildQuickActions(context, sw)),
-                  SizedBox(height: sw * 0.060),
+                  SizedBox(height: sw * 0.055),
+
+                  // ── App Showcase Banner (image slides)
+                  _fs(9, _sectionHeader('Why StudentHub?', sub: 'Everything you need to land your first role', sw: sw)),
+                  SizedBox(height: sw * 0.018),
+                  _fs(9, const _AppShowcaseBanner()),
+                  SizedBox(height: sw * 0.055),
 
                   // ── Recommended Jobs
-                  _fs(
-                    3,
-                    _sectionHeader(
-                      'Recommended Jobs',
-                      sub: 'Based on your skills • ${_jobs.length} matches',
-                      sw: sw,
-                    ),
-                  ),
-                  SizedBox(height: sw * 0.030),
+                  _fs(3, _sectionHeader('Recommended Jobs', sub: 'Based on your skills • ${_jobs.length} matches', sw: sw)),
+                  SizedBox(height: sw * 0.028),
                   _jobs.isEmpty
-                      ? _fs(
-                          3,
-                          _emptyCard(
-                            'No job matches yet. Add more skills!',
-                            sw,
-                          ),
-                        )
+                      ? _fs(3, _emptyCard('No job matches yet. Add more skills!', sw))
                       : _fs(3, _buildRecommendedJobs(sw)),
                   if (_jobs.length > 4) ...[
-                    SizedBox(height: sw * 0.020),
-                    _fs(
-                      3,
-                      _viewAllButton(
-                        'View all ${_jobs.length} jobs',
-                        '/jobs',
-                        context,
-                        sw,
-                      ),
-                    ),
+                    SizedBox(height: sw * 0.018),
+                    _fs(3, _viewAllButton('View all ${_jobs.length} jobs', '/jobs', context, sw)),
                   ],
-                  SizedBox(height: sw * 0.060),
+                  SizedBox(height: sw * 0.055),
 
                   // ── Recommended Internships
-                  _fs(
-                    4,
-                    _sectionHeader(
-                      'Recommended Internships',
-                      sub: 'Fresher-friendly • ${_internships.length} matches',
-                      sw: sw,
-                    ),
-                  ),
-                  SizedBox(height: sw * 0.030),
+                  _fs(4, _sectionHeader('Recommended Internships', sub: 'Fresher-friendly • ${_internships.length} matches', sw: sw)),
+                  SizedBox(height: sw * 0.028),
                   _internships.isEmpty
                       ? _fs(4, _emptyCard('No internship matches yet.', sw))
                       : _fs(4, _buildRecommendedInternships(sw)),
                   if (_internships.length > 4) ...[
-                    SizedBox(height: sw * 0.020),
-                    _fs(
-                      4,
-                      _viewAllButton(
-                        'View all ${_internships.length} internships',
-                        '/internships',
-                        context,
-                        sw,
-                      ),
-                    ),
+                    SizedBox(height: sw * 0.018),
+                    _fs(4, _viewAllButton('View all ${_internships.length} internships', '/internships', context, sw)),
                   ],
-                  SizedBox(height: sw * 0.060),
+                  SizedBox(height: sw * 0.055),
 
                   // ── Courses
-                  _fs(
-                    5,
-                    _sectionHeader(
-                      'Courses For You',
-                      sub: 'Fill your skill gaps • ${_courses.length} courses',
-                      sw: sw,
-                    ),
-                  ),
-                  SizedBox(height: sw * 0.030),
+                  _fs(5, _sectionHeader('Courses For You', sub: 'Fill your skill gaps • ${_courses.length} courses', sw: sw)),
+                  SizedBox(height: sw * 0.028),
                   _courses.isEmpty
                       ? _fs(5, _emptyCard('No course recommendations yet.', sw))
                       : _fs(5, _buildRecommendedCourses(sw)),
-                  SizedBox(height: sw * 0.060),
+                  SizedBox(height: sw * 0.055),
 
                   _fs(6, _buildMotivationBanner(sw)),
                 ],
@@ -557,7 +1230,19 @@ class _DashboardScreenState extends State<DashboardScreen>
   }
 
   // ─────────────────────────────────────────
-  //  HEADER
+  //  SLIDER APPLY HANDLER
+  // ─────────────────────────────────────────
+  void _handleSliderApply(_SliderItem item) {
+    final sw = MediaQuery.of(context).size.width;
+    if (item.type == 'job') {
+      _showJobBottomSheet(item.sourceObject as RecommendedJob, sw);
+    } else if (item.type == 'internship') {
+      _showInternshipBottomSheet(item.sourceObject as RecommendedInternship, sw);
+    }
+  }
+
+  // ─────────────────────────────────────────
+  //  HEADER  (reduced padding/height)
   // ─────────────────────────────────────────
   Widget _buildHeader(double sw) {
     final displayName = profileState.name.isNotEmpty
@@ -582,34 +1267,34 @@ class _DashboardScreenState extends State<DashboardScreen>
         child: SafeArea(
           bottom: false,
           child: Padding(
+            // ← Reduced vertical padding from 0.035 → 0.022 and 0.05 → 0.032
             padding: EdgeInsets.fromLTRB(
               sw * 0.05,
-              sw * 0.035,
+              sw * 0.022,
               sw * 0.05,
-              sw * 0.05,
+              sw * 0.032,
             ),
             child: Column(
               children: [
                 Row(
                   children: [
+                    // Avatar (slightly smaller)
                     Container(
-                      width: sw * 0.125,
-                      height: sw * 0.125,
+                      width: sw * 0.110,
+                      height: sw * 0.110,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        gradient: const LinearGradient(
-                          colors: [kPrimary, kAccent],
-                        ),
+                        gradient: const LinearGradient(colors: [kPrimary, kAccent]),
                         boxShadow: [
                           BoxShadow(
-                            color: kPrimary.withValues(alpha: 0.40),
-                            blurRadius: 12,
-                            offset: const Offset(0, 4),
+                            color: kPrimary.withValues(alpha: 0.38),
+                            blurRadius: 10,
+                            offset: const Offset(0, 3),
                           ),
                         ],
                       ),
                       child: Container(
-                        margin: const EdgeInsets.all(2.5),
+                        margin: const EdgeInsets.all(2),
                         decoration: const BoxDecoration(
                           color: Color(0xFF1E1B4B),
                           shape: BoxShape.circle,
@@ -618,7 +1303,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                           child: Text(
                             initial,
                             style: TextStyle(
-                              fontSize: sw * 0.050,
+                              fontSize: sw * 0.044,
                               fontWeight: FontWeight.w800,
                               color: Colors.white,
                             ),
@@ -626,7 +1311,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                         ),
                       ),
                     ),
-                    SizedBox(width: sw * 0.035),
+                    SizedBox(width: sw * 0.030),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -637,7 +1322,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                                 child: Text(
                                   'Hey, $displayName ',
                                   style: TextStyle(
-                                    fontSize: sw * 0.048,
+                                    fontSize: sw * 0.042,
                                     fontWeight: FontWeight.w800,
                                     color: Colors.white,
                                     letterSpacing: -0.3,
@@ -645,28 +1330,22 @@ class _DashboardScreenState extends State<DashboardScreen>
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ),
-                              Text(
-                                '👋',
-                                style: TextStyle(fontSize: sw * 0.040),
-                              ),
+                              Text('👋', style: TextStyle(fontSize: sw * 0.036)),
                             ],
                           ),
-                          SizedBox(height: sw * 0.005),
+                          SizedBox(height: sw * 0.004),
                           Row(
                             children: [
                               Container(
-                                width: sw * 0.018,
-                                height: sw * 0.018,
-                                decoration: const BoxDecoration(
-                                  color: kAccent,
-                                  shape: BoxShape.circle,
-                                ),
+                                width: sw * 0.016,
+                                height: sw * 0.016,
+                                decoration: const BoxDecoration(color: kAccent, shape: BoxShape.circle),
                               ),
-                              SizedBox(width: sw * 0.013),
+                              SizedBox(width: sw * 0.010),
                               Text(
                                 '${_jobs.length} job matches today',
                                 style: TextStyle(
-                                  fontSize: sw * 0.028,
+                                  fontSize: sw * 0.026,
                                   color: Colors.white.withValues(alpha: 0.70),
                                   fontWeight: FontWeight.w600,
                                 ),
@@ -676,75 +1355,63 @@ class _DashboardScreenState extends State<DashboardScreen>
                         ],
                       ),
                     ),
-                    Stack(
-                      children: [
-                        Container(
-                          width: sw * 0.10,
-                          height: sw * 0.10,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.10),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.15),
-                            ),
-                          ),
-                          child: Icon(
-                            Icons.notifications_none,
-                            color: Colors.white,
-                            size: sw * 0.050,
-                          ),
-                        ),
-                        Positioned(
-                          top: sw * 0.022,
-                          right: sw * 0.022,
-                          child: Container(
-                            width: sw * 0.020,
-                            height: sw * 0.020,
+                    // Notification bell
+                    GestureDetector(
+                      onTap: () => context.push('/notifications'),
+                      child: Stack(
+                        children: [
+                          Container(
+                            width: sw * 0.092,
+                            height: sw * 0.092,
                             decoration: BoxDecoration(
-                              color: kAccent,
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: const Color(0xFF1E1B4B),
-                                width: 1.5,
+                              color: Colors.white.withValues(alpha: 0.10),
+                              borderRadius: BorderRadius.circular(11),
+                              border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+                            ),
+                            child: Icon(Icons.notifications_none, color: Colors.white, size: sw * 0.046),
+                          ),
+                          Positioned(
+                            top: sw * 0.018,
+                            right: sw * 0.018,
+                            child: Container(
+                              width: sw * 0.018,
+                              height: sw * 0.018,
+                              decoration: BoxDecoration(
+                                color: kAccent,
+                                shape: BoxShape.circle,
+                                border: Border.all(color: const Color(0xFF1E1B4B), width: 1.5),
                               ),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ],
                 ),
-                SizedBox(height: sw * 0.040),
+                SizedBox(height: sw * 0.028),
+                // Profile strength mini-bar
                 Container(
                   padding: EdgeInsets.symmetric(
-                    horizontal: sw * 0.035,
-                    vertical: sw * 0.025,
+                    horizontal: sw * 0.030,
+                    vertical: sw * 0.018,
                   ),
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.07),
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.10),
-                    ),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
                   ),
                   child: Row(
                     children: [
                       Container(
-                        width: sw * 0.085,
-                        height: sw * 0.085,
+                        width: sw * 0.070,
+                        height: sw * 0.070,
                         decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [kPrimary, kAccent],
-                          ),
-                          borderRadius: BorderRadius.circular(10),
+                          gradient: const LinearGradient(colors: [kPrimary, kAccent]),
+                          borderRadius: BorderRadius.circular(9),
                         ),
-                        child: Icon(
-                          Icons.auto_awesome,
-                          color: Colors.white,
-                          size: sw * 0.040,
-                        ),
+                        child: Icon(Icons.auto_awesome, color: Colors.white, size: sw * 0.035),
                       ),
-                      SizedBox(width: sw * 0.030),
+                      SizedBox(width: sw * 0.025),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -752,34 +1419,31 @@ class _DashboardScreenState extends State<DashboardScreen>
                             Text(
                               'Profile at $pct% — ${profileState.strengthHint}',
                               style: TextStyle(
-                                fontSize: sw * 0.028,
-                                fontWeight: FontWeight.w800,
+                                fontSize: sw * 0.026,
+                                fontWeight: FontWeight.w700,
                                 color: Colors.white,
                               ),
                             ),
                             Text(
-                              'Complete profile to unlock more matches',
+                              'Complete to unlock more matches',
                               style: TextStyle(
-                                fontSize: sw * 0.024,
-                                color: Colors.white.withValues(alpha: 0.55),
+                                fontSize: sw * 0.022,
+                                color: Colors.white.withValues(alpha: 0.50),
                               ),
                             ),
                           ],
                         ),
                       ),
                       Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: sw * 0.020,
-                          vertical: sw * 0.010,
-                        ),
+                        padding: EdgeInsets.symmetric(horizontal: sw * 0.016, vertical: sw * 0.008),
                         decoration: BoxDecoration(
                           color: kAccent.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(7),
                         ),
                         child: Text(
                           '$pct%',
                           style: TextStyle(
-                            fontSize: sw * 0.030,
+                            fontSize: sw * 0.026,
                             fontWeight: FontWeight.w800,
                             color: kAccent,
                           ),
@@ -802,54 +1466,32 @@ class _DashboardScreenState extends State<DashboardScreen>
   Widget _buildSearchBar(double sw) {
     return Container(
       color: kCardBg,
-      padding: EdgeInsets.symmetric(
-        horizontal: sw * 0.040,
-        vertical: sw * 0.030,
-      ),
+      padding: EdgeInsets.symmetric(horizontal: sw * 0.040, vertical: sw * 0.025),
       child: TextField(
-        style: TextStyle(
-          fontSize: sw * 0.035,
-          fontWeight: FontWeight.w600,
-          color: kInk,
-        ),
+        style: TextStyle(fontSize: sw * 0.034, fontWeight: FontWeight.w600, color: kInk),
         decoration: InputDecoration(
           hintText: 'Search jobs, courses, companies…',
-          hintStyle: TextStyle(fontSize: sw * 0.033, color: kHint),
-          prefixIcon: Icon(Icons.search, color: kMuted, size: sw * 0.050),
+          hintStyle: TextStyle(fontSize: sw * 0.032, color: kHint),
+          prefixIcon: Icon(Icons.search, color: kMuted, size: sw * 0.048),
           suffixIcon: Container(
-            margin: EdgeInsets.all(sw * 0.020),
-            padding: EdgeInsets.symmetric(horizontal: sw * 0.025),
-            decoration: BoxDecoration(
-              color: kSelectedBg,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(Icons.tune, color: kPrimary, size: sw * 0.045),
+            margin: EdgeInsets.all(sw * 0.018),
+            padding: EdgeInsets.symmetric(horizontal: sw * 0.022),
+            decoration: BoxDecoration(color: kSelectedBg, borderRadius: BorderRadius.circular(9)),
+            child: Icon(Icons.tune, color: kPrimary, size: sw * 0.042),
           ),
           filled: true,
           fillColor: kBgPage,
-          contentPadding: EdgeInsets.symmetric(
-            horizontal: sw * 0.040,
-            vertical: sw * 0.033,
-          ),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: kBorder, width: 1.5),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: kBorder, width: 1.5),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: kPrimary, width: 2),
-          ),
+          contentPadding: EdgeInsets.symmetric(horizontal: sw * 0.038, vertical: sw * 0.026),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(13), borderSide: const BorderSide(color: kBorder, width: 1.5)),
+          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(13), borderSide: const BorderSide(color: kBorder, width: 1.5)),
+          focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(13), borderSide: const BorderSide(color: kPrimary, width: 2)),
         ),
       ),
     );
   }
 
   // ─────────────────────────────────────────
-  //  STATS GRID — 2 × 2
+  //  STATS GRID
   // ─────────────────────────────────────────
   Widget _buildStatsGrid(double sw) {
     final stats = [
@@ -885,21 +1527,9 @@ class _DashboardScreenState extends State<DashboardScreen>
 
     return Column(
       children: [
-        Row(
-          children: [
-            _statCard(stats[0], sw),
-            SizedBox(width: sw * 0.030),
-            _statCard(stats[1], sw),
-          ],
-        ),
-        SizedBox(height: sw * 0.030),
-        Row(
-          children: [
-            _statCard(stats[2], sw),
-            SizedBox(width: sw * 0.030),
-            _statCard(stats[3], sw),
-          ],
-        ),
+        Row(children: [_statCard(stats[0], sw), SizedBox(width: sw * 0.028), _statCard(stats[1], sw)]),
+        SizedBox(height: sw * 0.028),
+        Row(children: [_statCard(stats[2], sw), SizedBox(width: sw * 0.028), _statCard(stats[3], sw)]),
       ],
     );
   }
@@ -908,79 +1538,41 @@ class _DashboardScreenState extends State<DashboardScreen>
     final color = s['color'] as Color;
     return Expanded(
       child: Container(
-        padding: EdgeInsets.all(sw * 0.045),
+        padding: EdgeInsets.all(sw * 0.040),
         decoration: BoxDecoration(
           color: kCardBg,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(18),
           border: Border.all(color: kBorder, width: 1.5),
           boxShadow: [
-            BoxShadow(
-              color: color.withValues(alpha: 0.07),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
+            BoxShadow(color: color.withValues(alpha: 0.07), blurRadius: 12, offset: const Offset(0, 4)),
           ],
         ),
         child: Row(
           children: [
             Container(
-              width: sw * 0.115,
-              height: sw * 0.115,
+              width: sw * 0.105,
+              height: sw * 0.105,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [color, color.withValues(alpha: 0.70)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
-                borderRadius: BorderRadius.circular(14),
-                boxShadow: [
-                  BoxShadow(
-                    color: color.withValues(alpha: 0.25),
-                    blurRadius: 8,
-                    offset: const Offset(0, 3),
-                  ),
-                ],
+                borderRadius: BorderRadius.circular(13),
+                boxShadow: [BoxShadow(color: color.withValues(alpha: 0.25), blurRadius: 8, offset: const Offset(0, 3))],
               ),
-              child: Icon(
-                s['icon'] as IconData,
-                size: sw * 0.050,
-                color: Colors.white,
-              ),
+              child: Icon(s['icon'] as IconData, size: sw * 0.046, color: Colors.white),
             ),
-            SizedBox(width: sw * 0.030),
+            SizedBox(width: sw * 0.026),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    s['value'] as String,
-                    style: TextStyle(
-                      fontSize: sw * 0.055,
-                      fontWeight: FontWeight.w800,
-                      color: kInk,
-                      letterSpacing: -0.5,
-                    ),
-                  ),
-                  SizedBox(height: sw * 0.004),
-                  Text(
-                    s['label'] as String,
-                    style: TextStyle(
-                      fontSize: sw * 0.030,
-                      fontWeight: FontWeight.w700,
-                      color: kSlate,
-                    ),
-                  ),
+                  Text(s['value'] as String, style: TextStyle(fontSize: sw * 0.050, fontWeight: FontWeight.w800, color: kInk, letterSpacing: -0.5)),
                   SizedBox(height: sw * 0.003),
-                  Text(
-                    s['sub'] as String,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: sw * 0.024,
-                      color: kMuted,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
+                  Text(s['label'] as String, style: TextStyle(fontSize: sw * 0.028, fontWeight: FontWeight.w700, color: kSlate)),
+                  SizedBox(height: sw * 0.002),
+                  Text(s['sub'] as String, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: sw * 0.022, color: kMuted, fontWeight: FontWeight.w500)),
                 ],
               ),
             ),
@@ -995,7 +1587,7 @@ class _DashboardScreenState extends State<DashboardScreen>
   // ─────────────────────────────────────────
   Widget _buildProfileStrength(double sw) {
     return Container(
-      padding: EdgeInsets.all(sw * 0.050),
+      padding: EdgeInsets.all(sw * 0.045),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           colors: [Color(0xFF0F172A), Color(0xFF1E1B4B)],
@@ -1003,52 +1595,29 @@ class _DashboardScreenState extends State<DashboardScreen>
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: kInk.withValues(alpha: 0.18),
-            blurRadius: 20,
-            offset: const Offset(0, 6),
-          ),
-        ],
+        boxShadow: [BoxShadow(color: kInk.withValues(alpha: 0.18), blurRadius: 20, offset: const Offset(0, 6))],
       ),
       child: Column(
         children: [
           Row(
             children: [
               Container(
-                width: sw * 0.105,
-                height: sw * 0.105,
+                width: sw * 0.095,
+                height: sw * 0.095,
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(colors: [kPrimary, kAccent]),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(11),
                 ),
-                child: Icon(
-                  Icons.person,
-                  color: Colors.white,
-                  size: sw * 0.050,
-                ),
+                child: Icon(Icons.person, color: Colors.white, size: sw * 0.046),
               ),
-              SizedBox(width: sw * 0.035),
+              SizedBox(width: sw * 0.030),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Profile Strength',
-                      style: TextStyle(
-                        fontSize: sw * 0.038,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.white,
-                      ),
-                    ),
-                    SizedBox(height: sw * 0.005),
-                    Text(
-                      profileState.strengthHint,
-                      style: TextStyle(
-                        fontSize: sw * 0.026,
-                        color: const Color(0xFF94A3B8),
-                      ),
-                    ),
+                    Text('Profile Strength', style: TextStyle(fontSize: sw * 0.035, fontWeight: FontWeight.w800, color: Colors.white)),
+                    SizedBox(height: sw * 0.004),
+                    Text(profileState.strengthHint, style: TextStyle(fontSize: sw * 0.024, color: const Color(0xFF94A3B8))),
                   ],
                 ),
               ),
@@ -1059,62 +1628,35 @@ class _DashboardScreenState extends State<DashboardScreen>
                   children: [
                     Text(
                       '${(_xpValue.value * 100).toInt()}%',
-                      style: TextStyle(
-                        fontSize: sw * 0.070,
-                        fontWeight: FontWeight.w800,
-                        color: kAccent,
-                        letterSpacing: -1,
-                      ),
+                      style: TextStyle(fontSize: sw * 0.062, fontWeight: FontWeight.w800, color: kAccent, letterSpacing: -1),
                     ),
-                    Text(
-                      'Complete',
-                      style: TextStyle(
-                        fontSize: sw * 0.023,
-                        color: kHint,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
+                    Text('Complete', style: TextStyle(fontSize: sw * 0.022, color: kHint, fontWeight: FontWeight.w600)),
                   ],
                 ),
               ),
             ],
           ),
-          SizedBox(height: sw * 0.040),
+          SizedBox(height: sw * 0.035),
           ClipRRect(
             borderRadius: BorderRadius.circular(8),
             child: AnimatedBuilder(
               animation: _xpValue,
               builder: (_, __) => LinearProgressIndicator(
                 value: _xpValue.value,
-                minHeight: 8,
+                minHeight: 7,
                 backgroundColor: Colors.white.withValues(alpha: 0.10),
                 valueColor: const AlwaysStoppedAnimation<Color>(kAccent),
               ),
             ),
           ),
-          SizedBox(height: sw * 0.035),
+          SizedBox(height: sw * 0.030),
           Row(
             children: [
-              _profileChip(
-                Icons.workspace_premium,
-                'Add Certs',
-                profileState.certifications.isNotEmpty,
-                sw,
-              ),
-              SizedBox(width: sw * 0.020),
-              _profileChip(
-                Icons.code,
-                'Link GitHub',
-                profileState.github.isNotEmpty,
-                sw,
-              ),
-              SizedBox(width: sw * 0.020),
-              _profileChip(
-                Icons.check_circle,
-                'Skills Added',
-                profileState.skills.isNotEmpty,
-                sw,
-              ),
+              _profileChip(Icons.workspace_premium, 'Add Certs', profileState.certifications.isNotEmpty, sw),
+              SizedBox(width: sw * 0.018),
+              _profileChip(Icons.code, 'Link GitHub', profileState.github.isNotEmpty, sw),
+              SizedBox(width: sw * 0.018),
+              _profileChip(Icons.check_circle, 'Skills Added', profileState.skills.isNotEmpty, sw),
             ],
           ),
         ],
@@ -1125,35 +1667,17 @@ class _DashboardScreenState extends State<DashboardScreen>
   Widget _profileChip(IconData icon, String label, bool done, double sw) {
     return Expanded(
       child: Container(
-        padding: EdgeInsets.symmetric(
-          vertical: sw * 0.020,
-          horizontal: sw * 0.020,
-        ),
+        padding: EdgeInsets.symmetric(vertical: sw * 0.018, horizontal: sw * 0.018),
         decoration: BoxDecoration(
-          color: done
-              ? kSuccess.withValues(alpha: 0.15)
-              : Colors.white.withValues(alpha: 0.07),
+          color: done ? kSuccess.withValues(alpha: 0.15) : Colors.white.withValues(alpha: 0.07),
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-            color: done
-                ? kSuccess.withValues(alpha: 0.40)
-                : Colors.white.withValues(alpha: 0.10),
-          ),
+          border: Border.all(color: done ? kSuccess.withValues(alpha: 0.40) : Colors.white.withValues(alpha: 0.10)),
         ),
         child: Row(
           children: [
-            Icon(icon, size: sw * 0.030, color: done ? kSuccess : kHint),
-            SizedBox(width: sw * 0.013),
-            Expanded(
-              child: Text(
-                label,
-                style: TextStyle(
-                  fontSize: sw * 0.023,
-                  fontWeight: FontWeight.w700,
-                  color: done ? kSuccess : kHint,
-                ),
-              ),
-            ),
+            Icon(icon, size: sw * 0.028, color: done ? kSuccess : kHint),
+            SizedBox(width: sw * 0.010),
+            Expanded(child: Text(label, style: TextStyle(fontSize: sw * 0.021, fontWeight: FontWeight.w700, color: done ? kSuccess : kHint))),
           ],
         ),
       ),
@@ -1161,55 +1685,19 @@ class _DashboardScreenState extends State<DashboardScreen>
   }
 
   // ─────────────────────────────────────────
-  //  QUICK ACTIONS — 2 rows × 3 columns
+  //  QUICK ACTIONS
   // ─────────────────────────────────────────
   Widget _buildQuickActions(BuildContext context, double sw) {
     final actions = [
-      {
-        'icon': Icons.work_outline,
-        'label': 'Jobs',
-        'g1': const Color(0xFF1D4ED8),
-        'g2': const Color(0xFF3B82F6),
-        'route': '/jobs',
-      },
-      {
-        'icon': Icons.school,
-        'label': 'Internships',
-        'g1': const Color(0xFF7C3AED),
-        'g2': const Color(0xFFA855F7),
-        'route': '/internships',
-      },
-      {
-        'icon': Icons.business,
-        'label': 'Companies',
-        'g1': const Color(0xFF0369A1),
-        'g2': const Color(0xFF0EA5E9),
-        'route': '/companies',
-      },
-      {
-        'icon': Icons.emoji_events,
-        'label': 'Hackathons',
-        'g1': const Color(0xFFD97706),
-        'g2': const Color(0xFFF59E0B),
-        'route': '/hackathons',
-      },
-      {
-        'icon': Icons.menu_book,
-        'label': 'Courses',
-        'g1': const Color(0xFF059669),
-        'g2': const Color(0xFF10B981),
-        'route': '/courses',
-      },
-      {
-        'icon': Icons.person,
-        'label': 'Profile',
-        'g1': const Color(0xFFEC4899),
-        'g2': const Color(0xFFF43F5E),
-        'route': '/profile',
-      },
+      {'icon': Icons.work_outline, 'label': 'Jobs', 'g1': const Color(0xFF1D4ED8), 'g2': const Color(0xFF3B82F6), 'route': '/jobs'},
+      {'icon': Icons.school, 'label': 'Internships', 'g1': const Color(0xFF7C3AED), 'g2': const Color(0xFFA855F7), 'route': '/internships'},
+      {'icon': Icons.business, 'label': 'Companies', 'g1': const Color(0xFF0369A1), 'g2': const Color(0xFF0EA5E9), 'route': '/companies'},
+      {'icon': Icons.emoji_events, 'label': 'Hackathons', 'g1': const Color(0xFFD97706), 'g2': const Color(0xFFF59E0B), 'route': '/hackathons'},
+      {'icon': Icons.menu_book, 'label': 'Courses', 'g1': const Color(0xFF059669), 'g2': const Color(0xFF10B981), 'route': '/courses'},
+      {'icon': Icons.person, 'label': 'Profile', 'g1': const Color(0xFFEC4899), 'g2': const Color(0xFFF43F5E), 'route': '/profile'},
     ];
 
-    Widget actionItem(Map<String, dynamic> a, {bool isLast = false}) {
+    Widget actionItem(Map<String, dynamic> a) {
       final g1 = a['g1'] as Color;
       final g2 = a['g2'] as Color;
       return Expanded(
@@ -1222,38 +1710,17 @@ class _DashboardScreenState extends State<DashboardScreen>
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                width: sw * 0.155,
-                height: sw * 0.155,
+                width: sw * 0.145,
+                height: sw * 0.145,
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [g1, g2],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(18),
-                  boxShadow: [
-                    BoxShadow(
-                      color: g1.withValues(alpha: 0.28),
-                      blurRadius: 8,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
+                  gradient: LinearGradient(colors: [g1, g2], begin: Alignment.topLeft, end: Alignment.bottomRight),
+                  borderRadius: BorderRadius.circular(17),
+                  boxShadow: [BoxShadow(color: g1.withValues(alpha: 0.28), blurRadius: 8, offset: const Offset(0, 3))],
                 ),
-                child: Icon(
-                  a['icon'] as IconData,
-                  color: Colors.white,
-                  size: sw * 0.065,
-                ),
+                child: Icon(a['icon'] as IconData, color: Colors.white, size: sw * 0.060),
               ),
-              SizedBox(height: sw * 0.018),
-              Text(
-                a['label'] as String,
-                style: TextStyle(
-                  fontSize: sw * 0.028,
-                  fontWeight: FontWeight.w700,
-                  color: kSlate,
-                ),
-              ),
+              SizedBox(height: sw * 0.015),
+              Text(a['label'] as String, style: TextStyle(fontSize: sw * 0.026, fontWeight: FontWeight.w700, color: kSlate)),
             ],
           ),
         ),
@@ -1264,28 +1731,10 @@ class _DashboardScreenState extends State<DashboardScreen>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _sectionHeader('Quick Access', sub: 'Jump to any section', sw: sw),
+        SizedBox(height: sw * 0.028),
+        Row(children: [actionItem(actions[0]), SizedBox(width: sw * 0.022), actionItem(actions[1]), SizedBox(width: sw * 0.022), actionItem(actions[2])]),
         SizedBox(height: sw * 0.030),
-        // ── Row 1: Jobs, Internships, Companies
-        Row(
-          children: [
-            actionItem(actions[0]),
-            SizedBox(width: sw * 0.025),
-            actionItem(actions[1]),
-            SizedBox(width: sw * 0.025),
-            actionItem(actions[2]),
-          ],
-        ),
-        SizedBox(height: sw * 0.035),
-        // ── Row 2: Hackathons, Courses, Profile
-        Row(
-          children: [
-            actionItem(actions[3]),
-            SizedBox(width: sw * 0.025),
-            actionItem(actions[4]),
-            SizedBox(width: sw * 0.025),
-            actionItem(actions[5]),
-          ],
-        ),
+        Row(children: [actionItem(actions[3]), SizedBox(width: sw * 0.022), actionItem(actions[4]), SizedBox(width: sw * 0.022), actionItem(actions[5])]),
       ],
     );
   }
@@ -1295,44 +1744,23 @@ class _DashboardScreenState extends State<DashboardScreen>
   // ─────────────────────────────────────────
   Widget _skillChip(String skill, bool isMatched, double sw) {
     return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: sw * 0.022,
-        vertical: sw * 0.008,
-      ),
+      padding: EdgeInsets.symmetric(horizontal: sw * 0.020, vertical: sw * 0.007),
       decoration: BoxDecoration(
         color: isMatched ? const Color(0xFFF0FDF4) : const Color(0xFFFFF1F2),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: isMatched
-              ? kSuccess.withValues(alpha: 0.40)
-              : Colors.red.withValues(alpha: 0.30),
-        ),
+        border: Border.all(color: isMatched ? kSuccess.withValues(alpha: 0.40) : Colors.red.withValues(alpha: 0.30)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            isMatched ? Icons.check_circle : Icons.cancel,
-            size: sw * 0.025,
-            color: isMatched ? kSuccess : Colors.red,
-          ),
-          SizedBox(width: sw * 0.008),
-          Text(
-            skill,
-            style: TextStyle(
-              fontSize: sw * 0.025,
-              color: isMatched ? kSuccess : Colors.red,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
+          Icon(isMatched ? Icons.check_circle : Icons.cancel, size: sw * 0.024, color: isMatched ? kSuccess : Colors.red),
+          SizedBox(width: sw * 0.006),
+          Text(skill, style: TextStyle(fontSize: sw * 0.024, color: isMatched ? kSuccess : Colors.red, fontWeight: FontWeight.w700)),
         ],
       ),
     );
   }
 
-  // ─────────────────────────────────────────
-  //  VIEW & APPLY BUTTON
-  // ─────────────────────────────────────────
   Widget _viewDetailsButton({
     required double sw,
     required VoidCallback onTap,
@@ -1348,37 +1776,19 @@ class _DashboardScreenState extends State<DashboardScreen>
       },
       child: Container(
         width: double.infinity,
-        padding: EdgeInsets.symmetric(vertical: sw * 0.032),
+        padding: EdgeInsets.symmetric(vertical: sw * 0.030),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [grad1, grad2],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(14),
-          boxShadow: [
-            BoxShadow(
-              color: grad1.withValues(alpha: 0.28),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
+          gradient: LinearGradient(colors: [grad1, grad2], begin: Alignment.topLeft, end: Alignment.bottomRight),
+          borderRadius: BorderRadius.circular(13),
+          boxShadow: [BoxShadow(color: grad1.withValues(alpha: 0.28), blurRadius: 10, offset: const Offset(0, 4))],
         ),
         child: Center(
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, color: Colors.white, size: sw * 0.040),
-              SizedBox(width: sw * 0.018),
-              Text(
-                label,
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w800,
-                  fontSize: sw * 0.032,
-                  letterSpacing: 0.2,
-                ),
-              ),
+              Icon(icon, color: Colors.white, size: sw * 0.038),
+              SizedBox(width: sw * 0.016),
+              Text(label, style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: sw * 0.030, letterSpacing: 0.2)),
             ],
           ),
         ),
@@ -1386,15 +1796,7 @@ class _DashboardScreenState extends State<DashboardScreen>
     );
   }
 
-  // ─────────────────────────────────────────
-  //  VIEW ALL BUTTON
-  // ─────────────────────────────────────────
-  Widget _viewAllButton(
-    String label,
-    String route,
-    BuildContext context,
-    double sw,
-  ) {
+  Widget _viewAllButton(String label, String route, BuildContext context, double sw) {
     return GestureDetector(
       onTap: () {
         HapticFeedback.lightImpact();
@@ -1402,32 +1804,18 @@ class _DashboardScreenState extends State<DashboardScreen>
       },
       child: Container(
         width: double.infinity,
-        padding: EdgeInsets.symmetric(vertical: sw * 0.030),
+        padding: EdgeInsets.symmetric(vertical: sw * 0.026),
         decoration: BoxDecoration(
           color: kSelectedBg,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: kPrimary.withValues(alpha: 0.30),
-            width: 1.5,
-          ),
+          borderRadius: BorderRadius.circular(13),
+          border: Border.all(color: kPrimary.withValues(alpha: 0.30), width: 1.5),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: sw * 0.032,
-                fontWeight: FontWeight.w700,
-                color: kPrimary,
-              ),
-            ),
-            SizedBox(width: sw * 0.015),
-            Icon(
-              Icons.arrow_forward_ios_rounded,
-              size: sw * 0.032,
-              color: kPrimary,
-            ),
+            Text(label, style: TextStyle(fontSize: sw * 0.030, fontWeight: FontWeight.w700, color: kPrimary)),
+            SizedBox(width: sw * 0.012),
+            Icon(Icons.arrow_forward_ios_rounded, size: sw * 0.030, color: kPrimary),
           ],
         ),
       ),
@@ -1445,15 +1833,9 @@ class _DashboardScreenState extends State<DashboardScreen>
     );
   }
 
-  // ─────────────────────────────────────────
-  //  APPLIED BANNER HELPERS
-  // ─────────────────────────────────────────
   Widget _appliedPill(double sw) {
     return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: sw * 0.030,
-        vertical: sw * 0.013,
-      ),
+      padding: EdgeInsets.symmetric(horizontal: sw * 0.028, vertical: sw * 0.012),
       decoration: BoxDecoration(
         gradient: const LinearGradient(colors: [kSuccess, Color(0xFF15803D)]),
         borderRadius: BorderRadius.circular(20),
@@ -1461,16 +1843,9 @@ class _DashboardScreenState extends State<DashboardScreen>
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.check_circle, color: Colors.white, size: sw * 0.030),
-          SizedBox(width: sw * 0.008),
-          Text(
-            'Applied',
-            style: TextStyle(
-              fontSize: sw * 0.028,
-              fontWeight: FontWeight.w800,
-              color: Colors.white,
-            ),
-          ),
+          Icon(Icons.check_circle, color: Colors.white, size: sw * 0.028),
+          SizedBox(width: sw * 0.007),
+          Text('Applied', style: TextStyle(fontSize: sw * 0.026, fontWeight: FontWeight.w800, color: Colors.white)),
         ],
       ),
     );
@@ -1478,10 +1853,7 @@ class _DashboardScreenState extends State<DashboardScreen>
 
   Widget _submittedBadge(double sw) {
     return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: sw * 0.025,
-        vertical: sw * 0.013,
-      ),
+      padding: EdgeInsets.symmetric(horizontal: sw * 0.022, vertical: sw * 0.012),
       decoration: BoxDecoration(
         color: const Color(0xFFF0FDF4),
         borderRadius: BorderRadius.circular(12),
@@ -1490,199 +1862,98 @@ class _DashboardScreenState extends State<DashboardScreen>
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.verified_rounded, color: kSuccess, size: sw * 0.030),
-          SizedBox(width: sw * 0.008),
-          Text(
-            'Application Submitted',
-            style: TextStyle(
-              fontSize: sw * 0.024,
-              fontWeight: FontWeight.w700,
-              color: kSuccess,
-            ),
-          ),
+          Icon(Icons.verified_rounded, color: kSuccess, size: sw * 0.028),
+          SizedBox(width: sw * 0.007),
+          Text('Submitted', style: TextStyle(fontSize: sw * 0.022, fontWeight: FontWeight.w700, color: kSuccess)),
         ],
       ),
     );
   }
 
   // ─────────────────────────────────────────
-  //  RECOMMENDED JOBS — max 4
+  //  RECOMMENDED JOBS
   // ─────────────────────────────────────────
   Widget _buildRecommendedJobs(double sw) {
     return Column(
       children: _jobs.take(4).map((job) {
         final theme = _jobTheme(job.title, job.companyName);
         final match = job.matchPercentage;
-        final matchColor = match >= 90
-            ? kSuccess
-            : match >= 80
-            ? kWarning
-            : kMuted;
-        final matchBg = match >= 90
-            ? const Color(0xFFF0FDF4)
-            : match >= 80
-            ? const Color(0xFFFFFBEB)
-            : const Color(0xFFF1F5F9);
+        final matchColor = match >= 90 ? kSuccess : match >= 80 ? kWarning : kMuted;
+        final matchBg = match >= 90 ? const Color(0xFFF0FDF4) : match >= 80 ? const Color(0xFFFFFBEB) : const Color(0xFFF1F5F9);
         final isApplied = _appliedJobIds.contains(job.jobId);
 
         return AnimatedContainer(
           duration: const Duration(milliseconds: 400),
-          margin: EdgeInsets.only(bottom: sw * 0.030),
+          margin: EdgeInsets.only(bottom: sw * 0.028),
           decoration: BoxDecoration(
-            gradient: isApplied
-                ? LinearGradient(
-                    colors: [
-                      theme.grad1.withValues(alpha: 0.09),
-                      theme.grad2.withValues(alpha: 0.04),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  )
-                : null,
+            gradient: isApplied ? LinearGradient(colors: [theme.grad1.withValues(alpha: 0.09), theme.grad2.withValues(alpha: 0.04)], begin: Alignment.topLeft, end: Alignment.bottomRight) : null,
             color: isApplied ? null : kCardBg,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: isApplied ? theme.grad1.withValues(alpha: 0.50) : kBorder,
-              width: isApplied ? 2 : 1.5,
-            ),
-            boxShadow: isApplied
-                ? [
-                    BoxShadow(
-                      color: theme.grad1.withValues(alpha: 0.10),
-                      blurRadius: 16,
-                      offset: const Offset(0, 4),
-                    ),
-                  ]
-                : null,
+            border: Border.all(color: isApplied ? theme.grad1.withValues(alpha: 0.50) : kBorder, width: isApplied ? 2 : 1.5),
+            boxShadow: isApplied ? [BoxShadow(color: theme.grad1.withValues(alpha: 0.10), blurRadius: 16, offset: const Offset(0, 4))] : null,
           ),
           child: Column(
             children: [
               Container(
                 height: isApplied ? 4 : 3,
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [theme.grad1, theme.grad2],
-                    begin: Alignment.centerLeft,
-                    end: Alignment.centerRight,
-                  ),
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(20),
-                  ),
+                  gradient: LinearGradient(colors: [theme.grad1, theme.grad2], begin: Alignment.centerLeft, end: Alignment.centerRight),
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
                 ),
               ),
               Padding(
-                padding: EdgeInsets.all(sw * 0.040),
+                padding: EdgeInsets.all(sw * 0.038),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
-                        _tile(theme.icon, theme.grad1, theme.grad2, sw * 0.115),
-                        SizedBox(width: sw * 0.030),
+                        _tile(theme.icon, theme.grad1, theme.grad2, sw * 0.110),
+                        SizedBox(width: sw * 0.028),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                job.title,
-                                style: TextStyle(
-                                  fontSize: sw * 0.035,
-                                  fontWeight: FontWeight.w800,
-                                  color: isApplied ? kPrimary : kInk,
-                                ),
-                              ),
-                              SizedBox(height: sw * 0.005),
-                              Text(
-                                job.companyName,
-                                style: TextStyle(
-                                  fontSize: sw * 0.030,
-                                  color: kMuted,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
+                              Text(job.title, style: TextStyle(fontSize: sw * 0.033, fontWeight: FontWeight.w800, color: isApplied ? kPrimary : kInk)),
+                              SizedBox(height: sw * 0.004),
+                              Text(job.companyName, style: TextStyle(fontSize: sw * 0.028, color: kMuted, fontWeight: FontWeight.w600)),
                             ],
                           ),
                         ),
                         Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: sw * 0.025,
-                            vertical: sw * 0.013,
-                          ),
-                          decoration: BoxDecoration(
-                            color: matchBg,
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Text(
-                            '$match% match',
-                            style: TextStyle(
-                              fontSize: sw * 0.025,
-                              fontWeight: FontWeight.w800,
-                              color: matchColor,
-                            ),
-                          ),
+                          padding: EdgeInsets.symmetric(horizontal: sw * 0.022, vertical: sw * 0.011),
+                          decoration: BoxDecoration(color: matchBg, borderRadius: BorderRadius.circular(20)),
+                          child: Text('$match% match', style: TextStyle(fontSize: sw * 0.023, fontWeight: FontWeight.w800, color: matchColor)),
                         ),
                       ],
                     ),
-                    SizedBox(height: sw * 0.025),
+                    SizedBox(height: sw * 0.022),
                     Row(
                       children: [
-                        Icon(Icons.location_on, size: sw * 0.033, color: kHint),
-                        SizedBox(width: sw * 0.010),
-                        Text(
-                          job.location,
-                          style: TextStyle(fontSize: sw * 0.028, color: kMuted),
-                        ),
-                        SizedBox(width: sw * 0.030),
-                        Icon(
-                          Icons.work_outline,
-                          size: sw * 0.033,
-                          color: kHint,
-                        ),
-                        SizedBox(width: sw * 0.010),
-                        Text(
-                          job.jobType,
-                          style: TextStyle(fontSize: sw * 0.028, color: kMuted),
-                        ),
+                        Icon(Icons.location_on, size: sw * 0.030, color: kHint),
+                        SizedBox(width: sw * 0.008),
+                        Text(job.location, style: TextStyle(fontSize: sw * 0.026, color: kMuted)),
+                        SizedBox(width: sw * 0.026),
+                        Icon(Icons.work_outline, size: sw * 0.030, color: kHint),
+                        SizedBox(width: sw * 0.008),
+                        Text(job.jobType, style: TextStyle(fontSize: sw * 0.026, color: kMuted)),
                         if (job.salaryMin != null && job.salaryMax != null) ...[
-                          SizedBox(width: sw * 0.030),
-                          Icon(
-                            Icons.currency_rupee,
-                            size: sw * 0.033,
-                            color: kHint,
-                          ),
-                          Text(
-                            '${job.salaryMin}–${job.salaryMax} LPA',
-                            style: TextStyle(
-                              fontSize: sw * 0.028,
-                              color: kMuted,
-                            ),
-                          ),
+                          SizedBox(width: sw * 0.026),
+                          Icon(Icons.currency_rupee, size: sw * 0.030, color: kHint),
+                          Text('${job.salaryMin}–${job.salaryMax} LPA', style: TextStyle(fontSize: sw * 0.026, color: kMuted)),
                         ],
                       ],
                     ),
-                    SizedBox(height: sw * 0.020),
                     if (job.requiredSkills.isNotEmpty) ...[
-                      Text(
-                        'Required Skills',
-                        style: TextStyle(
-                          fontSize: sw * 0.026,
-                          color: kMuted,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      SizedBox(height: sw * 0.010),
+                      SizedBox(height: sw * 0.018),
+                      Text('Required Skills', style: TextStyle(fontSize: sw * 0.024, color: kMuted, fontWeight: FontWeight.w700)),
+                      SizedBox(height: sw * 0.009),
                       Wrap(
-                        spacing: sw * 0.015,
-                        runSpacing: sw * 0.010,
-                        children: job.requiredSkills.take(5).map((skill) {
-                          return _skillChip(
-                            skill,
-                            job.matchedSkills.contains(skill),
-                            sw,
-                          );
-                        }).toList(),
+                        spacing: sw * 0.013,
+                        runSpacing: sw * 0.009,
+                        children: job.requiredSkills.take(5).map((s) => _skillChip(s, job.matchedSkills.contains(s), sw)).toList(),
                       ),
-                      SizedBox(height: sw * 0.025),
+                      SizedBox(height: sw * 0.022),
                     ],
                     if (isApplied)
                       Row(
@@ -1690,14 +1961,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                         children: [_appliedPill(sw), _submittedBadge(sw)],
                       )
                     else
-                      _viewDetailsButton(
-                        sw: sw,
-                        grad1: theme.grad1,
-                        grad2: theme.grad2,
-                        icon: Icons.open_in_new,
-                        label: 'View & Apply',
-                        onTap: () => _showJobBottomSheet(job, sw),
-                      ),
+                      _viewDetailsButton(sw: sw, grad1: theme.grad1, grad2: theme.grad2, icon: Icons.open_in_new, label: 'View & Apply', onTap: () => _showJobBottomSheet(job, sw)),
                   ],
                 ),
               ),
@@ -1725,98 +1989,37 @@ class _DashboardScreenState extends State<DashboardScreen>
           maxChildSize: 0.95,
           minChildSize: 0.4,
           builder: (_, ctrl) => Container(
-            decoration: const BoxDecoration(
-              color: kCardBg,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-            ),
+            decoration: const BoxDecoration(color: kCardBg, borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
             child: Column(
               children: [
                 Container(
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [theme.grad1, theme.grad2],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(24),
-                    ),
+                    gradient: LinearGradient(colors: [theme.grad1, theme.grad2], begin: Alignment.topLeft, end: Alignment.bottomRight),
+                    borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
                   ),
-                  padding: EdgeInsets.fromLTRB(
-                    sw * 0.05,
-                    sw * 0.025,
-                    sw * 0.05,
-                    sw * 0.040,
-                  ),
+                  padding: EdgeInsets.fromLTRB(sw * 0.05, sw * 0.025, sw * 0.05, sw * 0.040),
                   child: Column(
                     children: [
-                      Center(
-                        child: Container(
-                          width: sw * 0.10,
-                          height: 4,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.40),
-                            borderRadius: BorderRadius.circular(2),
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: sw * 0.030),
+                      Center(child: Container(width: sw * 0.10, height: 4, decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.40), borderRadius: BorderRadius.circular(2)))),
+                      SizedBox(height: sw * 0.028),
                       Row(
                         children: [
-                          Container(
-                            width: sw * 0.140,
-                            height: sw * 0.140,
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.15),
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: Icon(
-                              theme.icon,
-                              color: Colors.white,
-                              size: sw * 0.065,
-                            ),
-                          ),
-                          SizedBox(width: sw * 0.035),
+                          Container(width: sw * 0.130, height: sw * 0.130, decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(15)), child: Icon(theme.icon, color: Colors.white, size: sw * 0.060)),
+                          SizedBox(width: sw * 0.030),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
-                                  job.title,
-                                  style: TextStyle(
-                                    fontSize: sw * 0.042,
-                                    fontWeight: FontWeight.w800,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                SizedBox(height: sw * 0.008),
-                                Text(
-                                  job.companyName,
-                                  style: TextStyle(
-                                    fontSize: sw * 0.030,
-                                    color: Colors.white.withValues(alpha: 0.80),
-                                  ),
-                                ),
+                                Text(job.title, style: TextStyle(fontSize: sw * 0.038, fontWeight: FontWeight.w800, color: Colors.white)),
+                                SizedBox(height: sw * 0.007),
+                                Text(job.companyName, style: TextStyle(fontSize: sw * 0.028, color: Colors.white.withValues(alpha: 0.80))),
                               ],
                             ),
                           ),
                           Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: sw * 0.025,
-                              vertical: sw * 0.013,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.20),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Text(
-                              '${job.matchPercentage}% match',
-                              style: TextStyle(
-                                fontSize: sw * 0.026,
-                                color: Colors.white,
-                                fontWeight: FontWeight.w800,
-                              ),
-                            ),
+                            padding: EdgeInsets.symmetric(horizontal: sw * 0.022, vertical: sw * 0.011),
+                            decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.20), borderRadius: BorderRadius.circular(20)),
+                            child: Text('${job.matchPercentage}% match', style: TextStyle(fontSize: sw * 0.024, color: Colors.white, fontWeight: FontWeight.w800)),
                           ),
                         ],
                       ),
@@ -1826,166 +2029,74 @@ class _DashboardScreenState extends State<DashboardScreen>
                 Expanded(
                   child: ListView(
                     controller: ctrl,
-                    padding: EdgeInsets.all(sw * 0.050),
+                    padding: EdgeInsets.all(sw * 0.048),
                     children: [
                       Wrap(
-                        spacing: sw * 0.020,
-                        runSpacing: sw * 0.015,
+                        spacing: sw * 0.018,
+                        runSpacing: sw * 0.013,
                         children: [
                           _metaChip(Icons.location_on, job.location, sw),
                           _metaChip(Icons.work_outline, job.jobType, sw),
-                          if (job.experienceLevel != null)
-                            _metaChip(
-                              Icons.bar_chart,
-                              job.experienceLevel!,
-                              sw,
-                            ),
-                          if (job.salaryMin != null && job.salaryMax != null)
-                            _metaChip(
-                              Icons.currency_rupee,
-                              '${job.salaryMin}–${job.salaryMax} LPA',
-                              sw,
-                            ),
+                          if (job.experienceLevel != null) _metaChip(Icons.bar_chart, job.experienceLevel!, sw),
+                          if (job.salaryMin != null && job.salaryMax != null) _metaChip(Icons.currency_rupee, '${job.salaryMin}–${job.salaryMax} LPA', sw),
                         ],
                       ),
-                      SizedBox(height: sw * 0.035),
+                      SizedBox(height: sw * 0.032),
                       Row(
                         children: [
-                          Expanded(
-                            child: _summaryBox(
-                              '${job.matchedCount}/${job.totalRequired}',
-                              'Skills Matched',
-                              kSuccess,
-                              const Color(0xFFF0FDF4),
-                              sw,
-                            ),
-                          ),
-                          SizedBox(width: sw * 0.020),
-                          Expanded(
-                            child: _summaryBox(
-                              '${job.matchPercentage}%',
-                              'Match Score',
-                              kPrimary,
-                              const Color(0xFFEFF6FF),
-                              sw,
-                            ),
-                          ),
-                          SizedBox(width: sw * 0.020),
-                          Expanded(
-                            child: _summaryBox(
-                              '${job.totalRequired - job.matchedCount}',
-                              'Skills Gap',
-                              Colors.red,
-                              const Color(0xFFFFF1F2),
-                              sw,
-                            ),
-                          ),
+                          Expanded(child: _summaryBox('${job.matchedCount}/${job.totalRequired}', 'Skills Matched', kSuccess, const Color(0xFFF0FDF4), sw)),
+                          SizedBox(width: sw * 0.018),
+                          Expanded(child: _summaryBox('${job.matchPercentage}%', 'Match Score', kPrimary, const Color(0xFFEFF6FF), sw)),
+                          SizedBox(width: sw * 0.018),
+                          Expanded(child: _summaryBox('${job.totalRequired - job.matchedCount}', 'Skills Gap', Colors.red, const Color(0xFFFFF1F2), sw)),
                         ],
                       ),
-                      SizedBox(height: sw * 0.035),
-                      Text(
-                        'Required Skills',
-                        style: TextStyle(
-                          fontSize: sw * 0.032,
-                          fontWeight: FontWeight.w800,
-                          color: kInk,
-                        ),
-                      ),
-                      SizedBox(height: sw * 0.015),
-                      Wrap(
-                        spacing: sw * 0.015,
-                        runSpacing: sw * 0.010,
-                        children: job.requiredSkills
-                            .map(
-                              (s) => _skillChip(
-                                s,
-                                job.matchedSkills.contains(s),
-                                sw,
-                              ),
-                            )
-                            .toList(),
-                      ),
-                      SizedBox(height: sw * 0.040),
+                      SizedBox(height: sw * 0.032),
+                      Text('Required Skills', style: TextStyle(fontSize: sw * 0.030, fontWeight: FontWeight.w800, color: kInk)),
+                      SizedBox(height: sw * 0.013),
+                      Wrap(spacing: sw * 0.013, runSpacing: sw * 0.009, children: job.requiredSkills.map((s) => _skillChip(s, job.matchedSkills.contains(s), sw)).toList()),
+                      SizedBox(height: sw * 0.038),
                       GestureDetector(
                         onTap: _applying
                             ? null
                             : () async {
-                                setSheetState(() => _applying = true);
-                                final result = await ApplicationsService.apply(
-                                  jobId: job.jobId,
-                                );
-                                if (!mounted) return;
-                                if (result == 'Applied successfully') {
-                                  setState(() => _appliedJobIds.add(job.jobId));
-                                  Navigator.pop(sheetCtx);
-                                  profileState.addApplication(
-                                    job.title,
-                                    job.companyName,
-                                    type: 'Job',
-                                  );
-                                  _showSnack('Applied to ${job.title} ✅');
-                                  _showJobAppliedDialog(job);
-                                } else {
-                                  setSheetState(() => _applying = false);
-                                  _showSnack(result ?? 'Something went wrong');
-                                }
-                              },
+                          setSheetState(() => _applying = true);
+                          final result = await ApplicationsService.apply(jobId: job.jobId);
+                          if (!mounted) return;
+                          if (result == 'Applied successfully') {
+                            setState(() => _appliedJobIds.add(job.jobId));
+                            Navigator.pop(sheetCtx);
+                            profileState.addApplication(job.title, job.companyName, type: 'Job');
+                            _showSnack('Applied to ${job.title} ✅');
+                            _showJobAppliedDialog(job);
+                          } else {
+                            setSheetState(() => _applying = false);
+                            _showSnack(result ?? 'Something went wrong');
+                          }
+                        },
                         child: Container(
                           width: double.infinity,
-                          padding: EdgeInsets.symmetric(vertical: sw * 0.040),
+                          padding: EdgeInsets.symmetric(vertical: sw * 0.038),
                           decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: _applying
-                                  ? [kMuted, kHint]
-                                  : [theme.grad1, theme.grad2],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: _applying
-                                ? []
-                                : [
-                                    BoxShadow(
-                                      color: theme.grad1.withValues(
-                                        alpha: 0.30,
-                                      ),
-                                      blurRadius: 12,
-                                      offset: const Offset(0, 4),
-                                    ),
-                                  ],
+                            gradient: LinearGradient(colors: _applying ? [kMuted, kHint] : [theme.grad1, theme.grad2], begin: Alignment.topLeft, end: Alignment.bottomRight),
+                            borderRadius: BorderRadius.circular(15),
+                            boxShadow: _applying ? [] : [BoxShadow(color: theme.grad1.withValues(alpha: 0.30), blurRadius: 12, offset: const Offset(0, 4))],
                           ),
                           child: Center(
                             child: _applying
-                                ? const SizedBox(
-                                    width: 22,
-                                    height: 22,
-                                    child: CircularProgressIndicator(
-                                      color: Colors.white,
-                                      strokeWidth: 2.5,
-                                    ),
-                                  )
+                                ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
                                 : Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      const Icon(
-                                        Icons.send,
-                                        color: Colors.white,
-                                      ),
-                                      SizedBox(width: sw * 0.020),
-                                      Text(
-                                        'Apply Now',
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.w800,
-                                          fontSize: sw * 0.038,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.send, color: Colors.white),
+                                SizedBox(width: sw * 0.018),
+                                Text('Apply Now', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: sw * 0.035)),
+                              ],
+                            ),
                           ),
                         ),
                       ),
-                      SizedBox(height: sw * 0.020),
+                      SizedBox(height: sw * 0.018),
                     ],
                   ),
                 ),
@@ -1998,202 +2109,95 @@ class _DashboardScreenState extends State<DashboardScreen>
   }
 
   // ─────────────────────────────────────────
-  //  RECOMMENDED INTERNSHIPS — max 4
+  //  RECOMMENDED INTERNSHIPS
   // ─────────────────────────────────────────
   Widget _buildRecommendedInternships(double sw) {
     return Column(
       children: _internships.take(4).map((intern) {
         final theme = _jobTheme(intern.title, intern.companyName);
         final match = intern.matchPercentage;
-        final matchColor = match >= 90
-            ? kSuccess
-            : match >= 80
-            ? kWarning
-            : kMuted;
-        final matchBg = match >= 90
-            ? const Color(0xFFF0FDF4)
-            : match >= 80
-            ? const Color(0xFFFFFBEB)
-            : const Color(0xFFF1F5F9);
+        final matchColor = match >= 90 ? kSuccess : match >= 80 ? kWarning : kMuted;
+        final matchBg = match >= 90 ? const Color(0xFFF0FDF4) : match >= 80 ? const Color(0xFFFFFBEB) : const Color(0xFFF1F5F9);
         final isApplied = _appliedInternshipIds.contains(intern.internshipId);
 
         return AnimatedContainer(
           duration: const Duration(milliseconds: 400),
-          margin: EdgeInsets.only(bottom: sw * 0.030),
+          margin: EdgeInsets.only(bottom: sw * 0.028),
           decoration: BoxDecoration(
-            gradient: isApplied
-                ? LinearGradient(
-                    colors: [
-                      theme.grad1.withValues(alpha: 0.09),
-                      theme.grad2.withValues(alpha: 0.04),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  )
-                : null,
+            gradient: isApplied ? LinearGradient(colors: [theme.grad1.withValues(alpha: 0.09), theme.grad2.withValues(alpha: 0.04)], begin: Alignment.topLeft, end: Alignment.bottomRight) : null,
             color: isApplied ? null : kCardBg,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: isApplied ? theme.grad1.withValues(alpha: 0.50) : kBorder,
-              width: isApplied ? 2 : 1.5,
-            ),
-            boxShadow: isApplied
-                ? [
-                    BoxShadow(
-                      color: theme.grad1.withValues(alpha: 0.10),
-                      blurRadius: 16,
-                      offset: const Offset(0, 4),
-                    ),
-                  ]
-                : null,
+            border: Border.all(color: isApplied ? theme.grad1.withValues(alpha: 0.50) : kBorder, width: isApplied ? 2 : 1.5),
+            boxShadow: isApplied ? [BoxShadow(color: theme.grad1.withValues(alpha: 0.10), blurRadius: 16, offset: const Offset(0, 4))] : null,
           ),
           child: Column(
             children: [
               Container(
                 height: isApplied ? 4 : 3,
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [theme.grad1, theme.grad2],
-                    begin: Alignment.centerLeft,
-                    end: Alignment.centerRight,
-                  ),
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(20),
-                  ),
+                  gradient: LinearGradient(colors: [theme.grad1, theme.grad2], begin: Alignment.centerLeft, end: Alignment.centerRight),
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
                 ),
               ),
               Padding(
-                padding: EdgeInsets.all(sw * 0.040),
+                padding: EdgeInsets.all(sw * 0.038),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
-                        _tile(theme.icon, theme.grad1, theme.grad2, sw * 0.115),
-                        SizedBox(width: sw * 0.030),
+                        _tile(theme.icon, theme.grad1, theme.grad2, sw * 0.110),
+                        SizedBox(width: sw * 0.028),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                intern.title,
-                                style: TextStyle(
-                                  fontSize: sw * 0.035,
-                                  fontWeight: FontWeight.w800,
-                                  color: isApplied ? kPrimary : kInk,
-                                ),
-                              ),
-                              SizedBox(height: sw * 0.005),
-                              Text(
-                                intern.companyName,
-                                style: TextStyle(
-                                  fontSize: sw * 0.030,
-                                  color: kMuted,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
+                              Text(intern.title, style: TextStyle(fontSize: sw * 0.033, fontWeight: FontWeight.w800, color: isApplied ? kPrimary : kInk)),
+                              SizedBox(height: sw * 0.004),
+                              Text(intern.companyName, style: TextStyle(fontSize: sw * 0.028, color: kMuted, fontWeight: FontWeight.w600)),
                             ],
                           ),
                         ),
                         Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: sw * 0.025,
-                            vertical: sw * 0.013,
-                          ),
-                          decoration: BoxDecoration(
-                            color: matchBg,
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Text(
-                            '$match% match',
-                            style: TextStyle(
-                              fontSize: sw * 0.025,
-                              fontWeight: FontWeight.w800,
-                              color: matchColor,
-                            ),
-                          ),
+                          padding: EdgeInsets.symmetric(horizontal: sw * 0.022, vertical: sw * 0.011),
+                          decoration: BoxDecoration(color: matchBg, borderRadius: BorderRadius.circular(20)),
+                          child: Text('$match% match', style: TextStyle(fontSize: sw * 0.023, fontWeight: FontWeight.w800, color: matchColor)),
                         ),
                       ],
                     ),
-                    SizedBox(height: sw * 0.025),
+                    SizedBox(height: sw * 0.022),
                     Row(
                       children: [
-                        Icon(Icons.location_on, size: sw * 0.033, color: kHint),
-                        SizedBox(width: sw * 0.010),
-                        Text(
-                          intern.location,
-                          style: TextStyle(fontSize: sw * 0.028, color: kMuted),
-                        ),
+                        Icon(Icons.location_on, size: sw * 0.030, color: kHint),
+                        SizedBox(width: sw * 0.008),
+                        Text(intern.location, style: TextStyle(fontSize: sw * 0.026, color: kMuted)),
                         if (intern.stipend != null) ...[
-                          SizedBox(width: sw * 0.030),
-                          Icon(
-                            Icons.currency_rupee,
-                            size: sw * 0.033,
-                            color: kHint,
-                          ),
-                          Text(
-                            '${intern.stipend}/mo',
-                            style: TextStyle(
-                              fontSize: sw * 0.028,
-                              color: kMuted,
-                            ),
-                          ),
+                          SizedBox(width: sw * 0.026),
+                          Icon(Icons.currency_rupee, size: sw * 0.030, color: kHint),
+                          Text('${intern.stipend}/mo', style: TextStyle(fontSize: sw * 0.026, color: kMuted)),
                         ],
                         if (intern.duration != null) ...[
-                          SizedBox(width: sw * 0.030),
-                          Icon(
-                            Icons.timer_outlined,
-                            size: sw * 0.033,
-                            color: kHint,
-                          ),
-                          Text(
-                            intern.duration!,
-                            style: TextStyle(
-                              fontSize: sw * 0.028,
-                              color: kMuted,
-                            ),
-                          ),
+                          SizedBox(width: sw * 0.026),
+                          Icon(Icons.timer_outlined, size: sw * 0.030, color: kHint),
+                          Text(intern.duration!, style: TextStyle(fontSize: sw * 0.026, color: kMuted)),
                         ],
                       ],
                     ),
-                    SizedBox(height: sw * 0.020),
                     if (intern.requiredSkills.isNotEmpty) ...[
-                      Text(
-                        'Required Skills',
-                        style: TextStyle(
-                          fontSize: sw * 0.026,
-                          color: kMuted,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      SizedBox(height: sw * 0.010),
+                      SizedBox(height: sw * 0.018),
+                      Text('Required Skills', style: TextStyle(fontSize: sw * 0.024, color: kMuted, fontWeight: FontWeight.w700)),
+                      SizedBox(height: sw * 0.009),
                       Wrap(
-                        spacing: sw * 0.015,
-                        runSpacing: sw * 0.010,
-                        children: intern.requiredSkills.take(5).map((skill) {
-                          return _skillChip(
-                            skill,
-                            intern.matchedSkills.contains(skill),
-                            sw,
-                          );
-                        }).toList(),
+                        spacing: sw * 0.013,
+                        runSpacing: sw * 0.009,
+                        children: intern.requiredSkills.take(5).map((s) => _skillChip(s, intern.matchedSkills.contains(s), sw)).toList(),
                       ),
-                      SizedBox(height: sw * 0.025),
+                      SizedBox(height: sw * 0.022),
                     ],
                     if (isApplied)
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [_appliedPill(sw), _submittedBadge(sw)],
-                      )
+                      Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [_appliedPill(sw), _submittedBadge(sw)])
                     else
-                      _viewDetailsButton(
-                        sw: sw,
-                        grad1: theme.grad1,
-                        grad2: theme.grad2,
-                        icon: Icons.open_in_new,
-                        label: 'View & Apply',
-                        onTap: () => _showInternshipBottomSheet(intern, sw),
-                      ),
+                      _viewDetailsButton(sw: sw, grad1: theme.grad1, grad2: theme.grad2, icon: Icons.open_in_new, label: 'View & Apply', onTap: () => _showInternshipBottomSheet(intern, sw)),
                   ],
                 ),
               ),
@@ -2221,98 +2225,37 @@ class _DashboardScreenState extends State<DashboardScreen>
           maxChildSize: 0.95,
           minChildSize: 0.4,
           builder: (_, ctrl) => Container(
-            decoration: const BoxDecoration(
-              color: kCardBg,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-            ),
+            decoration: const BoxDecoration(color: kCardBg, borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
             child: Column(
               children: [
                 Container(
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [theme.grad1, theme.grad2],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(24),
-                    ),
+                    gradient: LinearGradient(colors: [theme.grad1, theme.grad2], begin: Alignment.topLeft, end: Alignment.bottomRight),
+                    borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
                   ),
-                  padding: EdgeInsets.fromLTRB(
-                    sw * 0.05,
-                    sw * 0.025,
-                    sw * 0.05,
-                    sw * 0.040,
-                  ),
+                  padding: EdgeInsets.fromLTRB(sw * 0.05, sw * 0.025, sw * 0.05, sw * 0.040),
                   child: Column(
                     children: [
-                      Center(
-                        child: Container(
-                          width: sw * 0.10,
-                          height: 4,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.40),
-                            borderRadius: BorderRadius.circular(2),
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: sw * 0.030),
+                      Center(child: Container(width: sw * 0.10, height: 4, decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.40), borderRadius: BorderRadius.circular(2)))),
+                      SizedBox(height: sw * 0.028),
                       Row(
                         children: [
-                          Container(
-                            width: sw * 0.140,
-                            height: sw * 0.140,
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.15),
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: Icon(
-                              theme.icon,
-                              color: Colors.white,
-                              size: sw * 0.065,
-                            ),
-                          ),
-                          SizedBox(width: sw * 0.035),
+                          Container(width: sw * 0.130, height: sw * 0.130, decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(15)), child: Icon(theme.icon, color: Colors.white, size: sw * 0.060)),
+                          SizedBox(width: sw * 0.030),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
-                                  intern.title,
-                                  style: TextStyle(
-                                    fontSize: sw * 0.042,
-                                    fontWeight: FontWeight.w800,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                SizedBox(height: sw * 0.008),
-                                Text(
-                                  intern.companyName,
-                                  style: TextStyle(
-                                    fontSize: sw * 0.030,
-                                    color: Colors.white.withValues(alpha: 0.80),
-                                  ),
-                                ),
+                                Text(intern.title, style: TextStyle(fontSize: sw * 0.038, fontWeight: FontWeight.w800, color: Colors.white)),
+                                SizedBox(height: sw * 0.007),
+                                Text(intern.companyName, style: TextStyle(fontSize: sw * 0.028, color: Colors.white.withValues(alpha: 0.80))),
                               ],
                             ),
                           ),
                           Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: sw * 0.025,
-                              vertical: sw * 0.013,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.20),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Text(
-                              '${intern.matchPercentage}% match',
-                              style: TextStyle(
-                                fontSize: sw * 0.026,
-                                color: Colors.white,
-                                fontWeight: FontWeight.w800,
-                              ),
-                            ),
+                            padding: EdgeInsets.symmetric(horizontal: sw * 0.022, vertical: sw * 0.011),
+                            decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.20), borderRadius: BorderRadius.circular(20)),
+                            child: Text('${intern.matchPercentage}% match', style: TextStyle(fontSize: sw * 0.024, color: Colors.white, fontWeight: FontWeight.w800)),
                           ),
                         ],
                       ),
@@ -2322,181 +2265,75 @@ class _DashboardScreenState extends State<DashboardScreen>
                 Expanded(
                   child: ListView(
                     controller: ctrl,
-                    padding: EdgeInsets.all(sw * 0.050),
+                    padding: EdgeInsets.all(sw * 0.048),
                     children: [
                       Wrap(
-                        spacing: sw * 0.020,
-                        runSpacing: sw * 0.015,
+                        spacing: sw * 0.018,
+                        runSpacing: sw * 0.013,
                         children: [
                           _metaChip(Icons.location_on, intern.location, sw),
-                          if (intern.internshipType != null)
-                            _metaChip(
-                              Icons.work_outline,
-                              intern.internshipType!,
-                              sw,
-                            ),
-                          if (intern.duration != null)
-                            _metaChip(
-                              Icons.timer_outlined,
-                              intern.duration!,
-                              sw,
-                            ),
-                          if (intern.stipend != null)
-                            _metaChip(
-                              Icons.currency_rupee,
-                              '₹${intern.stipend}/mo',
-                              sw,
-                            ),
-                          if (intern.startDate != null)
-                            _metaChip(
-                              Icons.calendar_today,
-                              intern.startDate!,
-                              sw,
-                            ),
+                          if (intern.internshipType != null) _metaChip(Icons.work_outline, intern.internshipType!, sw),
+                          if (intern.duration != null) _metaChip(Icons.timer_outlined, intern.duration!, sw),
+                          if (intern.stipend != null) _metaChip(Icons.currency_rupee, '₹${intern.stipend}/mo', sw),
+                          if (intern.startDate != null) _metaChip(Icons.calendar_today, intern.startDate!, sw),
                         ],
                       ),
-                      SizedBox(height: sw * 0.035),
+                      SizedBox(height: sw * 0.032),
                       Row(
                         children: [
-                          Expanded(
-                            child: _summaryBox(
-                              '${intern.matchedCount}/${intern.totalRequired}',
-                              'Skills Matched',
-                              kSuccess,
-                              const Color(0xFFF0FDF4),
-                              sw,
-                            ),
-                          ),
-                          SizedBox(width: sw * 0.020),
-                          Expanded(
-                            child: _summaryBox(
-                              '${intern.matchPercentage}%',
-                              'Match Score',
-                              kPrimary,
-                              const Color(0xFFEFF6FF),
-                              sw,
-                            ),
-                          ),
-                          SizedBox(width: sw * 0.020),
-                          Expanded(
-                            child: _summaryBox(
-                              '${intern.totalRequired - intern.matchedCount}',
-                              'Skills Gap',
-                              Colors.red,
-                              const Color(0xFFFFF1F2),
-                              sw,
-                            ),
-                          ),
+                          Expanded(child: _summaryBox('${intern.matchedCount}/${intern.totalRequired}', 'Skills Matched', kSuccess, const Color(0xFFF0FDF4), sw)),
+                          SizedBox(width: sw * 0.018),
+                          Expanded(child: _summaryBox('${intern.matchPercentage}%', 'Match Score', kPrimary, const Color(0xFFEFF6FF), sw)),
+                          SizedBox(width: sw * 0.018),
+                          Expanded(child: _summaryBox('${intern.totalRequired - intern.matchedCount}', 'Skills Gap', Colors.red, const Color(0xFFFFF1F2), sw)),
                         ],
                       ),
-                      SizedBox(height: sw * 0.035),
-                      Text(
-                        'Required Skills',
-                        style: TextStyle(
-                          fontSize: sw * 0.032,
-                          fontWeight: FontWeight.w800,
-                          color: kInk,
-                        ),
-                      ),
-                      SizedBox(height: sw * 0.015),
-                      Wrap(
-                        spacing: sw * 0.015,
-                        runSpacing: sw * 0.010,
-                        children: intern.requiredSkills
-                            .map(
-                              (s) => _skillChip(
-                                s,
-                                intern.matchedSkills.contains(s),
-                                sw,
-                              ),
-                            )
-                            .toList(),
-                      ),
-                      SizedBox(height: sw * 0.040),
+                      SizedBox(height: sw * 0.032),
+                      Text('Required Skills', style: TextStyle(fontSize: sw * 0.030, fontWeight: FontWeight.w800, color: kInk)),
+                      SizedBox(height: sw * 0.013),
+                      Wrap(spacing: sw * 0.013, runSpacing: sw * 0.009, children: intern.requiredSkills.map((s) => _skillChip(s, intern.matchedSkills.contains(s), sw)).toList()),
+                      SizedBox(height: sw * 0.038),
                       GestureDetector(
                         onTap: _applying
                             ? null
                             : () async {
-                                setSheetState(() => _applying = true);
-                                final result = await ApplicationsService.apply(
-                                  internshipId: intern.internshipId,
-                                );
-                                if (!mounted) return;
-                                if (result == 'Applied successfully') {
-                                  setState(
-                                    () => _appliedInternshipIds.add(
-                                      intern.internshipId,
-                                    ),
-                                  );
-                                  Navigator.pop(sheetCtx);
-                                  profileState.addApplication(
-                                    intern.title,
-                                    intern.companyName,
-                                    type: 'Internship',
-                                  );
-                                  _showSnack('Applied to ${intern.title} ✅');
-                                  _showInternshipAppliedDialog(intern);
-                                } else {
-                                  setSheetState(() => _applying = false);
-                                  _showSnack(result ?? 'Something went wrong');
-                                }
-                              },
+                          setSheetState(() => _applying = true);
+                          final result = await ApplicationsService.apply(internshipId: intern.internshipId);
+                          if (!mounted) return;
+                          if (result == 'Applied successfully') {
+                            setState(() => _appliedInternshipIds.add(intern.internshipId));
+                            Navigator.pop(sheetCtx);
+                            profileState.addApplication(intern.title, intern.companyName, type: 'Internship');
+                            _showSnack('Applied to ${intern.title} ✅');
+                            _showInternshipAppliedDialog(intern);
+                          } else {
+                            setSheetState(() => _applying = false);
+                            _showSnack(result ?? 'Something went wrong');
+                          }
+                        },
                         child: Container(
                           width: double.infinity,
-                          padding: EdgeInsets.symmetric(vertical: sw * 0.040),
+                          padding: EdgeInsets.symmetric(vertical: sw * 0.038),
                           decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: _applying
-                                  ? [kMuted, kHint]
-                                  : [theme.grad1, theme.grad2],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: _applying
-                                ? []
-                                : [
-                                    BoxShadow(
-                                      color: theme.grad1.withValues(
-                                        alpha: 0.30,
-                                      ),
-                                      blurRadius: 12,
-                                      offset: const Offset(0, 4),
-                                    ),
-                                  ],
+                            gradient: LinearGradient(colors: _applying ? [kMuted, kHint] : [theme.grad1, theme.grad2], begin: Alignment.topLeft, end: Alignment.bottomRight),
+                            borderRadius: BorderRadius.circular(15),
+                            boxShadow: _applying ? [] : [BoxShadow(color: theme.grad1.withValues(alpha: 0.30), blurRadius: 12, offset: const Offset(0, 4))],
                           ),
                           child: Center(
                             child: _applying
-                                ? const SizedBox(
-                                    width: 22,
-                                    height: 22,
-                                    child: CircularProgressIndicator(
-                                      color: Colors.white,
-                                      strokeWidth: 2.5,
-                                    ),
-                                  )
+                                ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
                                 : Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      const Icon(
-                                        Icons.send,
-                                        color: Colors.white,
-                                      ),
-                                      SizedBox(width: sw * 0.020),
-                                      Text(
-                                        'Apply Now',
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.w800,
-                                          fontSize: sw * 0.038,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.send, color: Colors.white),
+                                SizedBox(width: sw * 0.018),
+                                Text('Apply Now', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: sw * 0.035)),
+                              ],
+                            ),
                           ),
                         ),
                       ),
-                      SizedBox(height: sw * 0.020),
+                      SizedBox(height: sw * 0.018),
                     ],
                   ),
                 ),
@@ -2518,8 +2355,8 @@ class _DashboardScreenState extends State<DashboardScreen>
         final ls = _levelStyle(course.level);
 
         return Container(
-          margin: EdgeInsets.only(bottom: sw * 0.030),
-          padding: EdgeInsets.all(sw * 0.040),
+          margin: EdgeInsets.only(bottom: sw * 0.028),
+          padding: EdgeInsets.all(sw * 0.038),
           decoration: BoxDecoration(
             color: kCardBg,
             borderRadius: BorderRadius.circular(20),
@@ -2530,71 +2367,31 @@ class _DashboardScreenState extends State<DashboardScreen>
             children: [
               Row(
                 children: [
-                  _tile(theme.icon, theme.grad1, theme.grad2, sw * 0.130),
-                  SizedBox(width: sw * 0.030),
+                  _tile(theme.icon, theme.grad1, theme.grad2, sw * 0.120),
+                  SizedBox(width: sw * 0.026),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          course.title,
-                          style: TextStyle(
-                            fontSize: sw * 0.033,
-                            fontWeight: FontWeight.w800,
-                            color: kInk,
-                          ),
-                        ),
-                        SizedBox(height: sw * 0.005),
-                        Text(
-                          course.provider,
-                          style: TextStyle(fontSize: sw * 0.028, color: kMuted),
-                        ),
-                        SizedBox(height: sw * 0.015),
+                        Text(course.title, style: TextStyle(fontSize: sw * 0.031, fontWeight: FontWeight.w800, color: kInk)),
+                        SizedBox(height: sw * 0.004),
+                        Text(course.provider, style: TextStyle(fontSize: sw * 0.026, color: kMuted)),
+                        SizedBox(height: sw * 0.013),
                         Row(
                           children: [
                             Container(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: sw * 0.020,
-                                vertical: sw * 0.008,
-                              ),
-                              decoration: BoxDecoration(
-                                color: ls.bg,
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Text(
-                                course.level,
-                                style: TextStyle(
-                                  fontSize: sw * 0.023,
-                                  color: ls.fg,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
+                              padding: EdgeInsets.symmetric(horizontal: sw * 0.018, vertical: sw * 0.007),
+                              decoration: BoxDecoration(color: ls.bg, borderRadius: BorderRadius.circular(20)),
+                              child: Text(course.level, style: TextStyle(fontSize: sw * 0.021, color: ls.fg, fontWeight: FontWeight.w700)),
                             ),
                             if (course.duration != null) ...[
-                              SizedBox(width: sw * 0.015),
-                              Text(
-                                course.duration!,
-                                style: TextStyle(
-                                  fontSize: sw * 0.025,
-                                  color: kHint,
-                                ),
-                              ),
+                              SizedBox(width: sw * 0.013),
+                              Text(course.duration!, style: TextStyle(fontSize: sw * 0.023, color: kHint)),
                             ],
                             if (course.rating != null) ...[
-                              SizedBox(width: sw * 0.015),
-                              Icon(
-                                Icons.star,
-                                color: kWarning,
-                                size: sw * 0.030,
-                              ),
-                              Text(
-                                course.rating!.toStringAsFixed(1),
-                                style: TextStyle(
-                                  fontSize: sw * 0.025,
-                                  color: kWarning,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
+                              SizedBox(width: sw * 0.013),
+                              Icon(Icons.star, color: kWarning, size: sw * 0.028),
+                              Text(course.rating!.toStringAsFixed(1), style: TextStyle(fontSize: sw * 0.023, color: kWarning, fontWeight: FontWeight.w700)),
                             ],
                           ],
                         ),
@@ -2604,88 +2401,38 @@ class _DashboardScreenState extends State<DashboardScreen>
                 ],
               ),
               if (course.gapFillCount > 0) ...[
-                SizedBox(height: sw * 0.015),
+                SizedBox(height: sw * 0.013),
                 Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: sw * 0.025,
-                    vertical: sw * 0.012,
-                  ),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF0FDF4),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: kSuccess.withValues(alpha: 0.30)),
-                  ),
+                  padding: EdgeInsets.symmetric(horizontal: sw * 0.022, vertical: sw * 0.010),
+                  decoration: BoxDecoration(color: const Color(0xFFF0FDF4), borderRadius: BorderRadius.circular(10), border: Border.all(color: kSuccess.withValues(alpha: 0.30))),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(
-                        Icons.trending_up,
-                        color: kSuccess,
-                        size: sw * 0.033,
-                      ),
-                      SizedBox(width: sw * 0.010),
-                      Text(
-                        'Fills ${course.gapFillCount} skill gap${course.gapFillCount > 1 ? 's' : ''} in your profile',
-                        style: TextStyle(
-                          fontSize: sw * 0.026,
-                          color: kSuccess,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
+                      Icon(Icons.trending_up, color: kSuccess, size: sw * 0.030),
+                      SizedBox(width: sw * 0.009),
+                      Text('Fills ${course.gapFillCount} skill gap${course.gapFillCount > 1 ? 's' : ''} in your profile', style: TextStyle(fontSize: sw * 0.024, color: kSuccess, fontWeight: FontWeight.w700)),
                     ],
                   ),
                 ),
               ],
               if (course.missingSkills.isNotEmpty) ...[
-                SizedBox(height: sw * 0.015),
-                Text(
-                  'You will learn',
-                  style: TextStyle(
-                    fontSize: sw * 0.026,
-                    color: kMuted,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                SizedBox(height: sw * 0.010),
+                SizedBox(height: sw * 0.013),
+                Text('You will learn', style: TextStyle(fontSize: sw * 0.024, color: kMuted, fontWeight: FontWeight.w700)),
+                SizedBox(height: sw * 0.009),
                 Wrap(
-                  spacing: sw * 0.015,
-                  runSpacing: sw * 0.010,
+                  spacing: sw * 0.013,
+                  runSpacing: sw * 0.009,
                   children: course.missingSkills.take(4).map((s) {
                     return Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: sw * 0.022,
-                        vertical: sw * 0.008,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF5F3FF),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: const Color(
-                            0xFF7C3AED,
-                          ).withValues(alpha: 0.30),
-                        ),
-                      ),
-                      child: Text(
-                        s,
-                        style: TextStyle(
-                          fontSize: sw * 0.025,
-                          color: const Color(0xFF7C3AED),
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
+                      padding: EdgeInsets.symmetric(horizontal: sw * 0.020, vertical: sw * 0.007),
+                      decoration: BoxDecoration(color: const Color(0xFFF5F3FF), borderRadius: BorderRadius.circular(20), border: Border.all(color: const Color(0xFF7C3AED).withValues(alpha: 0.30))),
+                      child: Text(s, style: TextStyle(fontSize: sw * 0.023, color: const Color(0xFF7C3AED), fontWeight: FontWeight.w700)),
                     );
                   }).toList(),
                 ),
               ],
-              SizedBox(height: sw * 0.025),
-              _viewDetailsButton(
-                sw: sw,
-                grad1: theme.grad1,
-                grad2: theme.grad2,
-                icon: Icons.play_circle_outline,
-                label: 'Start Course',
-                onTap: () {},
-              ),
+              SizedBox(height: sw * 0.022),
+              _viewDetailsButton(sw: sw, grad1: theme.grad1, grad2: theme.grad2, icon: Icons.play_circle_outline, label: 'Start Course', onTap: () {}),
             ],
           ),
         );
@@ -2698,13 +2445,9 @@ class _DashboardScreenState extends State<DashboardScreen>
   // ─────────────────────────────────────────
   Widget _buildMotivationBanner(double sw) {
     return Container(
-      padding: EdgeInsets.all(sw * 0.050),
+      padding: EdgeInsets.all(sw * 0.045),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF1D4ED8), Color(0xFF7C3AED)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        gradient: const LinearGradient(colors: [Color(0xFF1D4ED8), Color(0xFF7C3AED)], begin: Alignment.topLeft, end: Alignment.bottomRight),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
@@ -2715,24 +2458,17 @@ class _DashboardScreenState extends State<DashboardScreen>
               children: [
                 Text(
                   '🚀 Keep going, ${profileState.name.isNotEmpty ? profileState.name.split(' ').first : 'Champion'}!',
-                  style: TextStyle(
-                    fontSize: sw * 0.035,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.white,
-                  ),
+                  style: TextStyle(fontSize: sw * 0.033, fontWeight: FontWeight.w800, color: Colors.white),
                 ),
-                SizedBox(height: sw * 0.010),
+                SizedBox(height: sw * 0.009),
                 Text(
                   'You have ${_jobs.length + _internships.length} active matches. Apply today!',
-                  style: TextStyle(
-                    fontSize: sw * 0.028,
-                    color: Colors.white.withValues(alpha: 0.75),
-                  ),
+                  style: TextStyle(fontSize: sw * 0.026, color: Colors.white.withValues(alpha: 0.75)),
                 ),
               ],
             ),
           ),
-          Icon(Icons.emoji_events, color: Colors.white, size: sw * 0.12),
+          Icon(Icons.emoji_events, color: Colors.white, size: sw * 0.11),
         ],
       ),
     );
@@ -2754,175 +2490,69 @@ class _DashboardScreenState extends State<DashboardScreen>
           decoration: BoxDecoration(
             color: kCardBg,
             borderRadius: BorderRadius.circular(24),
-            boxShadow: [
-              BoxShadow(
-                color: theme.grad1.withValues(alpha: 0.15),
-                blurRadius: 40,
-                offset: const Offset(0, 12),
-              ),
-            ],
+            boxShadow: [BoxShadow(color: theme.grad1.withValues(alpha: 0.15), blurRadius: 40, offset: const Offset(0, 12))],
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Container(
-                height: 6,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(colors: [theme.grad1, theme.grad2]),
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(24),
-                  ),
-                ),
-              ),
+              Container(height: 6, decoration: BoxDecoration(gradient: LinearGradient(colors: [theme.grad1, theme.grad2]), borderRadius: const BorderRadius.vertical(top: Radius.circular(24)))),
               Padding(
-                padding: EdgeInsets.fromLTRB(
-                  sw * 0.06,
-                  sw * 0.05,
-                  sw * 0.06,
-                  sw * 0.06,
-                ),
+                padding: EdgeInsets.fromLTRB(sw * 0.06, sw * 0.05, sw * 0.06, sw * 0.06),
                 child: Column(
                   children: [
                     Container(
-                      width: sw * 0.175,
-                      height: sw * 0.175,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: LinearGradient(
-                          colors: [
-                            kSuccess.withValues(alpha: 0.15),
-                            kSuccess.withValues(alpha: 0.05),
-                          ],
-                        ),
-                        border: Border.all(
-                          color: kSuccess.withValues(alpha: 0.30),
-                          width: 2,
-                        ),
-                      ),
-                      child: Center(
-                        child: Icon(
-                          Icons.check_circle,
-                          color: kSuccess,
-                          size: sw * 0.09,
-                        ),
-                      ),
+                      width: sw * 0.160,
+                      height: sw * 0.160,
+                      decoration: BoxDecoration(shape: BoxShape.circle, gradient: LinearGradient(colors: [kSuccess.withValues(alpha: 0.15), kSuccess.withValues(alpha: 0.05)]), border: Border.all(color: kSuccess.withValues(alpha: 0.30), width: 2)),
+                      child: Center(child: Icon(Icons.check_circle, color: kSuccess, size: sw * 0.082)),
                     ),
+                    SizedBox(height: sw * 0.028),
+                    Text('Application Sent! 🎉', style: TextStyle(fontSize: sw * 0.038, fontWeight: FontWeight.w800, color: kInk, letterSpacing: -0.3)),
+                    SizedBox(height: sw * 0.009),
+                    Text('Your application for ${job.title} has been submitted.', textAlign: TextAlign.center, style: TextStyle(fontSize: sw * 0.028, color: kMuted, height: 1.5)),
                     SizedBox(height: sw * 0.030),
-                    Text(
-                      'Application Sent! 🎉',
-                      style: TextStyle(
-                        fontSize: sw * 0.042,
-                        fontWeight: FontWeight.w800,
-                        color: kInk,
-                        letterSpacing: -0.3,
-                      ),
-                    ),
-                    SizedBox(height: sw * 0.010),
-                    Text(
-                      'Your application for ${job.title} has been submitted.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: sw * 0.030,
-                        color: kMuted,
-                        height: 1.5,
-                      ),
-                    ),
-                    SizedBox(height: sw * 0.035),
                     Container(
                       width: double.infinity,
-                      padding: EdgeInsets.all(sw * 0.035),
-                      decoration: BoxDecoration(
-                        color: kBgPage,
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: kBorder),
-                      ),
+                      padding: EdgeInsets.all(sw * 0.032),
+                      decoration: BoxDecoration(color: kBgPage, borderRadius: BorderRadius.circular(13), border: Border.all(color: kBorder)),
                       child: Column(
                         children: [
                           Row(
                             children: [
-                              _tile(
-                                theme.icon,
-                                theme.grad1,
-                                theme.grad2,
-                                sw * 0.100,
-                              ),
-                              SizedBox(width: sw * 0.025),
+                              _tile(theme.icon, theme.grad1, theme.grad2, sw * 0.090),
+                              SizedBox(width: sw * 0.022),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(
-                                      job.title,
-                                      style: TextStyle(
-                                        fontSize: sw * 0.030,
-                                        fontWeight: FontWeight.w800,
-                                        color: kInk,
-                                      ),
-                                    ),
-                                    Text(
-                                      job.companyName,
-                                      style: TextStyle(
-                                        fontSize: sw * 0.026,
-                                        color: kMuted,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
+                                    Text(job.title, style: TextStyle(fontSize: sw * 0.028, fontWeight: FontWeight.w800, color: kInk)),
+                                    Text(job.companyName, style: TextStyle(fontSize: sw * 0.024, color: kMuted, fontWeight: FontWeight.w600)),
                                   ],
                                 ),
                               ),
                             ],
                           ),
-                          SizedBox(height: sw * 0.020),
+                          SizedBox(height: sw * 0.018),
                           Container(height: 1, color: kBorder),
-                          SizedBox(height: sw * 0.020),
-                          _dialogRow(
-                            Icons.location_on,
-                            'Location',
-                            job.location,
-                            sw,
-                          ),
-                          SizedBox(height: sw * 0.012),
-                          _dialogRow(
-                            Icons.work_outline,
-                            'Type',
-                            job.jobType,
-                            sw,
-                          ),
-                          if (job.salaryMin != null &&
-                              job.salaryMax != null) ...[
-                            SizedBox(height: sw * 0.012),
-                            _dialogRow(
-                              Icons.currency_rupee,
-                              'Salary',
-                              '${job.salaryMin}–${job.salaryMax} LPA',
-                              sw,
-                            ),
+                          SizedBox(height: sw * 0.018),
+                          _dialogRow(Icons.location_on, 'Location', job.location, sw),
+                          SizedBox(height: sw * 0.011),
+                          _dialogRow(Icons.work_outline, 'Type', job.jobType, sw),
+                          if (job.salaryMin != null && job.salaryMax != null) ...[
+                            SizedBox(height: sw * 0.011),
+                            _dialogRow(Icons.currency_rupee, 'Salary', '${job.salaryMin}–${job.salaryMax} LPA', sw),
                           ],
                         ],
                       ),
                     ),
-                    SizedBox(height: sw * 0.040),
+                    SizedBox(height: sw * 0.035),
                     GestureDetector(
                       onTap: () => Navigator.pop(context),
                       child: Container(
                         width: double.infinity,
-                        padding: EdgeInsets.symmetric(vertical: sw * 0.033),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [theme.grad1, theme.grad2],
-                          ),
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        child: Center(
-                          child: Text(
-                            'OK, Got it!',
-                            style: TextStyle(
-                              fontSize: sw * 0.035,
-                              fontWeight: FontWeight.w800,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
+                        padding: EdgeInsets.symmetric(vertical: sw * 0.030),
+                        decoration: BoxDecoration(gradient: LinearGradient(colors: [theme.grad1, theme.grad2]), borderRadius: BorderRadius.circular(13)),
+                        child: Center(child: Text('OK, Got it!', style: TextStyle(fontSize: sw * 0.032, fontWeight: FontWeight.w800, color: Colors.white))),
                       ),
                     ),
                   ],
@@ -2948,183 +2578,67 @@ class _DashboardScreenState extends State<DashboardScreen>
           decoration: BoxDecoration(
             color: kCardBg,
             borderRadius: BorderRadius.circular(24),
-            boxShadow: [
-              BoxShadow(
-                color: theme.grad1.withValues(alpha: 0.15),
-                blurRadius: 40,
-                offset: const Offset(0, 12),
-              ),
-            ],
+            boxShadow: [BoxShadow(color: theme.grad1.withValues(alpha: 0.15), blurRadius: 40, offset: const Offset(0, 12))],
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Container(
-                height: 6,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(colors: [theme.grad1, theme.grad2]),
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(24),
-                  ),
-                ),
-              ),
+              Container(height: 6, decoration: BoxDecoration(gradient: LinearGradient(colors: [theme.grad1, theme.grad2]), borderRadius: const BorderRadius.vertical(top: Radius.circular(24)))),
               Padding(
-                padding: EdgeInsets.fromLTRB(
-                  sw * 0.06,
-                  sw * 0.05,
-                  sw * 0.06,
-                  sw * 0.06,
-                ),
+                padding: EdgeInsets.fromLTRB(sw * 0.06, sw * 0.05, sw * 0.06, sw * 0.06),
                 child: Column(
                   children: [
                     Container(
-                      width: sw * 0.175,
-                      height: sw * 0.175,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: LinearGradient(
-                          colors: [
-                            kSuccess.withValues(alpha: 0.15),
-                            kSuccess.withValues(alpha: 0.05),
-                          ],
-                        ),
-                        border: Border.all(
-                          color: kSuccess.withValues(alpha: 0.30),
-                          width: 2,
-                        ),
-                      ),
-                      child: Center(
-                        child: Icon(
-                          Icons.check_circle,
-                          color: kSuccess,
-                          size: sw * 0.09,
-                        ),
-                      ),
+                      width: sw * 0.160,
+                      height: sw * 0.160,
+                      decoration: BoxDecoration(shape: BoxShape.circle, gradient: LinearGradient(colors: [kSuccess.withValues(alpha: 0.15), kSuccess.withValues(alpha: 0.05)]), border: Border.all(color: kSuccess.withValues(alpha: 0.30), width: 2)),
+                      child: Center(child: Icon(Icons.check_circle, color: kSuccess, size: sw * 0.082)),
                     ),
+                    SizedBox(height: sw * 0.028),
+                    Text('Application Sent! 🎉', style: TextStyle(fontSize: sw * 0.038, fontWeight: FontWeight.w800, color: kInk, letterSpacing: -0.3)),
+                    SizedBox(height: sw * 0.009),
+                    Text('Your application for ${intern.title} has been submitted.', textAlign: TextAlign.center, style: TextStyle(fontSize: sw * 0.028, color: kMuted, height: 1.5)),
                     SizedBox(height: sw * 0.030),
-                    Text(
-                      'Application Sent! 🎉',
-                      style: TextStyle(
-                        fontSize: sw * 0.042,
-                        fontWeight: FontWeight.w800,
-                        color: kInk,
-                        letterSpacing: -0.3,
-                      ),
-                    ),
-                    SizedBox(height: sw * 0.010),
-                    Text(
-                      'Your application for ${intern.title} has been submitted.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: sw * 0.030,
-                        color: kMuted,
-                        height: 1.5,
-                      ),
-                    ),
-                    SizedBox(height: sw * 0.035),
                     Container(
                       width: double.infinity,
-                      padding: EdgeInsets.all(sw * 0.035),
-                      decoration: BoxDecoration(
-                        color: kBgPage,
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: kBorder),
-                      ),
+                      padding: EdgeInsets.all(sw * 0.032),
+                      decoration: BoxDecoration(color: kBgPage, borderRadius: BorderRadius.circular(13), border: Border.all(color: kBorder)),
                       child: Column(
                         children: [
                           Row(
                             children: [
-                              _tile(
-                                theme.icon,
-                                theme.grad1,
-                                theme.grad2,
-                                sw * 0.100,
-                              ),
-                              SizedBox(width: sw * 0.025),
+                              _tile(theme.icon, theme.grad1, theme.grad2, sw * 0.090),
+                              SizedBox(width: sw * 0.022),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(
-                                      intern.title,
-                                      style: TextStyle(
-                                        fontSize: sw * 0.030,
-                                        fontWeight: FontWeight.w800,
-                                        color: kInk,
-                                      ),
-                                    ),
-                                    Text(
-                                      intern.companyName,
-                                      style: TextStyle(
-                                        fontSize: sw * 0.026,
-                                        color: kMuted,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
+                                    Text(intern.title, style: TextStyle(fontSize: sw * 0.028, fontWeight: FontWeight.w800, color: kInk)),
+                                    Text(intern.companyName, style: TextStyle(fontSize: sw * 0.024, color: kMuted, fontWeight: FontWeight.w600)),
                                   ],
                                 ),
                               ),
                             ],
                           ),
-                          SizedBox(height: sw * 0.020),
+                          SizedBox(height: sw * 0.018),
                           Container(height: 1, color: kBorder),
-                          SizedBox(height: sw * 0.020),
-                          _dialogRow(
-                            Icons.location_on,
-                            'Location',
-                            intern.location,
-                            sw,
-                          ),
-                          SizedBox(height: sw * 0.012),
-                          _dialogRow(
-                            Icons.work_outline,
-                            'Type',
-                            intern.internshipType ?? 'Internship',
-                            sw,
-                          ),
-                          if (intern.stipend != null) ...[
-                            SizedBox(height: sw * 0.012),
-                            _dialogRow(
-                              Icons.currency_rupee,
-                              'Stipend',
-                              '₹${intern.stipend}/mo',
-                              sw,
-                            ),
-                          ],
-                          if (intern.duration != null) ...[
-                            SizedBox(height: sw * 0.012),
-                            _dialogRow(
-                              Icons.timer_outlined,
-                              'Duration',
-                              intern.duration!,
-                              sw,
-                            ),
-                          ],
+                          SizedBox(height: sw * 0.018),
+                          _dialogRow(Icons.location_on, 'Location', intern.location, sw),
+                          SizedBox(height: sw * 0.011),
+                          _dialogRow(Icons.work_outline, 'Type', intern.internshipType ?? 'Internship', sw),
+                          if (intern.stipend != null) ...[SizedBox(height: sw * 0.011), _dialogRow(Icons.currency_rupee, 'Stipend', '₹${intern.stipend}/mo', sw)],
+                          if (intern.duration != null) ...[SizedBox(height: sw * 0.011), _dialogRow(Icons.timer_outlined, 'Duration', intern.duration!, sw)],
                         ],
                       ),
                     ),
-                    SizedBox(height: sw * 0.040),
+                    SizedBox(height: sw * 0.035),
                     GestureDetector(
                       onTap: () => Navigator.pop(context),
                       child: Container(
                         width: double.infinity,
-                        padding: EdgeInsets.symmetric(vertical: sw * 0.033),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [theme.grad1, theme.grad2],
-                          ),
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        child: Center(
-                          child: Text(
-                            'OK, Got it!',
-                            style: TextStyle(
-                              fontSize: sw * 0.035,
-                              fontWeight: FontWeight.w800,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
+                        padding: EdgeInsets.symmetric(vertical: sw * 0.030),
+                        decoration: BoxDecoration(gradient: LinearGradient(colors: [theme.grad1, theme.grad2]), borderRadius: BorderRadius.circular(13)),
+                        child: Center(child: Text('OK, Got it!', style: TextStyle(fontSize: sw * 0.032, fontWeight: FontWeight.w800, color: Colors.white))),
                       ),
                     ),
                   ],
@@ -3141,81 +2655,33 @@ class _DashboardScreenState extends State<DashboardScreen>
   //  HELPERS
   // ─────────────────────────────────────────
   Widget _emptyCard(String msg, double sw) => Container(
-    padding: EdgeInsets.all(sw * 0.050),
-    decoration: BoxDecoration(
-      color: kCardBg,
-      borderRadius: BorderRadius.circular(16),
-      border: Border.all(color: kBorder),
-    ),
-    child: Center(
-      child: Text(
-        msg,
-        style: TextStyle(color: kMuted, fontSize: sw * 0.030),
-      ),
-    ),
+    padding: EdgeInsets.all(sw * 0.045),
+    decoration: BoxDecoration(color: kCardBg, borderRadius: BorderRadius.circular(15), border: Border.all(color: kBorder)),
+    child: Center(child: Text(msg, style: TextStyle(color: kMuted, fontSize: sw * 0.028))),
   );
 
   Widget _metaChip(IconData icon, String label, double sw) => Container(
-    padding: EdgeInsets.symmetric(horizontal: sw * 0.025, vertical: sw * 0.013),
-    decoration: BoxDecoration(
-      color: kBgPage,
-      borderRadius: BorderRadius.circular(20),
-      border: Border.all(color: kBorder),
-    ),
+    padding: EdgeInsets.symmetric(horizontal: sw * 0.022, vertical: sw * 0.011),
+    decoration: BoxDecoration(color: kBgPage, borderRadius: BorderRadius.circular(20), border: Border.all(color: kBorder)),
     child: Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: sw * 0.033, color: kMuted),
-        SizedBox(width: sw * 0.010),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: sw * 0.028,
-            color: kSlate,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
+        Icon(icon, size: sw * 0.030, color: kMuted),
+        SizedBox(width: sw * 0.009),
+        Text(label, style: TextStyle(fontSize: sw * 0.026, color: kSlate, fontWeight: FontWeight.w600)),
       ],
     ),
   );
 
-  Widget _summaryBox(
-    String value,
-    String label,
-    Color color,
-    Color bg,
-    double sw,
-  ) {
+  Widget _summaryBox(String value, String label, Color color, Color bg, double sw) {
     return Container(
-      padding: EdgeInsets.symmetric(
-        vertical: sw * 0.025,
-        horizontal: sw * 0.015,
-      ),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: color.withValues(alpha: 0.25)),
-      ),
+      padding: EdgeInsets.symmetric(vertical: sw * 0.022, horizontal: sw * 0.013),
+      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(13), border: Border.all(color: color.withValues(alpha: 0.25))),
       child: Column(
         children: [
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: sw * 0.038,
-              fontWeight: FontWeight.w800,
-              color: color,
-            ),
-          ),
-          SizedBox(height: sw * 0.005),
-          Text(
-            label,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: sw * 0.022,
-              color: color.withValues(alpha: 0.80),
-              fontWeight: FontWeight.w600,
-            ),
-          ),
+          Text(value, style: TextStyle(fontSize: sw * 0.035, fontWeight: FontWeight.w800, color: color)),
+          SizedBox(height: sw * 0.004),
+          Text(label, textAlign: TextAlign.center, style: TextStyle(fontSize: sw * 0.020, color: color.withValues(alpha: 0.80), fontWeight: FontWeight.w600)),
         ],
       ),
     );
@@ -3225,61 +2691,26 @@ class _DashboardScreenState extends State<DashboardScreen>
     return Row(
       children: [
         Container(
-          width: sw * 0.070,
-          height: sw * 0.070,
-          decoration: BoxDecoration(
-            color: kSelectedBg,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Icon(icon, size: sw * 0.035, color: kPrimary),
+          width: sw * 0.064,
+          height: sw * 0.064,
+          decoration: BoxDecoration(color: kSelectedBg, borderRadius: BorderRadius.circular(8)),
+          child: Icon(icon, size: sw * 0.032, color: kPrimary),
         ),
-        SizedBox(width: sw * 0.020),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: sw * 0.028,
-            color: kMuted,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
+        SizedBox(width: sw * 0.018),
+        Text(label, style: TextStyle(fontSize: sw * 0.026, color: kMuted, fontWeight: FontWeight.w600)),
         const Spacer(),
-        Flexible(
-          child: Text(
-            value,
-            textAlign: TextAlign.right,
-            style: TextStyle(
-              fontSize: sw * 0.028,
-              fontWeight: FontWeight.w800,
-              color: kInk,
-            ),
-          ),
-        ),
+        Flexible(child: Text(value, textAlign: TextAlign.right, style: TextStyle(fontSize: sw * 0.026, fontWeight: FontWeight.w800, color: kInk))),
       ],
     );
   }
 
-  Widget _sectionHeader(
-    String title, {
-    required String sub,
-    required double sw,
-  }) {
+  Widget _sectionHeader(String title, {required String sub, required double sw}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          title,
-          style: TextStyle(
-            fontSize: sw * 0.045,
-            fontWeight: FontWeight.w800,
-            color: kInk,
-            letterSpacing: -0.5,
-          ),
-        ),
-        SizedBox(height: sw * 0.005),
-        Text(
-          sub,
-          style: TextStyle(fontSize: sw * 0.030, color: kMuted),
-        ),
+        Text(title, style: TextStyle(fontSize: sw * 0.042, fontWeight: FontWeight.w800, color: kInk, letterSpacing: -0.5)),
+        SizedBox(height: sw * 0.004),
+        Text(sub, style: TextStyle(fontSize: sw * 0.028, color: kMuted)),
       ],
     );
   }

@@ -25,6 +25,27 @@ const kInterestedAmber = Color(0xFFE65100);
 //  API MODELS
 // ─────────────────────────────────────────────
 
+class ApiSavedCourse {
+  final int courseId;
+  final String title;
+  final String description;
+  final String savedAt;
+
+  ApiSavedCourse({
+    required this.courseId,
+    required this.title,
+    required this.description,
+    required this.savedAt,
+  });
+
+  factory ApiSavedCourse.fromJson(Map<String, dynamic> json) => ApiSavedCourse(
+    courseId: json['course_id'] ?? 0,
+    title: json['title'] ?? '',
+    description: json['description'] ?? '',
+    savedAt: json['saved_at'] ?? '',
+  );
+}
+
 class ProfileApiData {
   final String fullName;
   final String email;
@@ -36,6 +57,7 @@ class ProfileApiData {
   final int coursesCompleted;
   final int achievements;
   final List<ApiCourse> courses;
+  final List<ApiSavedCourse> savedCourses;
 
   ProfileApiData({
     required this.fullName,
@@ -48,6 +70,7 @@ class ProfileApiData {
     required this.coursesCompleted,
     required this.achievements,
     required this.courses,
+    required this.savedCourses,
   });
 
   factory ProfileApiData.fromJson(Map<String, dynamic> json) {
@@ -55,6 +78,9 @@ class ProfileApiData {
     final stats = json['stats'] as Map<String, dynamic>;
     final coursesList = (json['courses'] as List)
         .map((c) => ApiCourse.fromJson(c as Map<String, dynamic>))
+        .toList();
+    final savedList = (json['savedCourses'] as List? ?? [])
+        .map((c) => ApiSavedCourse.fromJson(c as Map<String, dynamic>))
         .toList();
     return ProfileApiData(
       fullName: user['full_name'] ?? '',
@@ -67,6 +93,7 @@ class ProfileApiData {
       coursesCompleted: stats['coursesCompleted'] ?? 0,
       achievements: stats['achievements'] ?? 0,
       courses: coursesList,
+      savedCourses: savedList,
     );
   }
 }
@@ -118,10 +145,6 @@ class _SchoolProfileScreenState extends State<SchoolProfileScreen>
   late AnimationController _strengthAnim;
   late Animation<double> _strengthVal;
   late TabController _tabCtrl;
-
-  // ─────────────────────────────────────────
-  //  LIFECYCLE
-  // ─────────────────────────────────────────
 
   @override
   void initState() {
@@ -252,7 +275,7 @@ class _SchoolProfileScreenState extends State<SchoolProfileScreen>
   }
 
   // ─────────────────────────────────────────
-  //  PROFILE STRENGTH
+  //  PROFILE STRENGTH  ← CHANGED
   // ─────────────────────────────────────────
 
   double _profileStrength(
@@ -260,16 +283,20 @@ class _SchoolProfileScreenState extends State<SchoolProfileScreen>
     List<Course> enrolled,
     List<Course> interested,
   ) {
-    double s = 0.20;
-    if (p.name.isNotEmpty && p.name != 'Student') s += 0.10;
-    if (p.school.isNotEmpty && p.school != 'My School') s += 0.10;
-    if (enrolled.isNotEmpty) s += 0.20;
-    if (enrolled.length >= 2) s += 0.10;
-    if (interested.isNotEmpty) s += 0.10;
-    if (p.streakDays >= 7) s += 0.10;
-    if (p.totalPoints >= 500) s += 0.10;
+    double s = 0.25; // base 25%
+    if (p.name.isNotEmpty && p.name != 'Student') s += 0.15; // +15%
+    if (p.school.isNotEmpty && p.school != 'My School') s += 0.15; // +15%
+    if (enrolled.isNotEmpty) s += 0.25; // +25%
+    if (enrolled.length >= 2) s += 0.10; // +10%
+    if (interested.isNotEmpty) s += 0.10; // +10%
+    // if (p.streakDays >= 7) s += 0.10;    // disabled for now
+    // if (p.totalPoints >= 500) s += 0.10; // disabled for now
     return s.clamp(0.0, 1.0);
   }
+
+  // ─────────────────────────────────────────
+  //  STRENGTH HINT  ← CHANGED
+  // ─────────────────────────────────────────
 
   String _strengthHint(
     StudentProfile p,
@@ -277,13 +304,13 @@ class _SchoolProfileScreenState extends State<SchoolProfileScreen>
     List<Course> interested,
   ) {
     if (p.name == 'Student' || p.name.isEmpty)
-      return 'Add your name to boost your profile (+10%)';
+      return 'Add your name to boost your profile (+15%)';
     if (p.school.isEmpty || p.school == 'My School')
-      return 'Add your school name (+10%)';
-    if (enrolled.isEmpty) return 'Enroll in a course to get started (+20%)';
+      return 'Add your school name (+15%)';
+    if (enrolled.isEmpty) return 'Enroll in a course to get started (+25%)';
     if (enrolled.length < 2) return 'Enroll in one more course (+10%)';
     if (interested.isEmpty) return 'Bookmark courses you like (+10%)';
-    if (p.streakDays < 7) return 'Keep a 7-day streak to level up (+10%)';
+    // if (p.streakDays < 7) return 'Keep a 7-day streak to level up (+10%)';
     return '🎉 Your profile is looking great!';
   }
 
@@ -390,13 +417,13 @@ class _SchoolProfileScreenState extends State<SchoolProfileScreen>
                       interested,
                       strength,
                     ),
-                    // ✅ API courses passed to Courses tab
                     _buildCoursesTab(
                       context,
                       state,
                       enrolled,
                       interested,
                       _apiData?.courses ?? [],
+                      _apiData?.savedCourses ?? [],
                     ),
                     _buildAchievementsTab(state, enrolled, interested),
                     _buildAccountTab(context, state, profile),
@@ -471,7 +498,7 @@ class _SchoolProfileScreenState extends State<SchoolProfileScreen>
               _apiBanner('${_apiData!.coursesEnrolled}', 'Enrolled', '🚀'),
               _apiBanner('${_apiData!.coursesCompleted}', 'Completed', '🎓'),
               _apiBanner('${_apiData!.achievements}', 'Badges', '🏅'),
-              _apiBanner('${_apiData!.courses.length}', 'Courses', '📚'),
+              _apiBanner('${_apiData!.savedCourses.length}', 'Saved', '🔖'),
             ],
           ),
         ],
@@ -514,6 +541,8 @@ class _SchoolProfileScreenState extends State<SchoolProfileScreen>
     List<Course> interested,
     double strength,
   ) {
+    final savedCount = _apiData?.savedCourses.length ?? interested.length;
+
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
@@ -526,7 +555,6 @@ class _SchoolProfileScreenState extends State<SchoolProfileScreen>
         bottom: false,
         child: Column(
           children: [
-            // App bar
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
               child: Row(
@@ -563,7 +591,6 @@ class _SchoolProfileScreenState extends State<SchoolProfileScreen>
               ),
             ),
 
-            // Avatar + name
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 22, 20, 0),
               child: Row(
@@ -687,7 +714,6 @@ class _SchoolProfileScreenState extends State<SchoolProfileScreen>
               ),
             ),
 
-            // Mini stats
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
               child: Container(
@@ -708,11 +734,7 @@ class _SchoolProfileScreenState extends State<SchoolProfileScreen>
                       Icons.rocket_launch_rounded,
                     ),
                     _hDiv(),
-                    _hStat(
-                      '${interested.length}',
-                      'Saved',
-                      Icons.bookmark_rounded,
-                    ),
+                    _hStat('$savedCount', 'Saved', Icons.bookmark_rounded),
                     _hDiv(),
                     _hStat('${p.totalPoints}', 'Points', Icons.star_rounded),
                     _hDiv(),
@@ -836,13 +858,13 @@ class _SchoolProfileScreenState extends State<SchoolProfileScreen>
     double strength,
   ) {
     final hint = _strengthHint(p, enrolled, interested);
+    final apiSaved = _apiData?.savedCourses ?? [];
+
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        // Stats banner
         _buildApiStatsBanner(),
 
-        // Profile strength
         _sectionCard(
           child: Column(
             children: [
@@ -927,7 +949,6 @@ class _SchoolProfileScreenState extends State<SchoolProfileScreen>
         ),
         const SizedBox(height: 16),
 
-        // Account details
         _sectionCard(
           child: Column(
             children: [
@@ -988,10 +1009,6 @@ class _SchoolProfileScreenState extends State<SchoolProfileScreen>
         ),
         const SizedBox(height: 16),
 
-        // ✅ "My Courses" section COMPLETELY REMOVED from here
-        const SizedBox(height: 16),
-
-        // ✅ API Enrolled Courses preview in Overview
         if (_apiData != null && _apiData!.courses.isNotEmpty)
           _sectionCard(
             child: Column(
@@ -1086,7 +1103,9 @@ class _SchoolProfileScreenState extends State<SchoolProfileScreen>
               ],
             ),
           ),
-        // Saved courses preview
+
+        const SizedBox(height: 16),
+
         _sectionCard(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1097,17 +1116,79 @@ class _SchoolProfileScreenState extends State<SchoolProfileScreen>
                 onEdit: () => _tabCtrl.animateTo(1),
               ),
               const SizedBox(height: 14),
-              if (interested.isEmpty)
+              if (apiSaved.isEmpty)
                 _emptyHint('🔖', 'Nothing bookmarked yet.')
               else
-                ...interested
-                    .take(2)
-                    .map((c) => _miniCourseRow(c, CourseStatus.interested)),
+                ...apiSaved.take(2).map((c) => _miniApiSavedRow(c)),
             ],
           ),
         ),
         const SizedBox(height: 30),
       ],
+    );
+  }
+
+  Widget _miniApiSavedRow(ApiSavedCourse c) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: kInterestedAmber.withValues(alpha: 0.10),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Center(
+              child: Icon(
+                Icons.bookmark_rounded,
+                color: kInterestedAmber,
+                size: 20,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  c.title,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: kTextDark,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                if (c.description.isNotEmpty)
+                  Text(
+                    c.description,
+                    style: const TextStyle(fontSize: 10, color: kTextMuted),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              color: kInterestedAmber.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: const Text(
+              'Saved',
+              style: TextStyle(
+                fontSize: 9,
+                fontWeight: FontWeight.w800,
+                color: kInterestedAmber,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -1120,7 +1201,8 @@ class _SchoolProfileScreenState extends State<SchoolProfileScreen>
     SchoolStateNotifier state,
     List<Course> enrolled,
     List<Course> interested,
-    List<ApiCourse> apiCourses, // ✅ API courses from backend
+    List<ApiCourse> apiCourses,
+    List<ApiSavedCourse> apiSaved,
   ) {
     return DefaultTabController(
       length: 2,
@@ -1131,20 +1213,15 @@ class _SchoolProfileScreenState extends State<SchoolProfileScreen>
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
             child: Row(
               children: [
-                // ✅ Count from API courses
                 _subTabPill(apiCourses.length, '🚀 Enrolled', 0),
                 const SizedBox(width: 10),
-                _subTabPill(interested.length, '🔖 Interested', 1),
+                _subTabPill(apiSaved.length, '🔖 Interested', 1),
               ],
             ),
           ),
           Expanded(
             child: TabBarView(
-              children: [
-                // ✅ Enrolled tab shows API courses (same list as "My Courses" was)
-                _apiEnrolledList(apiCourses),
-                _courseList(state, interested, isEnrolled: false),
-              ],
+              children: [_apiEnrolledList(apiCourses), _apiSavedList(apiSaved)],
             ),
           ),
         ],
@@ -1152,16 +1229,125 @@ class _SchoolProfileScreenState extends State<SchoolProfileScreen>
     );
   }
 
-  // ✅ Renders API courses in Enrolled tab
+  Widget _apiSavedList(List<ApiSavedCourse> courses) {
+    if (courses.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: const [
+            Text('🔖', style: TextStyle(fontSize: 42)),
+            SizedBox(height: 12),
+            Text(
+              'Nothing saved yet.\nGo to Courses and tap Save!',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 13, color: kTextMuted, height: 1.6),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+      itemCount: courses.length,
+      itemBuilder: (_, i) {
+        final c = courses[i];
+        return Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: const Color(0xFFFFF8F2),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+              color: kInterestedAmber.withValues(alpha: 0.35),
+              width: 1.5,
+            ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  color: kInterestedAmber.withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: const Center(
+                  child: Icon(
+                    Icons.bookmark_rounded,
+                    color: kInterestedAmber,
+                    size: 26,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      c.title,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                        color: kTextDark,
+                      ),
+                    ),
+                    if (c.description.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        c.description,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontSize: 11, color: kTextMuted),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              const SizedBox(width: 10),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                decoration: BoxDecoration(
+                  color: kInterestedAmber.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.bookmark_rounded,
+                      size: 11,
+                      color: kInterestedAmber,
+                    ),
+                    SizedBox(width: 4),
+                    Text(
+                      'Saved',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                        color: kInterestedAmber,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   Widget _apiEnrolledList(List<ApiCourse> courses) {
     if (courses.isEmpty) {
       return Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('🚀', style: TextStyle(fontSize: 42)),
-            const SizedBox(height: 12),
-            const Text(
+          children: const [
+            Text('🚀', style: TextStyle(fontSize: 42)),
+            SizedBox(height: 12),
+            Text(
               'No enrolled courses yet.\nGo to Courses and hit Enroll!',
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 13, color: kTextMuted, height: 1.6),
@@ -2617,7 +2803,7 @@ class _SubTabPillState extends State<_SubTabPill> {
 }
 
 // ─────────────────────────────────────────────
-//  PROFILE COURSE CARD (Interested tab — swipe to remove)
+//  PROFILE COURSE CARD
 // ─────────────────────────────────────────────
 
 class _ProfileCourseCard extends StatefulWidget {
@@ -2667,8 +2853,8 @@ class _ProfileCourseCardState extends State<_ProfileCourseCard>
   @override
   Widget build(BuildContext context) {
     final c = widget.course;
-    final color = kInterestedAmber;
-    final bgColor = const Color(0xFFFFF8F2);
+    const color = kInterestedAmber;
+    const bgColor = Color(0xFFFFF8F2);
 
     return FadeTransition(
       opacity: _fade,
@@ -2794,11 +2980,11 @@ class _ProfileCourseCardState extends State<_ProfileCourseCard>
                         color: color.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(20),
                       ),
-                      child: Row(
+                      child: const Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(Icons.bookmark_rounded, size: 11, color: color),
-                          const SizedBox(width: 4),
+                          SizedBox(width: 4),
                           Text(
                             'Saved',
                             style: TextStyle(

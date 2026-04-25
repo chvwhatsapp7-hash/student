@@ -56,6 +56,10 @@ class _SchoolCoursesScreenState extends State<SchoolCoursesScreen>
   final Set<int> _enrolledIds = {};
   final Set<int> _enrollingIds = {};
 
+  // ✅ NEW: Saved courses tracking
+  final Set<int> _savedIds = {};
+  final Set<int> _savingIds = {};
+
   late AnimationController _headerAnim;
   late Animation<double> _headerFade;
   late Animation<Offset> _headerSlide;
@@ -79,6 +83,7 @@ class _SchoolCoursesScreenState extends State<SchoolCoursesScreen>
 
     _loadCourses();
     _loadEnrolledIds();
+    _loadSavedIds(); // ✅ NEW
   }
 
   Future<void> _loadCourses() async {
@@ -117,6 +122,29 @@ class _SchoolCoursesScreenState extends State<SchoolCoursesScreen>
       });
     } catch (e) {
       debugPrint('Load enrolled error: $e');
+    }
+  }
+
+  // ✅ NEW: Load saved course IDs from API
+  Future<void> _loadSavedIds() async {
+    try {
+      final response = await AuthService().get('/saved-courses');
+      if (!mounted) return;
+      if (response.statusCode == 200) {
+        final json = response.data as Map<String, dynamic>;
+        if (json['success'] == true) {
+          final list = json['data'] as List<dynamic>;
+          setState(() {
+            _savedIds.addAll(
+              list
+                  .where((c) => c['course_id'] != null)
+                  .map<int>((c) => c['course_id'] as int),
+            );
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint('Load saved courses error: $e');
     }
   }
 
@@ -160,7 +188,6 @@ class _SchoolCoursesScreenState extends State<SchoolCoursesScreen>
     }
   }
 
-  // ✅ NEW: Unenroll via API
   Future<void> _unenroll(Course course) async {
     if (!_enrolledIds.contains(course.id)) return;
     if (_enrollingIds.contains(course.id)) return;
@@ -200,6 +227,102 @@ class _SchoolCoursesScreenState extends State<SchoolCoursesScreen>
       debugPrint('Unenroll error: $e');
     } finally {
       if (mounted) setState(() => _enrollingIds.remove(course.id));
+    }
+  }
+
+  // ✅ NEW: Save course via POST /saved-courses
+  Future<void> _saveCourse(Course course) async {
+    if (_savedIds.contains(course.id)) return;
+    if (_savingIds.contains(course.id)) return;
+
+    HapticFeedback.selectionClick();
+    setState(() => _savingIds.add(course.id));
+    try {
+      final response = await AuthService().post('/saved-courses', {
+        'course_id': course.id,
+      });
+      if (!mounted) return;
+      final success = response.statusCode == 201 || response.statusCode == 200;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              Icon(
+                success ? Icons.bookmark_added_rounded : Icons.error_rounded,
+                color: Colors.white,
+                size: 16,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  success
+                      ? 'Course saved successfully'
+                      : 'Failed to save course',
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: success ? kInterestedAmber : const Color(0xFFE53935),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+          margin: const EdgeInsets.all(16),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+      if (success) setState(() => _savedIds.add(course.id));
+    } catch (e) {
+      debugPrint('Save course error: $e');
+    } finally {
+      if (mounted) setState(() => _savingIds.remove(course.id));
+    }
+  }
+
+  // ✅ NEW: Unsave course via DELETE /saved-courses
+  Future<void> _unsaveCourse(Course course) async {
+    if (!_savedIds.contains(course.id)) return;
+    if (_savingIds.contains(course.id)) return;
+
+    HapticFeedback.selectionClick();
+    setState(() => _savingIds.add(course.id));
+    try {
+      final response = await AuthService().delete('/saved-courses', {
+        'course_id': course.id,
+      });
+      if (!mounted) return;
+      final success = response.statusCode == 200;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              Icon(
+                success ? Icons.bookmark_remove_rounded : Icons.error_rounded,
+                color: Colors.white,
+                size: 16,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  success ? 'Course unsaved successfully' : 'Failed to unsave',
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: success ? kTextMuted : const Color(0xFFE53935),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+          margin: const EdgeInsets.all(16),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+      if (success) setState(() => _savedIds.remove(course.id));
+    } catch (e) {
+      debugPrint('Unsave course error: $e');
+    } finally {
+      if (mounted) setState(() => _savingIds.remove(course.id));
     }
   }
 
@@ -335,10 +458,13 @@ class _SchoolCoursesScreenState extends State<SchoolCoursesScreen>
       builder: (_) => _CourseDetailSheet(
         course: course,
         isEnrolled: _enrolledIds.contains(course.id),
+        isSaved: _savedIds.contains(course.id), // ✅ NEW
         status: state.statusOf(course.id),
         onStatus: (s) => state.setStatus(course.id, s),
         onEnroll: () => _enroll(course),
-        onUnenroll: () => _unenroll(course), // ✅ NEW
+        onUnenroll: () => _unenroll(course),
+        onSave: () => _saveCourse(course), // ✅ NEW
+        onUnsave: () => _unsaveCourse(course), // ✅ NEW
       ),
     );
   }
@@ -618,11 +744,15 @@ class _SchoolCoursesScreenState extends State<SchoolCoursesScreen>
                 index: i,
                 isEnrolled: _enrolledIds.contains(course.id),
                 isEnrolling: _enrollingIds.contains(course.id),
+                isSaved: _savedIds.contains(course.id), // ✅ NEW
+                isSaving: _savingIds.contains(course.id), // ✅ NEW
                 status: state.statusOf(course.id),
                 onTap: () => _openDetail(course, state),
                 onStatus: (s) => state.setStatus(course.id, s),
                 onEnroll: () => _enroll(course),
-                onUnenroll: () => _unenroll(course), // ✅ NEW
+                onUnenroll: () => _unenroll(course),
+                onSave: () => _saveCourse(course), // ✅ NEW
+                onUnsave: () => _unsaveCourse(course), // ✅ NEW
               );
             },
           );
@@ -638,11 +768,15 @@ class _SchoolCoursesScreenState extends State<SchoolCoursesScreen>
               index: i,
               isEnrolled: _enrolledIds.contains(course.id),
               isEnrolling: _enrollingIds.contains(course.id),
+              isSaved: _savedIds.contains(course.id), // ✅ NEW
+              isSaving: _savingIds.contains(course.id), // ✅ NEW
               status: state.statusOf(course.id),
               onTap: () => _openDetail(course, state),
               onStatus: (s) => state.setStatus(course.id, s),
               onEnroll: () => _enroll(course),
-              onUnenroll: () => _unenroll(course), // ✅ NEW
+              onUnenroll: () => _unenroll(course),
+              onSave: () => _saveCourse(course), // ✅ NEW
+              onUnsave: () => _unsaveCourse(course), // ✅ NEW
             );
           },
         );
@@ -661,21 +795,29 @@ class _AnimatedCourseCard extends StatefulWidget {
   final CourseStatus status;
   final bool isEnrolled;
   final bool isEnrolling;
+  final bool isSaved; // ✅ NEW
+  final bool isSaving; // ✅ NEW
   final VoidCallback onTap;
   final ValueChanged<CourseStatus> onStatus;
   final VoidCallback onEnroll;
-  final VoidCallback onUnenroll; // ✅ NEW
+  final VoidCallback onUnenroll;
+  final VoidCallback onSave; // ✅ NEW
+  final VoidCallback onUnsave; // ✅ NEW
 
   const _AnimatedCourseCard({
     required this.course,
     required this.index,
     required this.isEnrolled,
     required this.isEnrolling,
+    required this.isSaved, // ✅ NEW
+    required this.isSaving, // ✅ NEW
     required this.status,
     required this.onTap,
     required this.onStatus,
     required this.onEnroll,
-    required this.onUnenroll, // ✅ NEW
+    required this.onUnenroll,
+    required this.onSave, // ✅ NEW
+    required this.onUnsave, // ✅ NEW
   });
 
   @override
@@ -948,16 +1090,15 @@ class _AnimatedCourseCardState extends State<_AnimatedCourseCard>
                         const SizedBox(height: 10),
                         Row(
                           children: [
+                            // ✅ NOW API-driven: save/unsave bookmark button
                             Expanded(
                               child: _InterestedButton(
-                                status: widget.status,
+                                isSaved: widget.isSaved,
+                                isSaving: widget.isSaving,
                                 onTap: () {
-                                  HapticFeedback.selectionClick();
-                                  widget.onStatus(
-                                    widget.status == CourseStatus.interested
-                                        ? CourseStatus.none
-                                        : CourseStatus.interested,
-                                  );
+                                  widget.isSaved
+                                      ? widget.onUnsave()
+                                      : widget.onSave();
                                 },
                               ),
                             ),
@@ -966,7 +1107,6 @@ class _AnimatedCourseCardState extends State<_AnimatedCourseCard>
                               child: _EnrollButton(
                                 isEnrolled: widget.isEnrolled,
                                 isEnrolling: widget.isEnrolling,
-                                // ✅ Toggle between enroll and unenroll
                                 onTap: widget.isEnrolled
                                     ? widget.onUnenroll
                                     : widget.onEnroll,
@@ -1060,12 +1200,18 @@ class _StatusBanner extends StatelessWidget {
   }
 }
 
-// ── Interested button ──────────────────────────
+// ── Interested button (✅ now API-driven save/unsave) ──
 
 class _InterestedButton extends StatefulWidget {
-  final CourseStatus status;
+  final bool isSaved; // ✅ replaced: status
+  final bool isSaving; // ✅ NEW: loading state
   final VoidCallback onTap;
-  const _InterestedButton({required this.status, required this.onTap});
+
+  const _InterestedButton({
+    required this.isSaved,
+    required this.isSaving,
+    required this.onTap,
+  });
 
   @override
   State<_InterestedButton> createState() => _InterestedButtonState();
@@ -1076,14 +1222,13 @@ class _InterestedButtonState extends State<_InterestedButton> {
 
   @override
   Widget build(BuildContext context) {
-    final active = widget.status == CourseStatus.interested;
     final r = _R(context);
     return GestureDetector(
       onTapDown: (_) => setState(() => _pressed = true),
       onTapCancel: () => setState(() => _pressed = false),
       onTapUp: (_) {
         setState(() => _pressed = false);
-        widget.onTap();
+        if (!widget.isSaving) widget.onTap();
       },
       child: AnimatedScale(
         scale: _pressed ? 0.92 : 1.0,
@@ -1096,12 +1241,12 @@ class _InterestedButtonState extends State<_InterestedButton> {
             vertical: r.isTablet ? 12 : 10,
           ),
           decoration: BoxDecoration(
-            color: active
+            color: widget.isSaved
                 ? kInterestedAmber.withValues(alpha: 0.12)
                 : const Color(0xFFF0F4FF),
             borderRadius: BorderRadius.circular(30),
             border: Border.all(
-              color: active ? kInterestedAmber : kCardBorder,
+              color: widget.isSaved ? kInterestedAmber : kCardBorder,
               width: 1.5,
             ),
           ),
@@ -1109,20 +1254,36 @@ class _InterestedButtonState extends State<_InterestedButton> {
             mainAxisAlignment: MainAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                active ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
-                size: r.isTablet ? 16 : 14,
-                color: active ? kInterestedAmber : kTextMuted,
-              ),
+              if (widget.isSaving)
+                SizedBox(
+                  width: 14,
+                  height: 14,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: kInterestedAmber,
+                  ),
+                )
+              else
+                Icon(
+                  widget.isSaved
+                      ? Icons.bookmark_rounded
+                      : Icons.bookmark_border_rounded,
+                  size: r.isTablet ? 16 : 14,
+                  color: widget.isSaved ? kInterestedAmber : kTextMuted,
+                ),
               const SizedBox(width: 4),
               Flexible(
                 child: Text(
-                  active ? 'Saved' : 'Interested',
+                  widget.isSaving
+                      ? '...'
+                      : widget.isSaved
+                      ? 'Saved'
+                      : 'Save',
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontSize: r.fs(12, tablet: 13),
                     fontWeight: FontWeight.w700,
-                    color: active ? kInterestedAmber : kTextMuted,
+                    color: widget.isSaved ? kInterestedAmber : kTextMuted,
                   ),
                 ),
               ),
@@ -1161,8 +1322,7 @@ class _EnrollButtonState extends State<_EnrollButton> {
       onTapCancel: () => setState(() => _pressed = false),
       onTapUp: (_) {
         setState(() => _pressed = false);
-        if (!widget.isEnrolling)
-          widget.onTap(); // ✅ allow tap for both enroll & unenroll
+        if (!widget.isEnrolling) widget.onTap();
       },
       child: AnimatedScale(
         scale: _pressed ? 0.93 : 1.0,
@@ -1182,9 +1342,7 @@ class _EnrollButtonState extends State<_EnrollButton> {
                     begin: Alignment.centerLeft,
                     end: Alignment.centerRight,
                   ),
-            color: widget.isEnrolled
-                ? const Color(0xFFFFEBEE)
-                : null, // ✅ red tint when enrolled
+            color: widget.isEnrolled ? const Color(0xFFFFEBEE) : null,
             borderRadius: BorderRadius.circular(30),
           ),
           child: Row(
@@ -1202,7 +1360,7 @@ class _EnrollButtonState extends State<_EnrollButton> {
                 )
               else if (widget.isEnrolled) ...[
                 const Icon(
-                  Icons.cancel_rounded, // ✅ unenroll icon
+                  Icons.cancel_rounded,
                   size: 14,
                   color: Color(0xFFE53935),
                 ),
@@ -1213,14 +1371,14 @@ class _EnrollButtonState extends State<_EnrollButton> {
                   widget.isEnrolling
                       ? 'Loading...'
                       : widget.isEnrolled
-                      ? 'Unenroll' // ✅ toggle label
+                      ? 'Unenroll'
                       : 'Enroll Now',
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontSize: r.fs(12, tablet: 13),
                     fontWeight: FontWeight.w800,
                     color: widget.isEnrolled
-                        ? const Color(0xFFE53935) // ✅ red text
+                        ? const Color(0xFFE53935)
                         : Colors.white,
                   ),
                 ),
@@ -1240,18 +1398,24 @@ class _EnrollButtonState extends State<_EnrollButton> {
 class _CourseDetailSheet extends StatefulWidget {
   final Course course;
   final bool isEnrolled;
+  final bool isSaved; // ✅ NEW
   final CourseStatus status;
   final ValueChanged<CourseStatus> onStatus;
   final VoidCallback onEnroll;
-  final VoidCallback onUnenroll; // ✅ NEW
+  final VoidCallback onUnenroll;
+  final VoidCallback onSave; // ✅ NEW
+  final VoidCallback onUnsave; // ✅ NEW
 
   const _CourseDetailSheet({
     required this.course,
     required this.isEnrolled,
+    required this.isSaved, // ✅ NEW
     required this.status,
     required this.onStatus,
     required this.onEnroll,
-    required this.onUnenroll, // ✅ NEW
+    required this.onUnenroll,
+    required this.onSave, // ✅ NEW
+    required this.onUnsave, // ✅ NEW
   });
 
   @override
@@ -1261,12 +1425,14 @@ class _CourseDetailSheet extends StatefulWidget {
 class _CourseDetailSheetState extends State<_CourseDetailSheet> {
   late CourseStatus _status;
   late bool _isEnrolled;
+  late bool _isSaved; // ✅ NEW
 
   @override
   void initState() {
     super.initState();
     _status = widget.status;
     _isEnrolled = widget.isEnrolled;
+    _isSaved = widget.isSaved; // ✅ NEW
   }
 
   void _setStatus(CourseStatus s) {
@@ -1702,15 +1868,14 @@ class _CourseDetailSheetState extends State<_CourseDetailSheet> {
   );
 
   Widget _buildActionButtons(Course c, _R r) {
-    final isInterested = _status == CourseStatus.interested;
     return Column(
       children: [
-        // ✅ Enroll / Unenroll button — API driven
+        // Enroll / Unenroll button — unchanged
         GestureDetector(
           onTap: () {
             HapticFeedback.mediumImpact();
             if (_isEnrolled) {
-              widget.onUnenroll(); // ✅ call unenroll
+              widget.onUnenroll();
               setState(() => _isEnrolled = false);
             } else {
               widget.onEnroll();
@@ -1729,9 +1894,7 @@ class _CourseDetailSheetState extends State<_CourseDetailSheet> {
                       begin: Alignment.centerLeft,
                       end: Alignment.centerRight,
                     ),
-              color: _isEnrolled
-                  ? const Color(0xFFFFEBEE)
-                  : null, // ✅ red bg when enrolled
+              color: _isEnrolled ? const Color(0xFFFFEBEE) : null,
               borderRadius: BorderRadius.circular(16),
               boxShadow: _isEnrolled
                   ? []
@@ -1748,8 +1911,7 @@ class _CourseDetailSheetState extends State<_CourseDetailSheet> {
               children: [
                 Icon(
                   _isEnrolled
-                      ? Icons
-                            .cancel_rounded // ✅ unenroll icon
+                      ? Icons.cancel_rounded
                       : Icons.rocket_launch_rounded,
                   size: r.isTablet ? 21 : 18,
                   color: _isEnrolled ? const Color(0xFFE53935) : Colors.white,
@@ -1758,7 +1920,7 @@ class _CourseDetailSheetState extends State<_CourseDetailSheet> {
                 Flexible(
                   child: Text(
                     _isEnrolled
-                        ? 'Unenroll from Course' // ✅ toggle label
+                        ? 'Unenroll from Course'
                         : 'Enroll Now — ${c.price}',
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
@@ -1775,25 +1937,29 @@ class _CourseDetailSheetState extends State<_CourseDetailSheet> {
           ),
         ),
         const SizedBox(height: 12),
-        // Interested button — unchanged
+        // ✅ Save / Unsave button — now API-driven
         GestureDetector(
           onTap: () {
             HapticFeedback.selectionClick();
-            _setStatus(
-              isInterested ? CourseStatus.none : CourseStatus.interested,
-            );
+            if (_isSaved) {
+              widget.onUnsave();
+              setState(() => _isSaved = false);
+            } else {
+              widget.onSave();
+              setState(() => _isSaved = true);
+            }
           },
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 280),
             width: double.infinity,
             padding: EdgeInsets.symmetric(vertical: r.isTablet ? 16 : 14),
             decoration: BoxDecoration(
-              color: isInterested
+              color: _isSaved
                   ? kInterestedAmber.withValues(alpha: 0.10)
                   : const Color(0xFFF4F7FF),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: isInterested ? kInterestedAmber : kCardBorder,
+                color: _isSaved ? kInterestedAmber : kCardBorder,
                 width: 1.5,
               ),
             ),
@@ -1801,21 +1967,21 @@ class _CourseDetailSheetState extends State<_CourseDetailSheet> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(
-                  isInterested
+                  _isSaved
                       ? Icons.bookmark_rounded
                       : Icons.bookmark_border_rounded,
                   size: r.isTablet ? 20 : 17,
-                  color: isInterested ? kInterestedAmber : kTextMuted,
+                  color: _isSaved ? kInterestedAmber : kTextMuted,
                 ),
                 const SizedBox(width: 8),
                 Flexible(
                   child: Text(
-                    isInterested ? 'Saved as Interested' : 'Mark as Interested',
+                    _isSaved ? 'Course Saved' : 'Save Course',
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       fontSize: r.fs(14, tablet: 15),
                       fontWeight: FontWeight.w700,
-                      color: isInterested ? kInterestedAmber : kTextMuted,
+                      color: _isSaved ? kInterestedAmber : kTextMuted,
                     ),
                   ),
                 ),

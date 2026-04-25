@@ -302,7 +302,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'NextStep',
+              'Students Hub',
               style: TextStyle(
                 fontSize: sw * 0.038,
                 fontWeight: FontWeight.w800,

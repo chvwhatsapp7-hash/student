@@ -390,13 +390,13 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
     try {
       final response = await http
           .post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'email': emailCtrl.text.trim(),
-          'password': passCtrl.text.trim(),
-        }),
-      )
+            url,
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({
+              'email': emailCtrl.text.trim(),
+              'password': passCtrl.text.trim(),
+            }),
+          )
           .timeout(const Duration(seconds: 15));
 
       final data = jsonDecode(response.body);
@@ -506,7 +506,7 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
       }
 
       final GoogleSignInAuthentication googleAuth =
-      await googleUser.authentication;
+          await googleUser.authentication;
       final String? idToken = googleAuth.idToken;
 
       if (idToken == null) {
@@ -522,12 +522,12 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
       );
       final response = await http
           .post(
-        url,
-        headers: {
-          'Authorization': 'Bearer $idToken',
-          'Content-Type': 'application/json',
-        },
-      )
+            url,
+            headers: {
+              'Authorization': 'Bearer $idToken',
+              'Content-Type': 'application/json',
+            },
+          )
           .timeout(const Duration(seconds: 15));
 
       final data = jsonDecode(response.body);
@@ -764,7 +764,7 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'NextStep',
+              'Students Hub',
               style: TextStyle(
                 fontSize: sw * 0.040,
                 fontWeight: FontWeight.w800,
@@ -1025,36 +1025,37 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
         ),
         child: isGoogleLoading
             ? Center(
-          child: SizedBox(
-            width: sw * 0.052,
-            height: sw * 0.052,
-            child: const CircularProgressIndicator(
-              strokeWidth: 2.5,
-              valueColor:
-              AlwaysStoppedAnimation<Color>(Color(0xFF4285F4)),
-            ),
-          ),
-        )
+                child: SizedBox(
+                  width: sw * 0.052,
+                  height: sw * 0.052,
+                  child: const CircularProgressIndicator(
+                    strokeWidth: 2.5,
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      Color(0xFF4285F4),
+                    ),
+                  ),
+                ),
+              )
             : Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Four-colour Google "G" — drawn with canvas, no assets needed
-            CustomPaint(
-              size: Size(sw * 0.058, sw * 0.058),
-              painter: _GoogleGPainter(),
-            ),
-            SizedBox(width: sw * 0.030),
-            Text(
-              'Sign in with Google',
-              style: TextStyle(
-                fontSize: sw * 0.038,
-                fontWeight: FontWeight.w600,
-                color: const Color(0xFF3C4043),
-                letterSpacing: 0.1,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Four-colour Google "G" — drawn with canvas, no assets needed
+                  CustomPaint(
+                    size: Size(sw * 0.058, sw * 0.058),
+                    painter: _GoogleGPainter(),
+                  ),
+                  SizedBox(width: sw * 0.030),
+                  Text(
+                    'Sign in with Google',
+                    style: TextStyle(
+                      fontSize: sw * 0.038,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF3C4043),
+                      letterSpacing: 0.1,
+                    ),
+                  ),
+                ],
               ),
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -1134,57 +1135,57 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
             gradient: btnPressed
                 ? null
                 : const LinearGradient(
-              colors: [kPrimary, kViolet],
-              begin: Alignment.centerLeft,
-              end: Alignment.centerRight,
-            ),
+                    colors: [kPrimary, kViolet],
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                  ),
             color: btnPressed ? kPrimary : null,
             borderRadius: BorderRadius.circular(16),
             boxShadow: btnPressed
                 ? null
                 : [
-              BoxShadow(
-                color: kPrimary.withValues(alpha: 0.38),
-                blurRadius: 18,
-                offset: const Offset(0, 7),
-              ),
-              BoxShadow(
-                color: kViolet.withValues(alpha: 0.22),
-                blurRadius: 28,
-                offset: const Offset(0, 14),
-              ),
-            ],
+                    BoxShadow(
+                      color: kPrimary.withValues(alpha: 0.38),
+                      blurRadius: 18,
+                      offset: const Offset(0, 7),
+                    ),
+                    BoxShadow(
+                      color: kViolet.withValues(alpha: 0.22),
+                      blurRadius: 28,
+                      offset: const Offset(0, 14),
+                    ),
+                  ],
           ),
           child: Center(
             child: isLoading
                 ? const SizedBox(
-              width: 24,
-              height: 24,
-              child: CircularProgressIndicator(
-                strokeWidth: 2.5,
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-              ),
-            )
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
+                  )
                 : Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.shield_rounded,
-                  color: Colors.white,
-                  size: sw * 0.048,
-                ),
-                SizedBox(width: sw * 0.022),
-                Text(
-                  'Sign In',
-                  style: TextStyle(
-                    fontSize: sw * 0.040,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.white,
-                    letterSpacing: 0.2,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.shield_rounded,
+                        color: Colors.white,
+                        size: sw * 0.048,
+                      ),
+                      SizedBox(width: sw * 0.022),
+                      Text(
+                        'Sign In',
+                        style: TextStyle(
+                          fontSize: sw * 0.040,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                          letterSpacing: 0.2,
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ],
-            ),
           ),
         ),
       ),

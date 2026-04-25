@@ -246,7 +246,7 @@ class _MainDashboardState extends State<MainDashboard>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'NextStep',
+                        'Students Hub',
                         style: TextStyle(
                           fontSize: sw * 0.043,
                           fontWeight: FontWeight.w800,

@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../companies/companies_screen.dart';
 import '../courses/courses_screen.dart' hide CompaniesScreen;
 import '../dashboard/dashboard_screen.dart';
-import '../hackathons/hackathons_screen.dart';
 import '../internships/internships_screen.dart';
 import '../jobs/jobs_screen.dart';
 import '../profile/profile_screen.dart';
@@ -84,8 +82,8 @@ const _pageTitles = [
   'Dashboard',
   'Jobs',
   'Internships',
-  'Companies',
-  'Hackathons',
+  // 'Companies',
+  // 'Hackathons',
   'Courses',
   'Profile',
 ];
@@ -115,8 +113,8 @@ class _MainDashboardState extends State<MainDashboard>
     DashboardScreen(),
     JobsScreen(),
     InternshipsScreen(),
-    CompaniesScreen(),
-    HackathonsScreen(),
+    // CompaniesScreen(),
+    // HackathonsScreen(),
     CoursesScreen(),
     ProfileScreen(),
   ];

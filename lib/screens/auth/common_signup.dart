@@ -326,9 +326,9 @@ class _CommonSignupScreenState extends State<CommonSignupScreen>
   // TODO: replace body with your Google OAuth / firebase_auth call
   Future<void> _signUpWithGoogle() async {
     HapticFeedback.lightImpact();
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Google sign-up coming soon")),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text("Google sign-up coming soon")));
   }
 
   // ── LINKEDIN SIGN UP ───────────────────────
@@ -410,15 +410,16 @@ class _CommonSignupScreenState extends State<CommonSignupScreen>
                         curve: Curves.easeOut,
                       ),
                       child: SlideTransition(
-                        position: Tween<Offset>(
-                          begin: const Offset(0, 0.12),
-                          end: Offset.zero,
-                        ).animate(
-                          CurvedAnimation(
-                            parent: _dropAnim,
-                            curve: Curves.easeOut,
-                          ),
-                        ),
+                        position:
+                            Tween<Offset>(
+                              begin: const Offset(0, 0.12),
+                              end: Offset.zero,
+                            ).animate(
+                              CurvedAnimation(
+                                parent: _dropAnim,
+                                curve: Curves.easeOut,
+                              ),
+                            ),
                         child: _buildRoleSelector(sw),
                       ),
                     ),
@@ -478,7 +479,8 @@ class _CommonSignupScreenState extends State<CommonSignupScreen>
                           ),
                           Padding(
                             padding: EdgeInsets.symmetric(
-                                horizontal: sw * 0.030),
+                              horizontal: sw * 0.030,
+                            ),
                             child: Text(
                               'or sign up with',
                               style: TextStyle(
@@ -508,10 +510,10 @@ class _CommonSignupScreenState extends State<CommonSignupScreen>
                               label: 'Google',
                               onTap: _signUpWithGoogle,
                               sw: sw,
-                              iconWidget:
-                              _GoogleIcon(size: sw * 0.048),
-                              borderColor: const Color(0xFF4285F4)
-                                  .withOpacity(0.45),
+                              iconWidget: _GoogleIcon(size: sw * 0.048),
+                              borderColor: const Color(
+                                0xFF4285F4,
+                              ).withOpacity(0.45),
                             ),
                           ),
                           SizedBox(width: sw * 0.025),
@@ -520,10 +522,10 @@ class _CommonSignupScreenState extends State<CommonSignupScreen>
                               label: 'LinkedIn',
                               onTap: _signUpWithLinkedIn,
                               sw: sw,
-                              iconWidget:
-                              _LinkedInIcon(size: sw * 0.048),
-                              borderColor: const Color(0xFF0A66C2)
-                                  .withOpacity(0.45),
+                              iconWidget: _LinkedInIcon(size: sw * 0.048),
+                              borderColor: const Color(
+                                0xFF0A66C2,
+                              ).withOpacity(0.45),
                             ),
                           ),
                         ],
@@ -704,8 +706,7 @@ class _CommonSignupScreenState extends State<CommonSignupScreen>
                         child: Text(
                           _role.subtitle,
                           key: ValueKey('sub_${_role.value}'),
-                          style:
-                          TextStyle(fontSize: sw * 0.030, color: kMuted),
+                          style: TextStyle(fontSize: sw * 0.030, color: kMuted),
                         ),
                       ),
                     ],
@@ -974,40 +975,39 @@ class _CommonSignupScreenState extends State<CommonSignupScreen>
             boxShadow: _btnPressed
                 ? null
                 : [
-              BoxShadow(
-                color: _role.accent.withOpacity(0.35),
-                blurRadius: 16,
-                offset: const Offset(0, 6),
-              ),
-            ],
+                    BoxShadow(
+                      color: _role.accent.withOpacity(0.35),
+                      blurRadius: 16,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
           ),
           child: Center(
             child: _isLoading
                 ? SizedBox(
-              width: sw * 0.055,
-              height: sw * 0.055,
-              child: const CircularProgressIndicator(
-                strokeWidth: 2.5,
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-              ),
-            )
+                    width: sw * 0.055,
+                    height: sw * 0.055,
+                    child: const CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
+                  )
                 : Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(_role.emoji,
-                    style: TextStyle(fontSize: sw * 0.040)),
-                SizedBox(width: sw * 0.020),
-                Text(
-                  'Create Account',
-                  style: TextStyle(
-                    fontSize: sw * 0.038,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.white,
-                    letterSpacing: 0.2,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(_role.emoji, style: TextStyle(fontSize: sw * 0.040)),
+                      SizedBox(width: sw * 0.020),
+                      Text(
+                        'Create Account',
+                        style: TextStyle(
+                          fontSize: sw * 0.038,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                          letterSpacing: 0.2,
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ],
-            ),
           ),
         ),
       ),
@@ -1075,31 +1075,42 @@ class _GooglePainter extends CustomPainter {
     final double cx = s / 2, cy = s / 2, r = s / 2;
 
     // White circle background
-    canvas.drawCircle(
-      Offset(cx, cy),
-      r,
-      Paint()..color = Colors.white,
-    );
+    canvas.drawCircle(Offset(cx, cy), r, Paint()..color = Colors.white);
 
-    final rect =
-    Rect.fromCircle(center: Offset(cx, cy), radius: r * 0.76);
+    final rect = Rect.fromCircle(center: Offset(cx, cy), radius: r * 0.76);
 
     // Four colour arcs
-    canvas.drawArc(rect, 3.38, 1.75, true,
-        Paint()..color = const Color(0xFFEA4335));
-    canvas.drawArc(rect, 5.13, 1.57, true,
-        Paint()..color = const Color(0xFF4285F4));
-    canvas.drawArc(rect, 0.52, 1.48, true,
-        Paint()..color = const Color(0xFF34A853));
-    canvas.drawArc(rect, 1.96, 1.42, true,
-        Paint()..color = const Color(0xFFFBBC05));
+    canvas.drawArc(
+      rect,
+      3.38,
+      1.75,
+      true,
+      Paint()..color = const Color(0xFFEA4335),
+    );
+    canvas.drawArc(
+      rect,
+      5.13,
+      1.57,
+      true,
+      Paint()..color = const Color(0xFF4285F4),
+    );
+    canvas.drawArc(
+      rect,
+      0.52,
+      1.48,
+      true,
+      Paint()..color = const Color(0xFF34A853),
+    );
+    canvas.drawArc(
+      rect,
+      1.96,
+      1.42,
+      true,
+      Paint()..color = const Color(0xFFFBBC05),
+    );
 
     // Inner white donut
-    canvas.drawCircle(
-      Offset(cx, cy),
-      r * 0.46,
-      Paint()..color = Colors.white,
-    );
+    canvas.drawCircle(Offset(cx, cy), r * 0.46, Paint()..color = Colors.white);
 
     // Blue right-side tab (the horizontal bar in the "G")
     canvas.drawRect(
@@ -1154,8 +1165,7 @@ class _LinkedInPainter extends CustomPainter {
     // Left vertical bar
     canvas.drawRRect(
       RRect.fromRectAndRadius(
-        Rect.fromLTWH(
-            pad, pad + dotR * 2 + s * 0.04, dotR * 2, s * 0.38),
+        Rect.fromLTWH(pad, pad + dotR * 2 + s * 0.04, dotR * 2, s * 0.38),
         Radius.circular(dotR),
       ),
       white,
@@ -1165,8 +1175,7 @@ class _LinkedInPainter extends CustomPainter {
     final double rx = s - pad - dotR * 2;
     canvas.drawRRect(
       RRect.fromRectAndRadius(
-        Rect.fromLTWH(
-            rx, pad + dotR * 2 + s * 0.10, dotR * 2, s * 0.32),
+        Rect.fromLTWH(rx, pad + dotR * 2 + s * 0.10, dotR * 2, s * 0.32),
         Radius.circular(dotR),
       ),
       white,
@@ -1363,10 +1372,10 @@ class _RolePickerSheet extends StatelessWidget {
                       ),
                       child: isSelected
                           ? Icon(
-                        Icons.check_rounded,
-                        color: Colors.white,
-                        size: sw * 0.035,
-                      )
+                              Icons.check_rounded,
+                              color: Colors.white,
+                              size: sw * 0.035,
+                            )
                           : null,
                     ),
                   ],

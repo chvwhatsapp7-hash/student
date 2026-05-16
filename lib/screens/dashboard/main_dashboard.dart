@@ -5,6 +5,7 @@ import '../courses/courses_screen.dart' hide CompaniesScreen;
 import '../dashboard/dashboard_screen.dart';
 import '../internships/internships_screen.dart';
 import '../jobs/jobs_screen.dart';
+import '../notifications/notification_page.dart';
 import '../profile/profile_screen.dart';
 
 // ─────────────────────────────────────────────
@@ -56,16 +57,6 @@ const _navItems = [
     inactiveIcon: Icons.rocket_launch_outlined,
     label: 'Intern',
   ),
-  // _NavItem(
-  //   activeIcon: Icons.business_rounded,
-  //   inactiveIcon: Icons.business_outlined,
-  //   label: 'Companies',
-  // ),
-  // _NavItem(
-  //   activeIcon: Icons.code_rounded,
-  //   inactiveIcon: Icons.code_rounded,
-  //   label: 'Hack',
-  // ),
   _NavItem(
     activeIcon: Icons.menu_book_rounded,
     inactiveIcon: Icons.menu_book_outlined,
@@ -82,8 +73,6 @@ const _pageTitles = [
   'Dashboard',
   'Jobs',
   'Internships',
-  // 'Companies',
-  // 'Hackathons',
   'Courses',
   'Profile',
 ];
@@ -109,14 +98,17 @@ class _MainDashboardState extends State<MainDashboard>
   late List<AnimationController> _navAnims;
   late List<Animation<double>> _navScales;
 
-  final List<Widget> _pages = const [
-    DashboardScreen(),
-    JobsScreen(),
-    InternshipsScreen(),
-    // CompaniesScreen(),
-    // HackathonsScreen(),
-    CoursesScreen(),
-    ProfileScreen(),
+  // ✅ KEY FIX: No onBack passed to any screen here.
+  // These screens live inside IndexedStack (bottom nav), so context.canPop()
+  // will always be false — meaning the back button correctly stays hidden.
+  // When navigated via context.push() from Quick Access, context.canPop()
+  // returns true, so the back button appears automatically.
+  late final List<Widget> _pages = [
+    const DashboardScreen(),
+    const JobsScreen(),           // ← no onBack
+    const InternshipsScreen(),    // ← no onBack
+    const CoursesScreen(),
+    const ProfileScreen(),        // ← no onBack
   ];
 
   @override
@@ -140,7 +132,7 @@ class _MainDashboardState extends State<MainDashboard>
 
     _navAnims = List.generate(
       _navItems.length,
-      (i) => AnimationController(
+          (i) => AnimationController(
         vsync: this,
         duration: const Duration(milliseconds: 260),
         value: i == 0 ? 1.0 : 0.0,
@@ -149,10 +141,10 @@ class _MainDashboardState extends State<MainDashboard>
     _navScales = _navAnims
         .map(
           (c) => Tween<double>(
-            begin: 0.82,
-            end: 1.0,
-          ).animate(CurvedAnimation(parent: c, curve: Curves.easeOut)),
-        )
+        begin: 0.82,
+        end: 1.0,
+      ).animate(CurvedAnimation(parent: c, curve: Curves.easeOut)),
+    )
         .toList();
   }
 
@@ -234,8 +226,14 @@ class _MainDashboardState extends State<MainDashboard>
                     color: Colors.white.withOpacity(0.12),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Center(
-                    child: Text('⚡', style: TextStyle(fontSize: sw * 0.050)),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.asset(
+                      'assets/icons/app_icon.png',
+                      width: sw * 0.10,
+                      height: sw * 0.10,
+                      fit: BoxFit.cover,
+                    ),
                   ),
                 ),
                 SizedBox(width: sw * 0.03),
@@ -273,34 +271,42 @@ class _MainDashboardState extends State<MainDashboard>
                 ),
 
                 // Notification bell
-                Stack(
-                  children: [
-                    Container(
-                      width: sw * 0.09,
-                      height: sw * 0.09,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.10),
-                        borderRadius: BorderRadius.circular(11),
-                      ),
-                      child: Icon(
-                        Icons.notifications_none_rounded,
-                        color: Colors.white,
-                        size: sw * 0.048,
-                      ),
+                GestureDetector(
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const NotificationPage(),
                     ),
-                    Positioned(
-                      top: sw * 0.018,
-                      right: sw * 0.018,
-                      child: Container(
-                        width: sw * 0.018,
-                        height: sw * 0.018,
-                        decoration: const BoxDecoration(
-                          color: kAccent,
-                          shape: BoxShape.circle,
+                  ),
+                  child: Stack(
+                    children: [
+                      Container(
+                        width: sw * 0.09,
+                        height: sw * 0.09,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.10),
+                          borderRadius: BorderRadius.circular(11),
+                        ),
+                        child: Icon(
+                          Icons.notifications_none_rounded,
+                          color: Colors.white,
+                          size: sw * 0.048,
                         ),
                       ),
-                    ),
-                  ],
+                      Positioned(
+                        top: sw * 0.018,
+                        right: sw * 0.018,
+                        child: Container(
+                          width: sw * 0.018,
+                          height: sw * 0.018,
+                          decoration: const BoxDecoration(
+                            color: kAccent,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
                 SizedBox(width: sw * 0.025),
 
@@ -352,7 +358,7 @@ class _MainDashboardState extends State<MainDashboard>
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: List.generate(
               _navItems.length,
-              (i) => _buildNavItem(i, sw),
+                  (i) => _buildNavItem(i, sw),
             ),
           ),
         ),
@@ -373,9 +379,6 @@ class _MainDashboardState extends State<MainDashboard>
           duration: const Duration(milliseconds: 280),
           curve: Curves.easeOut,
           padding: EdgeInsets.symmetric(
-            // CHANGED: removed dynamic horizontal padding (was sw * 0.035 when
-            // selected, sw * 0.025 unselected) — now fixed at sw * 0.025 so
-            // the pill width does not jump when labels are always visible.
             horizontal: sw * 0.025,
             vertical: sw * 0.020,
           ),
@@ -387,7 +390,6 @@ class _MainDashboardState extends State<MainDashboard>
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Icon + optional badge dot
               Stack(
                 clipBehavior: Clip.none,
                 children: [
@@ -396,7 +398,7 @@ class _MainDashboardState extends State<MainDashboard>
                     child: Icon(
                       isSelected ? item.activeIcon : item.inactiveIcon,
                       key: ValueKey(isSelected),
-                      size: sw * 0.050, // ~20px on 400px screen
+                      size: sw * 0.050,
                       color: isSelected ? kPrimary : kMuted,
                     ),
                   ),
@@ -415,24 +417,6 @@ class _MainDashboardState extends State<MainDashboard>
                     ),
                 ],
               ),
-
-              // ─────────────────────────────────────────────
-              // CHANGED: Label is now ALWAYS visible for every
-              // nav item, not just the selected one.
-              //
-              // BEFORE (labels only showed when selected):
-              //   AnimatedSize(
-              //     ...
-              //     child: isSelected
-              //         ? Row(children: [...Text(item.label)])
-              //         : const SizedBox.shrink(),  // ← this hid all labels
-              //   ),
-              //
-              // AFTER (label always rendered, only style changes):
-              //   AnimatedDefaultTextStyle animates color and weight
-              //   between selected (kPrimary, w800) and
-              //   unselected (kMuted, w600) states smoothly.
-              // ─────────────────────────────────────────────
               SizedBox(width: sw * 0.015),
               AnimatedDefaultTextStyle(
                 duration: const Duration(milliseconds: 200),

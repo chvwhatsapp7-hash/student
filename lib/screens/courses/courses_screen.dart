@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:go_router/go_router.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -25,7 +26,7 @@ const kWarning = Color(0xFFF59E0B);
 const kSelectedBg = Color(0xFFEFF6FF);
 
 // ─────────────────────────────────────────────
-//  MODEL  — untouched
+//  MODEL
 // ─────────────────────────────────────────────
 
 class EngCourse {
@@ -84,7 +85,7 @@ class EngCourse {
 }
 
 // ─────────────────────────────────────────────
-//  CATEGORY LIST — untouched
+//  CATEGORY LIST
 // ─────────────────────────────────────────────
 
 const List<String> kCategories = [
@@ -98,11 +99,12 @@ const List<String> kCategories = [
 ];
 
 // ─────────────────────────────────────────────
-//  LEVEL STYLE — untouched
+//  LEVEL STYLE
 // ─────────────────────────────────────────────
 
 class _LevelStyle {
-  final Color bg, fg;
+  final Color bg;
+  final Color fg;
   const _LevelStyle({required this.bg, required this.fg});
 }
 
@@ -143,7 +145,8 @@ Color _accentFor(String category) {
 // ─────────────────────────────────────────────
 
 class CoursesScreen extends StatefulWidget {
-  const CoursesScreen({super.key});
+  final VoidCallback? onBack;
+  const CoursesScreen({super.key, this.onBack});
 
   @override
   State<CoursesScreen> createState() => _CoursesScreenState();
@@ -167,11 +170,10 @@ class _CoursesScreenState extends State<CoursesScreen>
       vsync: this,
       duration: const Duration(milliseconds: 600),
     )..forward();
-    _loadEnrolled(); // ✅ FIX 1: Load enrolled IDs from API on screen open
+    _loadEnrolled();
     _fetchCourses();
   }
 
-  // ✅ FIX 1: New method — loads enrolled course IDs into _enrolled Set
   Future<void> _loadEnrolled() async {
     final enrolledCourses = await CourseService.getEnrolledCourses();
     if (!mounted) return;
@@ -199,22 +201,22 @@ class _CoursesScreenState extends State<CoursesScreen>
               _courses = dataList
                   .map(
                     (e) => EngCourse(
-                      id: e['course_id'] ?? 0,
-                      title: e['title'] ?? '',
-                      category: e['category'] ?? '',
-                      duration: e['duration'] ?? '',
-                      price: e['price'].toString(),
-                      mode: ['Online'],
-                      rating: (e['rating'] ?? 0).toDouble(),
-                      students: 0,
-                      level: e['level'] ?? '',
-                      instructor: e['instructor'] ?? '',
-                      badge: _resolveBadge(e['title'] ?? '', e['category'] ?? ''),
-                      tags: [],
-                      desc: e['description'] ?? '',
-                      bgColor: _resolveBgColor(e['category'] ?? ''),
-                    ),
-                  )
+                  id: e['course_id'] ?? 0,
+                  title: e['title'] ?? '',
+                  category: e['category'] ?? '',
+                  duration: e['duration'] ?? '',
+                  price: e['price'].toString(),
+                  mode: ['Online'],
+                  rating: (e['rating'] ?? 0).toDouble(),
+                  students: 0,
+                  level: e['level'] ?? '',
+                  instructor: e['instructor'] ?? '',
+                  badge: _resolveBadge(e['title'] ?? '', e['category'] ?? ''),
+                  tags: [],
+                  desc: e['description'] ?? '',
+                  bgColor: _resolveBgColor(e['category'] ?? ''),
+                ),
+              )
                   .toList();
 
               _isLoading = false;
@@ -392,10 +394,10 @@ class _CoursesScreenState extends State<CoursesScreen>
       list = list
           .where(
             (c) =>
-                c.title.toLowerCase().contains(_search.toLowerCase()) ||
-                c.category.toLowerCase().contains(_search.toLowerCase()) ||
-                c.instructor.toLowerCase().contains(_search.toLowerCase()),
-          )
+        c.title.toLowerCase().contains(_search.toLowerCase()) ||
+            c.category.toLowerCase().contains(_search.toLowerCase()) ||
+            c.instructor.toLowerCase().contains(_search.toLowerCase()),
+      )
           .toList();
     }
     return list;
@@ -410,15 +412,28 @@ class _CoursesScreenState extends State<CoursesScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: kBgPage,
-      body: Column(
-        children: [
-          _buildHeader(),
-          _buildSearchBar(),
-          _buildCategoryBar(),
-          Expanded(child: _buildCourseList()),
-        ],
+    return PopScope(
+      canPop: false, // Prevent the default back behavior
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+
+        // Mirror the logic used in the UI back button
+        if (widget.onBack != null) {
+          widget.onBack!();
+        } else if (Navigator.canPop(context)) {
+          Navigator.pop(context);
+        }
+      },
+      child: Scaffold(
+        backgroundColor: kBgPage,
+        body: Column(
+          children: [
+            _buildHeader(),
+            _buildSearchBar(),
+            _buildCategoryBar(),
+            Expanded(child: _buildCourseList()),
+          ],
+        ),
       ),
     );
   }
@@ -438,22 +453,28 @@ class _CoursesScreenState extends State<CoursesScreen>
               children: [
                 Row(
                   children: [
-                    GestureDetector(
-                      onTap: () => Navigator.maybePop(context),
-                      child: Container(
-                        width: 36,
-                        height: 36,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.10),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: const Icon(
-                          Icons.arrow_back_ios_new,
-                          color: Colors.white,
-                          size: 16,
+                    // Replace this whole GestureDetector block for the back button:
+                    if (context.canPop())
+                      GestureDetector(
+                        onTap: () {
+                          HapticFeedback.mediumImpact();
+                          context.pop();
+                        },
+                        child: Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.10),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Icon(
+                            Icons.arrow_back_ios_new,
+                            color: Colors.white,
+                            size: 16,
+                          ),
                         ),
                       ),
-                    ),
+                    if (context.canPop()) const SizedBox(width: 12),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
@@ -749,7 +770,6 @@ class _CoursesScreenState extends State<CoursesScreen>
         course: list[i],
         isEnrolled: _enrolled.contains(list[i].id),
         onEnroll: () async {
-          // ✅ FIX 2: Guard against double-tap enrolling
           if (_enrolled.contains(list[i].id)) return;
 
           HapticFeedback.lightImpact();
@@ -757,7 +777,6 @@ class _CoursesScreenState extends State<CoursesScreen>
 
           if (!mounted) return;
 
-          // ✅ FIX 3: Styled snackbar with icon + colour feedback
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Row(
@@ -795,7 +814,7 @@ class _CoursesScreenState extends State<CoursesScreen>
 }
 
 // ─────────────────────────────────────────────
-//  SKELETON LOADER — untouched
+//  SKELETON LOADER
 // ─────────────────────────────────────────────
 
 class _SkeletonCard extends StatefulWidget {
@@ -906,7 +925,7 @@ class _SkeletonCardState extends State<_SkeletonCard>
 }
 
 // ─────────────────────────────────────────────
-//  COURSE ICON SYSTEM — untouched
+//  COURSE ICON SYSTEM
 // ─────────────────────────────────────────────
 
 class _CourseTheme {
@@ -1299,7 +1318,7 @@ class _CourseIconTile extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────
-//  COURSE CARD WIDGET — untouched
+//  COURSE CARD WIDGET
 // ─────────────────────────────────────────────
 
 class _EngCourseCard extends StatefulWidget {
@@ -1352,16 +1371,16 @@ class _EngCourseCardState extends State<_EngCourseCard>
 
     return ctrl != null
         ? AnimatedBuilder(
-            animation: ctrl,
-            builder: (_, child) => Opacity(
-              opacity: ctrl.value,
-              child: Transform.translate(
-                offset: Offset(0, 12 * (1 - ctrl.value)),
-                child: child,
-              ),
-            ),
-            child: _buildCard(c, ls),
-          )
+      animation: ctrl,
+      builder: (_, child) => Opacity(
+        opacity: ctrl.value,
+        child: Transform.translate(
+          offset: Offset(0, 12 * (1 - ctrl.value)),
+          child: child,
+        ),
+      ),
+      child: _buildCard(c, ls),
+    )
         : _buildCard(c, ls);
   }
 
@@ -1498,25 +1517,25 @@ class _EngCourseCardState extends State<_EngCourseCard>
                       children: c.tags
                           .map(
                             (t) => Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 9,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFF8FAFC),
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(color: kBorder),
-                              ),
-                              child: Text(
-                                t,
-                                style: const TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w700,
-                                  color: kSlate,
-                                ),
-                              ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 9,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF8FAFC),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: kBorder),
+                          ),
+                          child: Text(
+                            t,
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: kSlate,
                             ),
-                          )
+                          ),
+                        ),
+                      )
                           .toList(),
                     ),
                   ],
@@ -1589,19 +1608,19 @@ class _EngCourseCardState extends State<_EngCourseCard>
                               borderRadius: BorderRadius.circular(30),
                               border: widget.isEnrolled
                                   ? Border.all(
-                                      color: const Color(0xFF86EFAC),
-                                      width: 1.5,
-                                    )
+                                color: const Color(0xFF86EFAC),
+                                width: 1.5,
+                              )
                                   : null,
                               boxShadow: widget.isEnrolled || _btnPressed
                                   ? null
                                   : [
-                                      BoxShadow(
-                                        color: kPrimary.withOpacity(0.28),
-                                        blurRadius: 10,
-                                        offset: const Offset(0, 4),
-                                      ),
-                                    ],
+                                BoxShadow(
+                                  color: kPrimary.withOpacity(0.28),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,

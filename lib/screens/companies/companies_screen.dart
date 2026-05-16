@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
 
 import '../../api_services/authservice.dart';
@@ -412,23 +413,25 @@ class _CompaniesScreenState extends State<CompaniesScreen>
               children: [
                 Row(
                   children: [
-                    GestureDetector(
-                      onTap: () => Navigator.maybePop(context),
-                      child: Container(
-                        width: 36,
-                        height: 36,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.10),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: const Icon(
-                          Icons.arrow_back_ios_new_rounded,
-                          color: Colors.white,
-                          size: 16,
+                    if (context.canPop()) ...[
+                      GestureDetector(
+                        onTap: () => context.pop(),
+                        child: Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.10),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Icon(
+                            Icons.arrow_back_ios_new_rounded,
+                            color: Colors.white,
+                            size: 16,
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 14),
+                      const SizedBox(width: 14),
+                    ],
                     const Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,

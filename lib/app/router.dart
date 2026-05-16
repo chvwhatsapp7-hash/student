@@ -2,7 +2,6 @@ import 'package:go_router/go_router.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 
 /// ── AUTH SERVICE ─────────────────────────────────────────────────────────────
-// adjust path to your AuthService
 import '../../api_services/authservice.dart';
 
 /// ── AUTH ─────────────────────────────────────────────────────────────────────
@@ -19,6 +18,9 @@ import '../screens/hackathons/hackathons_screen.dart';
 import '../screens/internships/internships_screen.dart';
 import '../screens/jobs/jobs_screen.dart';
 
+/// ── LANDING ──────────────────────────────────────────────────────────────────
+import '../screens/landing/landing_screen.dart';
+
 /// ── PREMIUM ──────────────────────────────────────────────────────────────────
 import '../screens/premium/premium_payment_screen.dart';
 
@@ -33,35 +35,38 @@ import '../screens/school/school_notifications_screen.dart';
 import '../screens/school/school_profile_screen.dart';
 
 // Pages that don't need auth — redirect won't block these
-const _publicRoutes = ['/login', '/signup', '/update-password'];
+const _publicRoutes = ['/', '/login', '/signup', '/update-password'];
 
 final GoRouter router = GoRouter(
-  initialLocation: '/login',
+  // ── App opens to landing screen, not login ─────────────────────────────────
+  initialLocation: '/',
 
-  // ── ONLY ADDITION: auth redirect ──────────────────────────────────────────
+  // ── Auth redirect ──────────────────────────────────────────────────────────
   redirect: (context, state) async {
-    final auth = AuthService();
+    final auth     = AuthService();
     final location = state.matchedLocation;
 
     // Let public routes through immediately
     if (_publicRoutes.contains(location)) {
-      // But if already logged in and going to /login, redirect to dashboard
-      final token = auth.accessToken;
-      final uid = auth.userId;
-      if (token != null && token.isNotEmpty && uid != null && uid.isNotEmpty) {
-        try {
-          if (!JwtDecoder.isExpired(token)) {
-            final roleId = int.tryParse(auth.roleId ?? '') ?? 0;
-            return roleId == 2 ? '/school/layout' : '/engineering';
-          }
-        } catch (_) {}
+      // If already logged in and visiting '/' or '/login', send to dashboard
+      if (location == '/' || location == '/login') {
+        final token = auth.accessToken;
+        final uid   = auth.userId;
+        if (token != null && token.isNotEmpty && uid != null && uid.isNotEmpty) {
+          try {
+            if (!JwtDecoder.isExpired(token)) {
+              final roleId = int.tryParse(auth.roleId ?? '') ?? 0;
+              return roleId == 2 ? '/school/layout' : '/engineering';
+            }
+          } catch (_) {}
+        }
       }
       return null; // stay on public route
     }
 
-    // Protected route — check token
+    // Protected route — verify token
     final token = auth.accessToken;
-    final uid = auth.userId;
+    final uid   = auth.userId;
 
     bool isValid = false;
     if (token != null && token.isNotEmpty && uid != null && uid.isNotEmpty) {
@@ -77,14 +82,20 @@ final GoRouter router = GoRouter(
       isValid = await auth.refreshTokens();
     }
 
-    // Not authenticated → send to login
-    if (!isValid) return '/login';
+    // Not authenticated → send to landing (not login, so user sees the app)
+    if (!isValid) return '/';
 
     return null; // all good, proceed
   },
 
   // ─────────────────────────────────────────────────────────────────────────
   routes: [
+    /// ── LANDING  ───────────────────────────────────────────────────────────
+    GoRoute(
+      path: '/',
+      builder: (context, state) => const LandingScreen(),
+    ),
+
     /// ── COMMON AUTH ────────────────────────────────────────────────────────
     GoRoute(
       path: '/login',
@@ -97,8 +108,8 @@ final GoRouter router = GoRouter(
     ),
 
     /// ── SAFETY NETS ────────────────────────────────────────────────────────
-    GoRoute(path: '/school', redirect: (context, state) => '/school/layout'),
-    GoRoute(path: '/school/login', redirect: (context, state) => '/login'),
+    GoRoute(path: '/school',        redirect: (context, state) => '/school/layout'),
+    GoRoute(path: '/school/login',  redirect: (context, state) => '/login'),
     GoRoute(path: '/school/signup', redirect: (context, state) => '/signup'),
 
     /// ── ENGINEERING / POST-GRAD PORTAL ─────────────────────────────────────
@@ -107,53 +118,46 @@ final GoRouter router = GoRouter(
       builder: (context, state) => const MainDashboard(),
     ),
 
-    GoRoute(path: '/jobs', builder: (context, state) => const JobsScreen()),
-
-    GoRoute(
-      path: '/internships',
-      builder: (context, state) => const InternshipsScreen(),
-    ),
-
-    GoRoute(
-      path: '/companies',
-      builder: (context, state) => const CompaniesScreen(),
-    ),
-
-    GoRoute(
-      path: '/hackathons',
-      builder: (context, state) => const HackathonsScreen(),
-    ),
-
-    GoRoute(
-      path: '/courses',
-      builder: (context, state) => const CoursesScreen(),
-    ),
-
-    GoRoute(
-      path: '/profile',
-      builder: (context, state) => const ProfileScreen(),
-    ),
+    GoRoute(path: '/jobs',        builder: (context, state) => const JobsScreen()),
+    GoRoute(path: '/internships', builder: (context, state) => const InternshipsScreen()),
+    GoRoute(path: '/companies',   builder: (context, state) => const CompaniesScreen()),
+    GoRoute(path: '/hackathons',  builder: (context, state) => const HackathonsScreen()),
+    GoRoute(path: '/courses',     builder: (context, state) => const CoursesScreen()),
+    GoRoute(path: '/profile',     builder: (context, state) => const ProfileScreen()),
 
     /// ── SCHOOL PORTAL ──────────────────────────────────────────────────────
+    // FIX: school/layout is the ROOT shell — sub-routes are nested under it
+    // so that context.pop() works correctly from dashboard, courses, profile
     GoRoute(
       path: '/school/layout',
       builder: (context, state) => const SchoolLayoutScreen(),
+      routes: [
+        GoRoute(
+          path: 'dashboard',  // resolves to /school/layout/dashboard
+          builder: (context, state) => const SchoolDashboardScreen(),
+          routes: [
+            GoRoute(
+              path: 'notifications', // resolves to /school/layout/dashboard/notifications
+              builder: (context, state) => const SchoolNotificationsScreen(),
+            ),
+          ],
+        ),
+        GoRoute(
+          path: 'courses',  // resolves to /school/layout/courses
+          builder: (context, state) => const SchoolCoursesScreen(),
+        ),
+        GoRoute(
+          path: 'profile',  // resolves to /school/layout/profile
+          builder: (context, state) => const SchoolProfileScreen(),
+        ),
+      ],
     ),
 
-    GoRoute(
-      path: '/school/dashboard',
-      builder: (context, state) => const SchoolDashboardScreen(),
-    ),
-
-    GoRoute(
-      path: '/school/courses',
-      builder: (context, state) => const SchoolCoursesScreen(),
-    ),
-
-    GoRoute(
-      path: '/school/profile',
-      builder: (context, state) => const SchoolProfileScreen(),
-    ),
+    // Keep old flat paths as redirects for backward compat (deep links, etc.)
+    GoRoute(path: '/school/dashboard',      redirect: (_, __) => '/school/layout/dashboard'),
+    GoRoute(path: '/school/courses',        redirect: (_, __) => '/school/layout/courses'),
+    GoRoute(path: '/school/profile',        redirect: (_, __) => '/school/layout/profile'),
+    GoRoute(path: '/school/notifications',  redirect: (_, __) => '/school/layout/dashboard/notifications'),
 
     /// ── PREMIUM ────────────────────────────────────────────────────────────
     GoRoute(
@@ -165,11 +169,6 @@ final GoRouter router = GoRouter(
     GoRoute(
       path: '/update-password',
       builder: (context, state) => const UpdatePasswordScreen(),
-    ),
-
-    GoRoute(
-      path: '/school/notifications',
-      builder: (context, state) => const SchoolNotificationsScreen(),
     ),
 
     GoRoute(

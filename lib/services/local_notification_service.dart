@@ -1,4 +1,5 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import '../app/router.dart'; // adjust path if needed
 
 class LocalNotificationService {
   static final FlutterLocalNotificationsPlugin _notifications =
@@ -11,7 +12,13 @@ class LocalNotificationService {
     const InitializationSettings settings =
     InitializationSettings(android: android);
 
-    await _notifications.initialize(settings);
+    await _notifications.initialize(
+      settings,
+      onDidReceiveNotificationResponse: (NotificationResponse response) {
+        // Fires when user taps the local notification banner (foreground)
+        router.go('/school/notifications');
+      },
+    );
   }
 
   static Future showNotification(String title, String body) async {

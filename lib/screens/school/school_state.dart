@@ -51,6 +51,7 @@ class SchoolStateNotifier extends ChangeNotifier {
   final Map<int, CourseStatus> _statuses = {};
   StudentProfile _profile = const StudentProfile();
   bool _challengeDone = false;
+  VoidCallback? goToDashboard;
 
   // ── getters ───────────────────────────────
   Map<int, CourseStatus> get statuses      => Map.unmodifiable(_statuses);

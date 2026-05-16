@@ -10,7 +10,6 @@ class SchoolApiService {
 
   final AuthService _auth = AuthService();
 
-  // Color & Emoji helpers for courses mapping
   static const _emojis = ['🚀', '💻', '🤖', '🎮', '📱', '🎨', '🧠'];
   static const _bgColors = [
     Color(0xFFFFF3E0),
@@ -20,6 +19,8 @@ class SchoolApiService {
     Color(0xFFFCE4EC),
     Color(0xFFE0F7FA),
   ];
+
+  // ── AUTH ──────────────────────────────────────────────────────────────────
 
   Future<bool> login(String email, String password) async {
     try {
@@ -34,11 +35,8 @@ class SchoolApiService {
           refresh: data['refreshToken'],
           user_id: data['user_id']?.toString(),
         );
-
-        // Sync FCM token
         await FcmTokenService.sendTokenToBackend(data['accessToken']);
         FcmTokenService.listenToTokenRefresh(data['accessToken']);
-
         return true;
       }
     } catch (e) {
@@ -52,8 +50,8 @@ class SchoolApiService {
     required String email,
     required String password,
     required String phone,
-    required String schoolName, // mapped to university
-    required String grade, // mapped to degree
+    required String schoolName,
+    required String grade,
   }) async {
     try {
       final res = await _auth.post('/auth/register', {
@@ -64,14 +62,14 @@ class SchoolApiService {
         'university': schoolName,
         'degree': grade,
       });
-      if (res.statusCode == 201 || res.statusCode == 200) {
-        return true;
-      }
+      if (res.statusCode == 201 || res.statusCode == 200) return true;
     } catch (e) {
       debugPrint('Register Error: $e');
     }
     return false;
   }
+
+  // ── COURSES ───────────────────────────────────────────────────────────────
 
   Future<List<Course>> getCourses() async {
     try {
@@ -85,103 +83,65 @@ class SchoolApiService {
             : (res.data['data'] ?? res.data['courses'] ?? []);
         return data.asMap().entries.map((e) {
           final index = e.key;
-          final item = e.value as Map<String, dynamic>;
-
-          final randomEmoji = _emojis[index % _emojis.length];
-          final randomBg = _bgColors[index % _bgColors.length];
-
+          final item  = e.value as Map<String, dynamic>;
           return Course(
-            id: int.tryParse(item['course_id'].toString()) ?? index,
-            emoji: randomEmoji,
-            title: item['title'] ?? 'Unknown Course',
-            desc: item['description'] ?? '',
-            fullDescription:
-                item['description'] ?? 'No long description provided.',
-            duration: item['duration'] ?? '4 weeks',
-            rating: item['rating']?.toString() ?? '4.5',
-            students: '100+',
-            age: '8-17',
-            level: item['level'] ?? 'Beginner',
-            price: item['price'] != null ? '₹${item['price']}' : 'Free',
-            bgColor: randomBg,
-            tag: 'New',
-            tagBg: randomBg,
-            tagColor:
-                kPrimaryBlue, // Using from school_data.dart or define fallback
+            id:              int.tryParse(item['course_id'].toString()) ?? index,
+            emoji:           _emojis[index % _emojis.length],
+            title:           item['title'] ?? 'Unknown Course',
+            desc:            item['description'] ?? '',
+            fullDescription: item['description'] ?? 'No long description provided.',
+            duration:        item['duration'] ?? '4 weeks',
+            rating:          item['rating']?.toString() ?? '4.5',
+            students:        '100+',
+            age:             '8-17',
+            level:           item['level'] ?? 'Beginner',
+            price:           item['price'] != null ? '₹${item['price']}' : 'Free',
+            bgColor:         _bgColors[index % _bgColors.length],
+            tag:             'New',
+            tagBg:           _bgColors[index % _bgColors.length],
+            tagColor:        kPrimaryBlue,
             instructor: Instructor(
-              name: item['provider'] ?? 'Expert Instructor',
-              role: 'Educator',
-              avatar: '🧑‍🏫',
+              name:       item['provider'] ?? 'Expert Instructor',
+              role:       'Educator',
+              avatar:     '🧑‍🏫',
               experience: '5+ years',
             ),
-            technologies:
-                (item['skills'] as List?)?.map((s) => s.toString()).toList() ??
+            technologies: (item['skills'] as List?)
+                ?.map((s) => s.toString())
+                .toList() ??
                 ['Coding'],
             outcomes: [
               'Gain hands-on experience',
               'Build interactive projects',
             ],
-            schedule: 'Flexible',
+            schedule:     'Flexible',
             totalLessons: '10 lessons',
-            certificate: 'Yes!',
+            certificate:  'Yes!',
           );
         }).toList();
       }
     } catch (e) {
       debugPrint('Get Courses Error: $e');
     }
-    // Fallback to dummy data if API fails to keep UI nice while disconnected
     return kCourses;
   }
+
+  // ── PROFILE ───────────────────────────────────────────────────────────────
 
   Future<Map<String, dynamic>?> getProfile() async {
     try {
       final uid = _auth.userId;
       if (uid == null) return null;
-
       final res = await _auth.get('/profile/$uid');
-      if (res.statusCode == 200) {
-        return res.data;
-      }
+      if (res.statusCode == 200) return res.data;
     } catch (e) {
       debugPrint('Get Profile Error: $e');
     }
     return null;
   }
 
-  Future<List<dynamic>> getNotifications() async {
-    try {
-      final res = await _auth.get('/notifications');
-      if (res.statusCode == 200) {
-        return res.data is List ? res.data as List : (res.data['data'] ?? []);
-      }
-    } catch (e) {
-      debugPrint('Get Notifications Error: $e');
-    }
-    return [];
-  }
-
-  Future<bool> markNotificationRead(String id) async {
-    try {
-      final res = await _auth.put('/notifications', {'notification_id': id});
-      return res.statusCode == 200;
-    } catch (e) {
-      debugPrint('Mark Notif Read Error: $e');
-    }
-    return false;
-  }
-
-  Future<bool> markAllNotificationsRead() async {
-    try {
-      final res = await _auth.put('/notifications/read-all', {});
-      return res.statusCode == 200;
-    } catch (e) {
-      debugPrint('Mark All Read Error: $e');
-    }
-    return false;
-  }
-
-  Future<void> updateProfile(String name, String grade, String school) async {
+  Future<void> updateProfile(
+      String name, String grade, String school) async {
     try {
       final uid = _auth.userId;
       if (uid == null) return;
@@ -193,5 +153,63 @@ class SchoolApiService {
     } catch (e) {
       debugPrint('Update Profile Error: $e');
     }
+  }
+
+  // ── NOTIFICATIONS ─────────────────────────────────────────────────────────
+
+  /// Fetch ALL notifications  →  GET /getNotifications
+  Future<List<dynamic>> getNotifications() async {
+    try {
+      final res = await _auth.get('/getNotifications');
+      if (res.statusCode == 200) {
+        return res.data is List
+            ? res.data as List
+            : (res.data['data'] ?? []);
+      }
+    } catch (e) {
+      debugPrint('Get Notifications Error: $e');
+    }
+    return [];
+  }
+
+  /// Fetch notifications by category  →  GET /getNotifications?category=public|personal
+  Future<List<dynamic>> getNotificationsByCategory(String category) async {
+    try {
+      final res = await _auth.get(
+        '/getNotifications',
+        queryParameters: {'category': category},
+      );
+      if (res.statusCode == 200) {
+        return res.data is List
+            ? res.data as List
+            : (res.data['data'] ?? []);
+      }
+    } catch (e) {
+      debugPrint('Get Notifications [$category] Error: $e');
+    }
+    return [];
+  }
+
+  /// Mark a single notification as read  →  PUT /notifications
+  Future<bool> markNotificationRead(String id) async {
+    try {
+      final res =
+      await _auth.put('/notifications', {'notification_id': id});
+      return res.statusCode == 200;
+    } catch (e) {
+      debugPrint('Mark Notif Read Error: $e');
+    }
+    return false;
+  }
+
+  /// Mark every notification as read  →  PUT /notifications/read-all
+  Future<bool> markAllNotificationsRead() async {
+    try {
+      final res = await _auth.put('/notifications/read-all', {});
+      return res.statusCode == 200;
+    } catch (e) {
+      debugPrint('Mark All Read Error: $e');
+    }
+    return false;
   }
 }

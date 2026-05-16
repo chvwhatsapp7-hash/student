@@ -41,7 +41,8 @@ class _R {
 // ─────────────────────────────────────────────
 
 class SchoolCoursesScreen extends StatefulWidget {
-  const SchoolCoursesScreen({super.key});
+  final VoidCallback? onBack;
+  const SchoolCoursesScreen({super.key, this.onBack});
 
   @override
   State<SchoolCoursesScreen> createState() => _SchoolCoursesScreenState();
@@ -517,10 +518,7 @@ class _SchoolCoursesScreenState extends State<SchoolCoursesScreen>
                       GestureDetector(
                         onTap: () {
                           HapticFeedback.lightImpact();
-                          if (context.canPop())
-                            context.pop();
-                          else
-                            context.go('/school/layout');
+                          widget.onBack?.call();
                         },
                         child: Container(
                           width: r.isTablet ? 42 : 36,

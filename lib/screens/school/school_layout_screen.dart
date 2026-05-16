@@ -104,6 +104,7 @@ class _SchoolLayoutScreenState extends State<SchoolLayoutScreen>
   final SchoolStateNotifier _schoolState = SchoolStateNotifier();
 
   int _selectedIndex = 0;
+  List<Widget> _screens = [];
 
   late List<AnimationController> _navAnims;
   late List<Animation<double>> _navScales;
@@ -112,11 +113,7 @@ class _SchoolLayoutScreenState extends State<SchoolLayoutScreen>
   late Animation<Offset> _pageSlide;
   late AnimationController _headerAnim;
 
-  final List<Widget> _screens = const [
-    SchoolDashboardScreen(),
-    SchoolCoursesScreen(),
-    SchoolProfileScreen(),
-  ];
+  // late final List<Widget> _screens;
 
   @override
   void initState() {
@@ -153,6 +150,14 @@ class _SchoolLayoutScreenState extends State<SchoolLayoutScreen>
           ).animate(CurvedAnimation(parent: c, curve: Curves.easeOut)),
         )
         .toList();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _schoolState.goToDashboard = () => _onTap(0);
+    });
+    _screens = [
+      SchoolDashboardScreen(),
+      SchoolCoursesScreen(onBack: () => _onTap(0)),
+      SchoolProfileScreen(onBack: () => _onTap(0)),
+    ];
   }
 
   @override

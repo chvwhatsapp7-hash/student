@@ -471,7 +471,7 @@ class ProfileState extends ChangeNotifier {
     roleName = _str(u['role_name']);
     goal = _str(u['goal']);
     status = _str(u['status']);
-    age = _int(u['age']);
+    age = _int(u['age']); // stored in state but NOT displayed in header
 
     if (isSchoolUser) {
       schoolName = _str(u['school_name']);
@@ -1802,16 +1802,16 @@ class _ProfileScreenState extends State<ProfileScreen>
                             fontWeight: FontWeight.w800,
                             color: Colors.white)),
                     const Spacer(),
-                    _iconBtn(
-                      Icons.notifications_outlined,
-                          () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (_) => const NotificationPage())),
-                      sw,
-                      bg: Colors.white.withOpacity(0.10),
-                      iconColor: kAccent,
-                    ),
+                    // _iconBtn(
+                    //   Icons.notifications_outlined,
+                    //       () => Navigator.push(
+                    //       context,
+                    //       MaterialPageRoute(
+                    //           builder: (_) => const NotificationPage())),
+                    //   sw,
+                    //   bg: Colors.white.withOpacity(0.10),
+                    //   iconColor: kAccent,
+                    // ),
                     SizedBox(width: sw * 0.025),
                     _iconBtn(
                       Icons.logout,
@@ -1876,6 +1876,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                 ],
               ),
               SizedBox(height: sw * 0.020),
+              // ── Name ──
               Text(p.name,
                   style: TextStyle(
                       fontSize: sw * 0.045,
@@ -1883,6 +1884,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                       color: Colors.white,
                       letterSpacing: -0.5)),
               SizedBox(height: sw * 0.008),
+              // ── Degree / education subtitle ──
               if (p.degree.isNotEmpty)
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: sw * 0.08),
@@ -1892,6 +1894,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                           fontSize: sw * 0.028,
                           color: Colors.white.withOpacity(0.65))),
                 ),
+              // ── Goal / Status badges (age is intentionally NOT shown here) ──
               if (p.goal.isNotEmpty || p.status.isNotEmpty) ...[
                 SizedBox(height: sw * 0.010),
                 Row(
@@ -1910,6 +1913,10 @@ class _ProfileScreenState extends State<ProfileScreen>
                   ],
                 ),
               ],
+              // ── NOTE: age is stored in profileState.age but is NOT rendered
+              //         anywhere in the header. If the API returns age as part
+              //         of a different field (e.g. inside degree/degree_year),
+              //         check _mapUser() above. ──
               SizedBox(height: sw * 0.030),
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: sw * 0.05),
@@ -2046,11 +2053,16 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
+  // ── FIX: TabBar is now centered using tabAlignment: TabAlignment.center
+  //        so Overview/Skills/Certs... are centred when they fit the screen,
+  //        and still scroll when they overflow. ──
   Widget _tabBar(double sw) => Container(
     color: kCardBg,
     child: TabBar(
       controller: _tab,
       isScrollable: true,
+      // CENTER the tabs — requires Flutter 3.10+
+      tabAlignment: TabAlignment.center,
       labelColor: kPrimary,
       unselectedLabelColor: kMuted,
       labelStyle:
@@ -2338,14 +2350,14 @@ class _ProfileScreenState extends State<ProfileScreen>
                   ),
                   if (has) ...[
                     SizedBox(height: sw * 0.008),
-                    GestureDetector(
-                      onTap: () => _openUrl(p.resumeName),
-                      child: Text('Open Resume →',
-                          style: TextStyle(
-                              fontSize: sw * 0.026,
-                              color: kPrimary,
-                              fontWeight: FontWeight.w700)),
-                    ),
+                    // GestureDetector(
+                    //   onTap: () => _openUrl(p.resumeName),
+                    //   child: Text('Open Resume →',
+                    //       style: TextStyle(
+                    //           fontSize: sw * 0.026,
+                    //           color: kPrimary,
+                    //           fontWeight: FontWeight.w700)),
+                    // ),
                   ],
                 ],
               ),

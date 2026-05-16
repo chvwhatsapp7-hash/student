@@ -201,14 +201,11 @@ _LevelStyle _levelStyle(String level) {
 //  SLIDER ITEM MODEL
 // ─────────────────────────────────────────────
 class _SliderItem {
-  final String title;
-  final String subtitle;
-  final String meta;
+  final String title, subtitle, meta;
   final int matchPercentage;
-  final Color grad1;
-  final Color grad2;
+  final Color grad1, grad2;
   final IconData icon;
-  final String type; // 'job' | 'internship' | 'course'
+  final String type;
   final dynamic sourceObject;
 
   const _SliderItem({
@@ -225,14 +222,12 @@ class _SliderItem {
 }
 
 // ─────────────────────────────────────────────
-//  RECOMMENDED SLIDER  — FIXED, NO OVERFLOW
+//  RECOMMENDED SLIDER
 // ─────────────────────────────────────────────
 class _RecommendedSlider extends StatefulWidget {
   final List<_SliderItem> items;
   final void Function(_SliderItem item) onApplyTap;
-
   const _RecommendedSlider({required this.items, required this.onApplyTap});
-
   @override
   State<_RecommendedSlider> createState() => _RecommendedSliderState();
 }
@@ -279,12 +274,9 @@ class _RecommendedSliderState extends State<_RecommendedSlider>
   Widget build(BuildContext context) {
     if (widget.items.isEmpty) return const SizedBox.shrink();
     final sw = MediaQuery.of(context).size.width;
-    // Fixed height — compact, no overflow
     final cardH = sw * 0.38;
-
     return Column(
       mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SizedBox(
           height: cardH,
@@ -333,7 +325,6 @@ class _RecommendedSliderState extends State<_RecommendedSlider>
         ? const Color(0xFFF59E0B)
         : const Color(0xFF38BDF8);
 
-    // Background decorative icon list based on type
     final List<IconData> bgIcons = item.type == 'job'
         ? [Icons.work, Icons.business_center, Icons.badge, Icons.apartment]
         : item.type == 'internship'
@@ -342,8 +333,8 @@ class _RecommendedSliderState extends State<_RecommendedSlider>
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 350),
-      margin: EdgeInsets.symmetric(
-          horizontal: sw * 0.018, vertical: sw * 0.008),
+      margin:
+      EdgeInsets.symmetric(horizontal: sw * 0.018, vertical: sw * 0.008),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [item.grad1, item.grad2],
@@ -363,7 +354,6 @@ class _RecommendedSliderState extends State<_RecommendedSlider>
         borderRadius: BorderRadius.circular(22),
         child: Stack(
           children: [
-            // ── Decorative background icons (animated)
             ...List.generate(bgIcons.length, (i) {
               final positions = [
                 const Offset(0.72, 0.08),
@@ -388,57 +378,43 @@ class _RecommendedSliderState extends State<_RecommendedSlider>
                       child: Icon(
                         bgIcons[i],
                         size: sizes[i],
-                        color: Colors.white.withValues(alpha: 0.10 + (i % 2 == 0 ? 0.04 : 0.0)),
+                        color: Colors.white.withValues(
+                            alpha: 0.10 + (i % 2 == 0 ? 0.04 : 0.0)),
                       ),
                     );
                   },
                 ),
               );
             }),
-
-            // ── Shimmer sweep on active card
             if (isActive)
               Positioned.fill(
                 child: AnimatedBuilder(
                   animation: _shimmerController,
-                  builder: (_, __) {
-                    return ShaderMask(
-                      blendMode: BlendMode.srcIn,
-                      shaderCallback: (bounds) => LinearGradient(
-                        colors: [
-                          Colors.transparent,
-                          Colors.white.withValues(alpha: 0.08),
-                          Colors.transparent,
-                        ],
-                        stops: const [0.0, 0.5, 1.0],
-                        begin: Alignment(
-                          -1.5 + _shimmerController.value * 3.5,
-                          -0.3,
-                        ),
-                        end: Alignment(
-                          -0.5 + _shimmerController.value * 3.5,
-                          0.3,
-                        ),
-                      ).createShader(bounds),
-                      child: Container(color: Colors.white),
-                    );
-                  },
+                  builder: (_, __) => ShaderMask(
+                    blendMode: BlendMode.srcIn,
+                    shaderCallback: (bounds) => LinearGradient(
+                      colors: [
+                        Colors.transparent,
+                        Colors.white.withValues(alpha: 0.08),
+                        Colors.transparent,
+                      ],
+                      stops: const [0.0, 0.5, 1.0],
+                      begin: Alignment(
+                          -1.5 + _shimmerController.value * 3.5, -0.3),
+                      end: Alignment(
+                          -0.5 + _shimmerController.value * 3.5, 0.3),
+                    ).createShader(bounds),
+                    child: Container(color: Colors.white),
+                  ),
                 ),
               ),
-
-            // ── Content
             Padding(
               padding: EdgeInsets.fromLTRB(
-                sw * 0.040,
-                sw * 0.026,
-                sw * 0.040,
-                sw * 0.024,
-              ),
+                  sw * 0.040, sw * 0.026, sw * 0.040, sw * 0.024),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Row 1: type badge + match badge
                   Row(
                     children: [
                       _typeBadge(item.type, sw),
@@ -447,8 +423,6 @@ class _RecommendedSliderState extends State<_RecommendedSlider>
                     ],
                   ),
                   SizedBox(height: sw * 0.018),
-
-                  // Row 2: icon + title/subtitle
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
@@ -459,15 +433,11 @@ class _RecommendedSliderState extends State<_RecommendedSlider>
                           color: Colors.white.withValues(alpha: 0.18),
                           borderRadius: BorderRadius.circular(14),
                           border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.28),
-                            width: 1.5,
-                          ),
+                              color: Colors.white.withValues(alpha: 0.28),
+                              width: 1.5),
                         ),
-                        child: Icon(
-                          item.icon,
-                          size: sw * 0.046,
-                          color: Colors.white,
-                        ),
+                        child: Icon(item.icon,
+                            size: sw * 0.046, color: Colors.white),
                       ),
                       SizedBox(width: sw * 0.026),
                       Expanded(
@@ -475,49 +445,41 @@ class _RecommendedSliderState extends State<_RecommendedSlider>
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Text(
-                              item.title,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontSize: sw * 0.036,
-                                fontWeight: FontWeight.w800,
-                                color: Colors.white,
-                                height: 1.2,
-                                letterSpacing: -0.3,
-                              ),
-                            ),
+                            Text(item.title,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                    fontSize: sw * 0.036,
+                                    fontWeight: FontWeight.w800,
+                                    color: Colors.white,
+                                    height: 1.2,
+                                    letterSpacing: -0.3)),
                             SizedBox(height: sw * 0.005),
-                            Text(
-                              item.subtitle,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontSize: sw * 0.026,
-                                color: Colors.white.withValues(alpha: 0.82),
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
+                            Text(item.subtitle,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                    fontSize: sw * 0.026,
+                                    color:
+                                    Colors.white.withValues(alpha: 0.82),
+                                    fontWeight: FontWeight.w600)),
                             SizedBox(height: sw * 0.004),
                             Row(
                               children: [
-                                Icon(
-                                  Icons.location_on,
-                                  size: sw * 0.024,
-                                  color: Colors.white.withValues(alpha: 0.65),
-                                ),
+                                Icon(Icons.location_on,
+                                    size: sw * 0.024,
+                                    color:
+                                    Colors.white.withValues(alpha: 0.65)),
                                 SizedBox(width: sw * 0.005),
                                 Flexible(
-                                  child: Text(
-                                    item.meta,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                      fontSize: sw * 0.022,
-                                      color: Colors.white.withValues(alpha: 0.65),
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
+                                  child: Text(item.meta,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(
+                                          fontSize: sw * 0.022,
+                                          color: Colors.white
+                                              .withValues(alpha: 0.65),
+                                          fontWeight: FontWeight.w500)),
                                 ),
                               ],
                             ),
@@ -527,12 +489,9 @@ class _RecommendedSliderState extends State<_RecommendedSlider>
                     ],
                   ),
                   SizedBox(height: sw * 0.018),
-
-                  // Row 3: skill match bar + Apply button
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      // Skill match bar
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -541,22 +500,17 @@ class _RecommendedSliderState extends State<_RecommendedSlider>
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text(
-                                  'Skill Match',
-                                  style: TextStyle(
-                                    fontSize: sw * 0.020,
-                                    color: Colors.white.withValues(alpha: 0.75),
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                Text(
-                                  '$matchPct%',
-                                  style: TextStyle(
-                                    fontSize: sw * 0.020,
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w800,
-                                  ),
-                                ),
+                                Text('Skill Match',
+                                    style: TextStyle(
+                                        fontSize: sw * 0.020,
+                                        color:
+                                        Colors.white.withValues(alpha: 0.75),
+                                        fontWeight: FontWeight.w600)),
+                                Text('$matchPct%',
+                                    style: TextStyle(
+                                        fontSize: sw * 0.020,
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w800)),
                               ],
                             ),
                             SizedBox(height: sw * 0.007),
@@ -576,8 +530,6 @@ class _RecommendedSliderState extends State<_RecommendedSlider>
                         ),
                       ),
                       SizedBox(width: sw * 0.022),
-
-                      // Apply Now button
                       GestureDetector(
                         onTap: () {
                           HapticFeedback.lightImpact();
@@ -585,37 +537,28 @@ class _RecommendedSliderState extends State<_RecommendedSlider>
                         },
                         child: Container(
                           padding: EdgeInsets.symmetric(
-                            horizontal: sw * 0.028,
-                            vertical: sw * 0.016,
-                          ),
+                              horizontal: sw * 0.028, vertical: sw * 0.016),
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(12),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.15),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
-                              ),
+                                  color: Colors.black.withValues(alpha: 0.15),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4)),
                             ],
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(
-                                Icons.send_rounded,
-                                size: sw * 0.028,
-                                color: item.grad1,
-                              ),
+                              Icon(Icons.send_rounded,
+                                  size: sw * 0.028, color: item.grad1),
                               SizedBox(width: sw * 0.008),
-                              Text(
-                                'Apply',
-                                style: TextStyle(
-                                  fontSize: sw * 0.024,
-                                  fontWeight: FontWeight.w800,
-                                  color: item.grad1,
-                                ),
-                              ),
+                              Text('Apply',
+                                  style: TextStyle(
+                                      fontSize: sw * 0.024,
+                                      fontWeight: FontWeight.w800,
+                                      color: item.grad1)),
                             ],
                           ),
                         ),
@@ -638,62 +581,49 @@ class _RecommendedSliderState extends State<_RecommendedSlider>
         ? '🎓 Internship'
         : '📚 Course';
     return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: sw * 0.020,
-        vertical: sw * 0.007,
-      ),
+      padding:
+      EdgeInsets.symmetric(horizontal: sw * 0.020, vertical: sw * 0.007),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.20),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: Colors.white.withValues(alpha: 0.30)),
       ),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: sw * 0.020,
-          fontWeight: FontWeight.w700,
-          color: Colors.white,
-        ),
-      ),
+      child: Text(label,
+          style: TextStyle(
+              fontSize: sw * 0.020,
+              fontWeight: FontWeight.w700,
+              color: Colors.white)),
     );
   }
 
   Widget _matchBadge(int pct, Color color, double sw) {
     return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: sw * 0.018,
-        vertical: sw * 0.007,
-      ),
+      padding:
+      EdgeInsets.symmetric(horizontal: sw * 0.018, vertical: sw * 0.007),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: color.withValues(alpha: 0.30),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
+              color: color.withValues(alpha: 0.30),
+              blurRadius: 6,
+              offset: const Offset(0, 2)),
         ],
       ),
-      child: Text(
-        '$pct% match',
-        style: TextStyle(
-          fontSize: sw * 0.020,
-          fontWeight: FontWeight.w800,
-          color: color,
-        ),
-      ),
+      child: Text('$pct% match',
+          style: TextStyle(
+              fontSize: sw * 0.020,
+              fontWeight: FontWeight.w800,
+              color: color)),
     );
   }
 }
 
 // ─────────────────────────────────────────────
-//  APP SHOWCASE BANNER  (image slides from assets)
-//  Title: "Discover StudentHub" or similar
+//  APP SHOWCASE BANNER
 // ─────────────────────────────────────────────
 class _AppShowcaseBanner extends StatefulWidget {
   const _AppShowcaseBanner();
-
   @override
   State<_AppShowcaseBanner> createState() => _AppShowcaseBannerState();
 }
@@ -737,19 +667,15 @@ class _AppShowcaseBannerState extends State<_AppShowcaseBanner>
   void initState() {
     super.initState();
     _fadeCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 400),
-      value: 1.0,
-    );
+        vsync: this,
+        duration: const Duration(milliseconds: 400),
+        value: 1.0);
     _fadeAnim = CurvedAnimation(parent: _fadeCtrl, curve: Curves.easeInOut);
     _timer = Timer.periodic(const Duration(seconds: 4), (_) {
       if (!mounted) return;
       final next = (_currentPage + 1) % _slides.length;
-      _controller.animateToPage(
-        next,
-        duration: const Duration(milliseconds: 600),
-        curve: Curves.easeInOut,
-      );
+      _controller.animateToPage(next,
+          duration: const Duration(milliseconds: 600), curve: Curves.easeInOut);
     });
   }
 
@@ -807,17 +733,14 @@ class _AppShowcaseBannerState extends State<_AppShowcaseBanner>
     return AnimatedContainer(
       duration: const Duration(milliseconds: 400),
       margin: EdgeInsets.symmetric(
-        horizontal: sw * 0.016,
-        vertical: sw * 0.012,
-      ),
+          horizontal: sw * 0.016, vertical: sw * 0.012),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(22),
         boxShadow: [
           BoxShadow(
-            color: tint.withValues(alpha: isActive ? 0.38 : 0.12),
-            blurRadius: isActive ? 22 : 8,
-            offset: const Offset(0, 6),
-          ),
+              color: tint.withValues(alpha: isActive ? 0.38 : 0.12),
+              blurRadius: isActive ? 22 : 8,
+              offset: const Offset(0, 6)),
         ],
       ),
       child: ClipRRect(
@@ -825,20 +748,16 @@ class _AppShowcaseBannerState extends State<_AppShowcaseBanner>
         child: Stack(
           fit: StackFit.expand,
           children: [
-            // Asset image
             Image.asset(
               slide['image'] as String,
               fit: BoxFit.cover,
               errorBuilder: (_, __, ___) => Container(
                 color: tint,
-                child: Icon(
-                  Icons.image_not_supported_outlined,
-                  color: Colors.white.withValues(alpha: 0.3),
-                  size: sw * 0.10,
-                ),
+                child: Icon(Icons.image_not_supported_outlined,
+                    color: Colors.white.withValues(alpha: 0.3),
+                    size: sw * 0.10),
               ),
             ),
-            // Gradient overlay
             Positioned.fill(
               child: DecoratedBox(
                 decoration: BoxDecoration(
@@ -855,59 +774,47 @@ class _AppShowcaseBannerState extends State<_AppShowcaseBanner>
                 ),
               ),
             ),
-            // Slide counter pill
             Positioned(
               top: sw * 0.026,
               right: sw * 0.026,
               child: Container(
                 padding: EdgeInsets.symmetric(
-                  horizontal: sw * 0.018,
-                  vertical: sw * 0.007,
-                ),
+                    horizontal: sw * 0.018, vertical: sw * 0.007),
                 decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.35),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  '${index + 1} / ${_slides.length}',
-                  style: TextStyle(
-                    fontSize: sw * 0.020,
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
+                    color: Colors.black.withValues(alpha: 0.35),
+                    borderRadius: BorderRadius.circular(20)),
+                child: Text('${index + 1} / ${_slides.length}',
+                    style: TextStyle(
+                        fontSize: sw * 0.020,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700)),
               ),
             ),
-            // Text content
             Positioned(
               bottom: sw * 0.038,
               left: sw * 0.038,
               right: sw * 0.038,
               child: FadeTransition(
-                opacity: isActive ? _fadeAnim : const AlwaysStoppedAnimation(1.0),
+                opacity: isActive
+                    ? _fadeAnim
+                    : const AlwaysStoppedAnimation(1.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
-                      slide['title'] as String,
-                      style: TextStyle(
-                        fontSize: sw * 0.038,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.white,
-                        height: 1.2,
-                        letterSpacing: -0.3,
-                      ),
-                    ),
+                    Text(slide['title'] as String,
+                        style: TextStyle(
+                            fontSize: sw * 0.038,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                            height: 1.2,
+                            letterSpacing: -0.3)),
                     SizedBox(height: sw * 0.007),
-                    Text(
-                      slide['sub'] as String,
-                      style: TextStyle(
-                        fontSize: sw * 0.026,
-                        color: Colors.white.withValues(alpha: 0.80),
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
+                    Text(slide['sub'] as String,
+                        style: TextStyle(
+                            fontSize: sw * 0.026,
+                            color: Colors.white.withValues(alpha: 0.80),
+                            fontWeight: FontWeight.w500)),
                   ],
                 ),
               ),
@@ -940,10 +847,15 @@ class _DashboardScreenState extends State<DashboardScreen>
   late List<Animation<double>> _sectionFade;
   late List<Animation<Offset>> _sectionSlide;
 
+  // Per-category bar animation controllers (7 categories)
+  late List<AnimationController> _catAnims;
+  late List<Animation<double>> _catValues;
+
   String _userName = '';
   String _userId = '';
   bool _isLoading = true;
   String? _error;
+  bool _scoreExpanded = false; // toggle full breakdown in dashboard
 
   List<RecommendedJob> _jobs = [];
   List<RecommendedInternship> _internships = [];
@@ -957,44 +869,41 @@ class _DashboardScreenState extends State<DashboardScreen>
     for (final job in _jobs.take(3)) {
       final theme = _jobTheme(job.title, job.companyName);
       items.add(_SliderItem(
-        title: job.title,
-        subtitle: job.companyName,
-        meta: job.location,
-        matchPercentage: job.matchPercentage,
-        grad1: theme.grad1,
-        grad2: theme.grad2,
-        icon: theme.icon,
-        type: 'job',
-        sourceObject: job,
-      ));
+          title: job.title,
+          subtitle: job.companyName,
+          meta: job.location,
+          matchPercentage: job.matchPercentage,
+          grad1: theme.grad1,
+          grad2: theme.grad2,
+          icon: theme.icon,
+          type: 'job',
+          sourceObject: job));
     }
     for (final intern in _internships.take(2)) {
       final theme = _jobTheme(intern.title, intern.companyName);
       items.add(_SliderItem(
-        title: intern.title,
-        subtitle: intern.companyName,
-        meta: intern.location,
-        matchPercentage: intern.matchPercentage,
-        grad1: theme.grad1,
-        grad2: theme.grad2,
-        icon: theme.icon,
-        type: 'internship',
-        sourceObject: intern,
-      ));
+          title: intern.title,
+          subtitle: intern.companyName,
+          meta: intern.location,
+          matchPercentage: intern.matchPercentage,
+          grad1: theme.grad1,
+          grad2: theme.grad2,
+          icon: theme.icon,
+          type: 'internship',
+          sourceObject: intern));
     }
     for (final course in _courses.take(2)) {
       final theme = _courseTheme(course.title, course.category);
       items.add(_SliderItem(
-        title: course.title,
-        subtitle: course.provider,
-        meta: course.level,
-        matchPercentage: (course.gapFillCount * 20).clamp(0, 100),
-        grad1: theme.grad1,
-        grad2: theme.grad2,
-        icon: theme.icon,
-        type: 'course',
-        sourceObject: course,
-      ));
+          title: course.title,
+          subtitle: course.provider,
+          meta: course.level,
+          matchPercentage: (course.gapFillCount * 20).clamp(0, 100),
+          grad1: theme.grad1,
+          grad2: theme.grad2,
+          icon: theme.icon,
+          type: 'course',
+          sourceObject: course));
     }
     return items;
   }
@@ -1003,44 +912,63 @@ class _DashboardScreenState extends State<DashboardScreen>
   void initState() {
     super.initState();
     _headerAnim = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 650),
-    )..forward();
+        vsync: this, duration: const Duration(milliseconds: 650))
+      ..forward();
     _xpAnim = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1600),
-    );
+        vsync: this, duration: const Duration(milliseconds: 1600));
     _xpValue = Tween<double>(begin: 0, end: 0).animate(_xpAnim);
+
     _sectionAnims = List.generate(
-      10,
-          (_) => AnimationController(
-        vsync: this,
-        duration: const Duration(milliseconds: 480),
-      ),
-    );
+        10,
+            (_) => AnimationController(
+            vsync: this, duration: const Duration(milliseconds: 480)));
     _sectionFade = _sectionAnims
         .map((c) =>
-    CurvedAnimation(parent: c, curve: Curves.easeOut) as Animation<double>)
+    CurvedAnimation(parent: c, curve: Curves.easeOut)
+    as Animation<double>)
         .toList();
     _sectionSlide = _sectionAnims
         .map((c) => Tween<Offset>(
-      begin: const Offset(0, 0.10),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(parent: c, curve: Curves.easeOut)))
+        begin: const Offset(0, 0.10), end: Offset.zero)
+        .animate(CurvedAnimation(parent: c, curve: Curves.easeOut)))
         .toList();
+
+    // 7 category bar animations
+    _catAnims = List.generate(
+        7,
+            (_) => AnimationController(
+            vsync: this, duration: const Duration(milliseconds: 900)));
+    _catValues = _catAnims
+        .map((c) =>
+    Tween<double>(begin: 0, end: 0)
+        .animate(CurvedAnimation(parent: c, curve: Curves.easeOut))
+    as Animation<double>)
+        .toList();
+
     profileState.addListener(_onProfileChanged);
     _loadAll();
+  }
+
+  void _rebuildCatAnims() {
+    final cats = profileState.scoreCategories;
+    for (int i = 0; i < _catAnims.length && i < cats.length; i++) {
+      _catAnims[i].reset();
+      _catValues[i] = Tween<double>(begin: 0, end: cats[i].fraction)
+          .animate(CurvedAnimation(parent: _catAnims[i], curve: Curves.easeOut));
+      Future.delayed(Duration(milliseconds: 200 + i * 100), () {
+        if (mounted) _catAnims[i].forward();
+      });
+    }
   }
 
   void _onProfileChanged() {
     if (!mounted) return;
     setState(() {
       _xpAnim.reset();
-      _xpValue = Tween<double>(
-        begin: 0,
-        end: profileState.strength,
-      ).animate(CurvedAnimation(parent: _xpAnim, curve: Curves.easeOut));
+      _xpValue = Tween<double>(begin: 0, end: profileState.strength)
+          .animate(CurvedAnimation(parent: _xpAnim, curve: Curves.easeOut));
       _xpAnim.forward();
+      _rebuildCatAnims();
     });
   }
 
@@ -1057,13 +985,12 @@ class _DashboardScreenState extends State<DashboardScreen>
         _fetchRecommendations(),
         _loadAppliedIds(),
       ]);
-      _xpValue = Tween<double>(
-        begin: 0,
-        end: profileState.strength,
-      ).animate(CurvedAnimation(parent: _xpAnim, curve: Curves.easeOut));
+      _xpValue = Tween<double>(begin: 0, end: profileState.strength)
+          .animate(CurvedAnimation(parent: _xpAnim, curve: Curves.easeOut));
       Future.delayed(const Duration(milliseconds: 300), () {
         if (mounted) _xpAnim.forward();
       });
+      _rebuildCatAnims();
       for (int i = 0; i < 10; i++) {
         Future.delayed(Duration(milliseconds: 80 + i * 80), () {
           if (mounted) _sectionAnims[i].forward();
@@ -1084,18 +1011,14 @@ class _DashboardScreenState extends State<DashboardScreen>
         setState(() {
           _appliedJobIds
             ..clear()
-            ..addAll(
-              dataList
-                  .where((a) => a['job_id'] != null)
-                  .map<int>((a) => a['job_id'] as int),
-            );
+            ..addAll(dataList
+                .where((a) => a['job_id'] != null)
+                .map<int>((a) => a['job_id'] as int));
           _appliedInternshipIds
             ..clear()
-            ..addAll(
-              dataList
-                  .where((a) => a['internship_id'] != null)
-                  .map<int>((a) => a['internship_id'] as int),
-            );
+            ..addAll(dataList
+                .where((a) => a['internship_id'] != null)
+                .map<int>((a) => a['internship_id'] as int));
         });
       }
     }
@@ -1113,15 +1036,15 @@ class _DashboardScreenState extends State<DashboardScreen>
         "Authorization": "Bearer $token",
       },
     );
-    if (res.statusCode != 200)
-      throw Exception('Failed to load recommendations');
+    if (res.statusCode != 200) throw Exception('Failed to load recommendations');
     final body = jsonDecode(res.body) as Map<String, dynamic>;
     if (body['success'] != true) throw Exception('API error');
     final data = body['data'] as Map<String, dynamic>;
     if (mounted) {
       setState(() {
-        _jobs =
-            (data['jobs'] as List).map((j) => RecommendedJob.fromJson(j)).toList();
+        _jobs = (data['jobs'] as List)
+            .map((j) => RecommendedJob.fromJson(j))
+            .toList();
         _internships = (data['internships'] as List)
             .map((i) => RecommendedInternship.fromJson(i))
             .toList();
@@ -1138,13 +1061,13 @@ class _DashboardScreenState extends State<DashboardScreen>
     _headerAnim.dispose();
     _xpAnim.dispose();
     for (final c in _sectionAnims) c.dispose();
+    for (final c in _catAnims) c.dispose();
     super.dispose();
   }
 
   Widget _fs(int i, Widget child) => FadeTransition(
-    opacity: _sectionFade[i],
-    child: SlideTransition(position: _sectionSlide[i], child: child),
-  );
+      opacity: _sectionFade[i],
+      child: SlideTransition(position: _sectionSlide[i], child: child));
 
   // ─────────────────────────────────────────
   //  BUILD
@@ -1153,9 +1076,8 @@ class _DashboardScreenState extends State<DashboardScreen>
   Widget build(BuildContext context) {
     if (_isLoading) {
       return const Scaffold(
-        backgroundColor: kBgPage,
-        body: Center(child: CircularProgressIndicator(color: kPrimary)),
-      );
+          backgroundColor: kBgPage,
+          body: Center(child: CircularProgressIndicator(color: kPrimary)));
     }
     if (_error != null) {
       return Scaffold(
@@ -1173,8 +1095,8 @@ class _DashboardScreenState extends State<DashboardScreen>
               GestureDetector(
                 onTap: _loadAll,
                 child: Container(
-                  padding:
-                  const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 24, vertical: 12),
                   decoration: BoxDecoration(
                       color: kPrimary,
                       borderRadius: BorderRadius.circular(12)),
@@ -1202,117 +1124,81 @@ class _DashboardScreenState extends State<DashboardScreen>
               onRefresh: _loadAll,
               child: ListView(
                 padding: EdgeInsets.fromLTRB(
-                  sw * 0.040,
-                  sw * 0.036,
-                  sw * 0.040,
-                  sw * 0.080,
-                ),
+                    sw * 0.040, sw * 0.036, sw * 0.040, sw * 0.080),
                 children: [
-                  // ── Top Picks Slider
                   if (_sliderItems.isNotEmpty) ...[
-                    _fs(
-                      8,
-                      _sectionHeader('Top Picks For You',
-                          sub: 'Your best matches today', sw: sw),
-                    ),
+                    _fs(8, _sectionHeader('Top Picks For You',
+                        sub: 'Your best matches today', sw: sw)),
                     SizedBox(height: sw * 0.016),
-                    _fs(
-                      8,
-                      _RecommendedSlider(
-                        items: _sliderItems,
-                        onApplyTap: _handleSliderApply,
-                      ),
-                    ),
+                    _fs(8,
+                        _RecommendedSlider(
+                            items: _sliderItems,
+                            onApplyTap: _handleSliderApply)),
                     SizedBox(height: sw * 0.045),
                   ],
-
                   _fs(0, _buildStatsGrid(sw)),
                   SizedBox(height: sw * 0.038),
-                  _fs(1, _buildProfileStrength(sw)),
+                  // ── DYNAMIC SCORE CARD ──────────────────
+                  _fs(1, _buildDynamicScoreCard(sw)),
                   SizedBox(height: sw * 0.050),
                   _fs(2, _buildQuickActions(context, sw)),
                   SizedBox(height: sw * 0.055),
-
-                  // ── StudentHub Highlights (image slides)
-                  _fs(
-                    9,
-                    _sectionHeader(
-                      'StudentHub Highlights',
+                  _fs(9, _sectionHeader('StudentHub Highlights',
                       sub: 'Everything you need to launch your career 🚀',
-                      sw: sw,
-                    ),
-                  ),
+                      sw: sw)),
                   SizedBox(height: sw * 0.018),
                   _fs(9, const _AppShowcaseBanner()),
                   SizedBox(height: sw * 0.055),
-
-                  // ── Recommended Jobs
-                  _fs(
-                    3,
-                    _sectionHeader('Recommended Jobs',
-                        sub:
-                        'Based on your skills • ${_jobs.length} matches',
-                        sw: sw),
-                  ),
+                  _fs(3, _sectionHeader('Recommended Jobs',
+                      sub:
+                      'Based on your skills • ${_jobs.length} matches',
+                      sw: sw)),
                   SizedBox(height: sw * 0.028),
                   _jobs.isEmpty
-                      ? _fs(
-                      3,
+                      ? _fs(3,
                       _emptyCard(
                           'No job matches yet. Add more skills!', sw))
                       : _fs(3, _buildRecommendedJobs(sw)),
                   if (_jobs.length > 4) ...[
                     SizedBox(height: sw * 0.018),
-                    _fs(
-                      3,
-                      _viewAllButton(
-                          'View all ${_jobs.length} jobs', '/jobs', context, sw),
-                    ),
+                    _fs(3,
+                        _viewAllButton(
+                            'View all ${_jobs.length} jobs',
+                            '/jobs',
+                            context,
+                            sw)),
                   ],
                   SizedBox(height: sw * 0.055),
-
-                  // ── Recommended Internships
-                  _fs(
-                    4,
-                    _sectionHeader('Recommended Internships',
-                        sub:
-                        'Fresher-friendly • ${_internships.length} matches',
-                        sw: sw),
-                  ),
+                  _fs(4, _sectionHeader('Recommended Internships',
+                      sub:
+                      'Fresher-friendly • ${_internships.length} matches',
+                      sw: sw)),
                   SizedBox(height: sw * 0.028),
                   _internships.isEmpty
-                      ? _fs(4, _emptyCard('No internship matches yet.', sw))
+                      ? _fs(4,
+                      _emptyCard('No internship matches yet.', sw))
                       : _fs(4, _buildRecommendedInternships(sw)),
                   if (_internships.length > 4) ...[
                     SizedBox(height: sw * 0.018),
-                    _fs(
-                      4,
-                      _viewAllButton(
-                          'View all ${_internships.length} internships',
-                          '/internships',
-                          context,
-                          sw),
-                    ),
+                    _fs(4,
+                        _viewAllButton(
+                            'View all ${_internships.length} internships',
+                            '/internships',
+                            context,
+                            sw)),
                   ],
                   SizedBox(height: sw * 0.055),
-
-                  // ── Courses
-                  _fs(
-                    5,
-                    _sectionHeader('Courses For You',
-                        sub:
-                        'Fill your skill gaps • ${_courses.length} courses',
-                        sw: sw),
-                  ),
+                  _fs(5, _sectionHeader('Courses For You',
+                      sub:
+                      'Fill your skill gaps • ${_courses.length} courses',
+                      sw: sw)),
                   SizedBox(height: sw * 0.028),
                   _courses.isEmpty
-                      ? _fs(
-                      5,
+                      ? _fs(5,
                       _emptyCard(
                           'No course recommendations yet.', sw))
                       : _fs(5, _buildRecommendedCourses(sw)),
                   SizedBox(height: sw * 0.055),
-
                   _fs(6, _buildMotivationBanner(sw)),
                 ],
               ),
@@ -1320,6 +1206,399 @@ class _DashboardScreenState extends State<DashboardScreen>
           ),
         ],
       ),
+    );
+  }
+
+  // ─────────────────────────────────────────
+  //  DYNAMIC SCORE CARD  ← THE NEW SECTION
+  // ─────────────────────────────────────────
+  Widget _buildDynamicScoreCard(double sw) {
+    final cats = profileState.scoreCategories;
+    final total = profileState.totalScore.toInt();
+    final level = profileState.scoreLevel;
+    final levelColor = profileState.scoreLevelColor;
+    final completedCount = cats.where((c) => c.complete).length;
+
+    return Container(
+      padding: EdgeInsets.all(sw * 0.045),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF0F172A), Color(0xFF1A1040)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(22),
+        boxShadow: [
+          BoxShadow(
+              color: kInk.withValues(alpha: 0.22),
+              blurRadius: 24,
+              offset: const Offset(0, 8)),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ── Top row: icon + title + circle score ──
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: sw * 0.100,
+                height: sw * 0.100,
+                decoration: BoxDecoration(
+                  gradient:
+                  const LinearGradient(colors: [kPrimary, kAccent]),
+                  borderRadius: BorderRadius.circular(13),
+                ),
+                child: Icon(Icons.bolt,
+                    color: Colors.white, size: sw * 0.048),
+              ),
+              SizedBox(width: sw * 0.025),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Profile Score',
+                        style: TextStyle(
+                            fontSize: sw * 0.036,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white)),
+                    SizedBox(height: sw * 0.005),
+                    // Level badge
+                    Container(
+                      padding: EdgeInsets.symmetric(
+                          horizontal: sw * 0.022, vertical: sw * 0.007),
+                      decoration: BoxDecoration(
+                        color: levelColor.withValues(alpha: 0.20),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                            color: levelColor.withValues(alpha: 0.40)),
+                      ),
+                      child: Text(level,
+                          style: TextStyle(
+                              fontSize: sw * 0.022,
+                              color: Colors.white,
+                              fontWeight: FontWeight.w700)),
+                    ),
+                    SizedBox(height: sw * 0.008),
+                    Text(
+                      '$completedCount/${cats.length} categories complete',
+                      style: TextStyle(
+                          fontSize: sw * 0.022,
+                          color: Colors.white.withValues(alpha: 0.50)),
+                    ),
+                  ],
+                ),
+              ),
+              // Circular score
+              SizedBox(
+                width: sw * 0.165,
+                height: sw * 0.165,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    SizedBox(
+                      width: sw * 0.165,
+                      height: sw * 0.165,
+                      child: AnimatedBuilder(
+                        animation: _xpValue,
+                        builder: (_, __) => CircularProgressIndicator(
+                          value: _xpValue.value,
+                          strokeWidth: 6,
+                          backgroundColor:
+                          Colors.white.withValues(alpha: 0.10),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                              levelColor),
+                        ),
+                      ),
+                    ),
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        AnimatedBuilder(
+                          animation: _xpValue,
+                          builder: (_, __) => Text(
+                            '${(_xpValue.value * 100).toInt()}',
+                            style: TextStyle(
+                                fontSize: sw * 0.050,
+                                fontWeight: FontWeight.w900,
+                                color: kAccent,
+                                letterSpacing: -1),
+                          ),
+                        ),
+                        Text('/100',
+                            style: TextStyle(
+                                fontSize: sw * 0.020,
+                                color: Colors.white.withValues(alpha: 0.45),
+                                fontWeight: FontWeight.w600)),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: sw * 0.030),
+
+          // ── Overall progress bar ──
+          Row(
+            children: [
+              Expanded(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(6),
+                  child: AnimatedBuilder(
+                    animation: _xpValue,
+                    builder: (_, __) => LinearProgressIndicator(
+                      value: _xpValue.value,
+                      minHeight: 8,
+                      backgroundColor:
+                      Colors.white.withValues(alpha: 0.10),
+                      valueColor:
+                      AlwaysStoppedAnimation<Color>(levelColor),
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(width: sw * 0.018),
+              Text('$total pts',
+                  style: TextStyle(
+                      fontSize: sw * 0.026,
+                      fontWeight: FontWeight.w800,
+                      color: kAccent)),
+            ],
+          ),
+          SizedBox(height: sw * 0.030),
+
+          // ── Next action hint ──
+          Container(
+            padding: EdgeInsets.symmetric(
+                horizontal: sw * 0.028, vertical: sw * 0.018),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.06),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.08)),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.tips_and_updates,
+                    color: kAccent, size: sw * 0.030),
+                SizedBox(width: sw * 0.015),
+                Expanded(
+                  child: Text(profileState.strengthHint,
+                      style: TextStyle(
+                          fontSize: sw * 0.024,
+                          color: Colors.white.withValues(alpha: 0.75),
+                          fontStyle: FontStyle.italic),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(height: sw * 0.030),
+
+          // ── Category rows (always show top 3 incomplete, expand for all) ──
+          ..._buildCategoryRows(cats, sw),
+
+          // ── Expand / Collapse toggle ──
+          GestureDetector(
+            onTap: () {
+              HapticFeedback.selectionClick();
+              setState(() => _scoreExpanded = !_scoreExpanded);
+            },
+            child: Container(
+              width: double.infinity,
+              padding: EdgeInsets.symmetric(vertical: sw * 0.022),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.06),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.10)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    _scoreExpanded
+                        ? 'Show less'
+                        : 'See full breakdown',
+                    style: TextStyle(
+                        fontSize: sw * 0.026,
+                        fontWeight: FontWeight.w700,
+                        color: kAccent),
+                  ),
+                  SizedBox(width: sw * 0.012),
+                  Icon(
+                    _scoreExpanded
+                        ? Icons.expand_less
+                        : Icons.expand_more,
+                    color: kAccent,
+                    size: sw * 0.028,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          SizedBox(height: sw * 0.022),
+
+          // ── "Go to Profile" CTA ──
+          GestureDetector(
+            onTap: () {
+              HapticFeedback.lightImpact();
+              context.push('/profile');
+            },
+            child: Container(
+              width: double.infinity,
+              padding: EdgeInsets.symmetric(vertical: sw * 0.030),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                    colors: [kPrimary, levelColor],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight),
+                borderRadius: BorderRadius.circular(14),
+                boxShadow: [
+                  BoxShadow(
+                      color: kPrimary.withValues(alpha: 0.30),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4)),
+                ],
+              ),
+              child: Center(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.person_outline,
+                        color: Colors.white, size: sw * 0.036),
+                    SizedBox(width: sw * 0.015),
+                    Text('Boost My Score',
+                        style: TextStyle(
+                            fontSize: sw * 0.030,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                            letterSpacing: 0.2)),
+                    SizedBox(width: sw * 0.012),
+                    Icon(Icons.arrow_forward_ios_rounded,
+                        color: Colors.white.withValues(alpha: 0.70),
+                        size: sw * 0.026),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Builds category rows — collapsed: top 3 incomplete + all complete ones.
+  /// Expanded: all 7 categories.
+  List<Widget> _buildCategoryRows(
+      List<ScoreCategory> cats, double sw) {
+    final List<ScoreCategory> toShow;
+    if (_scoreExpanded) {
+      toShow = cats;
+    } else {
+      final incomplete = cats.where((c) => !c.complete).take(3).toList();
+      final complete = cats.where((c) => c.complete).toList();
+      toShow = [...incomplete, ...complete];
+    }
+
+    return toShow.asMap().entries.map((entry) {
+      final i = cats.indexOf(entry.value);
+      final cat = entry.value;
+      return Padding(
+        padding: EdgeInsets.only(bottom: sw * 0.024),
+        child: _categoryRow(cat, i, sw),
+      );
+    }).toList();
+  }
+
+  Widget _categoryRow(ScoreCategory cat, int index, double sw) {
+    final animValue = (index < _catValues.length)
+        ? _catValues[index]
+        : const AlwaysStoppedAnimation<double>(0);
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        // Icon box
+        Container(
+          width: sw * 0.068,
+          height: sw * 0.068,
+          decoration: BoxDecoration(
+            color: cat.complete
+                ? cat.color.withValues(alpha: 0.25)
+                : Colors.white.withValues(alpha: 0.07),
+            borderRadius: BorderRadius.circular(9),
+            border: Border.all(
+              color: cat.complete
+                  ? cat.color.withValues(alpha: 0.50)
+                  : Colors.white.withValues(alpha: 0.10),
+            ),
+          ),
+          child: Icon(
+            cat.complete ? Icons.check_rounded : cat.icon,
+            size: sw * 0.030,
+            color: cat.complete
+                ? cat.color
+                : Colors.white.withValues(alpha: 0.55),
+          ),
+        ),
+        SizedBox(width: sw * 0.018),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Text(cat.label,
+                      style: TextStyle(
+                          fontSize: sw * 0.026,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white)),
+                  const Spacer(),
+                  Text(
+                    '${cat.earned.toInt()}/${cat.max.toInt()} pts',
+                    style: TextStyle(
+                        fontSize: sw * 0.022,
+                        fontWeight: FontWeight.w700,
+                        color: cat.complete
+                            ? cat.color
+                            : Colors.white.withValues(alpha: 0.50)),
+                  ),
+                ],
+              ),
+              SizedBox(height: sw * 0.007),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: AnimatedBuilder(
+                  animation: animValue,
+                  builder: (_, __) => LinearProgressIndicator(
+                    value: animValue.value,
+                    minHeight: 5,
+                    backgroundColor: Colors.white.withValues(alpha: 0.10),
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      cat.complete
+                          ? cat.color
+                          : cat.color.withValues(alpha: 0.70),
+                    ),
+                  ),
+                ),
+              ),
+              if (!cat.complete) ...[
+                SizedBox(height: sw * 0.005),
+                Text(cat.hint,
+                    style: TextStyle(
+                        fontSize: sw * 0.020,
+                        color: Colors.white.withValues(alpha: 0.38)),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis),
+              ],
+            ],
+          ),
+        ),
+      ],
     );
   }
 
@@ -1334,7 +1613,6 @@ class _DashboardScreenState extends State<DashboardScreen>
       _showInternshipBottomSheet(
           item.sourceObject as RecommendedInternship, sw);
     }
-    // Course type: no bottom sheet, could navigate to course URL
   }
 
   // ─────────────────────────────────────────
@@ -1348,7 +1626,8 @@ class _DashboardScreenState extends State<DashboardScreen>
         : 'There';
     final initial =
     displayName.isNotEmpty ? displayName[0].toUpperCase() : 'U';
-    final pct = (profileState.strength * 100).toInt();
+    final pct = profileState.totalScore.toInt(); // now shows pts out of 100
+    final levelColor = profileState.scoreLevelColor;
 
     return AnimatedBuilder(
       animation: _headerAnim,
@@ -1366,11 +1645,7 @@ class _DashboardScreenState extends State<DashboardScreen>
           bottom: false,
           child: Padding(
             padding: EdgeInsets.fromLTRB(
-              sw * 0.05,
-              sw * 0.022,
-              sw * 0.05,
-              sw * 0.032,
-            ),
+                sw * 0.05, sw * 0.022, sw * 0.05, sw * 0.032),
             child: Column(
               children: [
                 Row(
@@ -1385,27 +1660,22 @@ class _DashboardScreenState extends State<DashboardScreen>
                             colors: [kPrimary, kAccent]),
                         boxShadow: [
                           BoxShadow(
-                            color: kPrimary.withValues(alpha: 0.38),
-                            blurRadius: 10,
-                            offset: const Offset(0, 3),
-                          ),
+                              color: kPrimary.withValues(alpha: 0.38),
+                              blurRadius: 10,
+                              offset: const Offset(0, 3)),
                         ],
                       ),
                       child: Container(
                         margin: const EdgeInsets.all(2),
                         decoration: const BoxDecoration(
-                          color: Color(0xFF1E1B4B),
-                          shape: BoxShape.circle,
-                        ),
+                            color: Color(0xFF1E1B4B),
+                            shape: BoxShape.circle),
                         child: Center(
-                          child: Text(
-                            initial,
-                            style: TextStyle(
-                              fontSize: sw * 0.044,
-                              fontWeight: FontWeight.w800,
-                              color: Colors.white,
-                            ),
-                          ),
+                          child: Text(initial,
+                              style: TextStyle(
+                                  fontSize: sw * 0.044,
+                                  fontWeight: FontWeight.w800,
+                                  color: Colors.white)),
                         ),
                       ),
                     ),
@@ -1420,11 +1690,10 @@ class _DashboardScreenState extends State<DashboardScreen>
                                 child: Text(
                                   'Hey, $displayName ',
                                   style: TextStyle(
-                                    fontSize: sw * 0.042,
-                                    fontWeight: FontWeight.w800,
-                                    color: Colors.white,
-                                    letterSpacing: -0.3,
-                                  ),
+                                      fontSize: sw * 0.042,
+                                      fontWeight: FontWeight.w800,
+                                      color: Colors.white,
+                                      letterSpacing: -0.3),
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ),
@@ -1447,11 +1716,10 @@ class _DashboardScreenState extends State<DashboardScreen>
                               Text(
                                 '${_jobs.length} job matches today',
                                 style: TextStyle(
-                                  fontSize: sw * 0.026,
-                                  color: Colors.white
-                                      .withValues(alpha: 0.70),
-                                  fontWeight: FontWeight.w600,
-                                ),
+                                    fontSize: sw * 0.026,
+                                    color: Colors.white
+                                        .withValues(alpha: 0.70),
+                                    fontWeight: FontWeight.w600),
                               ),
                             ],
                           ),
@@ -1460,23 +1728,24 @@ class _DashboardScreenState extends State<DashboardScreen>
                     ),
                     // Notification bell
                     GestureDetector(
-                      onTap: () => context.push('/notifications'),
+                      onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) => const NotificationPage())),
                       child: Stack(
                         children: [
                           Container(
                             width: sw * 0.092,
                             height: sw * 0.092,
                             decoration: BoxDecoration(
-                              color:
-                              Colors.white.withValues(alpha: 0.10),
+                              color: Colors.white.withValues(alpha: 0.10),
                               borderRadius: BorderRadius.circular(11),
                               border: Border.all(
                                   color: Colors.white
                                       .withValues(alpha: 0.15)),
                             ),
                             child: Icon(Icons.notifications_none,
-                                color: Colors.white,
-                                size: sw * 0.046),
+                                color: Colors.white, size: sw * 0.046),
                           ),
                           Positioned(
                             top: sw * 0.018,
@@ -1499,73 +1768,88 @@ class _DashboardScreenState extends State<DashboardScreen>
                   ],
                 ),
                 SizedBox(height: sw * 0.028),
-                // Profile strength mini-bar
-                Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: sw * 0.030,
-                    vertical: sw * 0.018,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.07),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.10)),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: sw * 0.070,
-                        height: sw * 0.070,
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                              colors: [kPrimary, kAccent]),
-                          borderRadius: BorderRadius.circular(9),
+                // ── Score mini-bar in header ──────────────
+                GestureDetector(
+                  onTap: () {
+                    HapticFeedback.lightImpact();
+                    context.push('/profile');
+                  },
+                  child: Container(
+                    padding: EdgeInsets.symmetric(
+                        horizontal: sw * 0.030, vertical: sw * 0.018),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.07),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.10)),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: sw * 0.070,
+                          height: sw * 0.070,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                                colors: [kPrimary, levelColor]),
+                            borderRadius: BorderRadius.circular(9),
+                          ),
+                          child: Icon(Icons.bolt,
+                              color: Colors.white, size: sw * 0.035),
                         ),
-                        child: Icon(Icons.auto_awesome,
-                            color: Colors.white, size: sw * 0.035),
-                      ),
-                      SizedBox(width: sw * 0.025),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Profile at $pct% — ${profileState.strengthHint}',
-                              style: TextStyle(
-                                fontSize: sw * 0.026,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.white,
+                        SizedBox(width: sw * 0.025),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '${profileState.scoreLevel}  •  $pct/100 pts',
+                                style: TextStyle(
+                                    fontSize: sw * 0.026,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.white),
                               ),
-                            ),
-                            Text(
-                              'Complete to unlock more matches',
-                              style: TextStyle(
-                                fontSize: sw * 0.022,
-                                color: Colors.white
-                                    .withValues(alpha: 0.50),
+                              Text(
+                                profileState.strengthHint,
+                                style: TextStyle(
+                                    fontSize: sw * 0.020,
+                                    color: Colors.white
+                                        .withValues(alpha: 0.50)),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Container(
-                        padding: EdgeInsets.symmetric(
-                            horizontal: sw * 0.016,
-                            vertical: sw * 0.008),
-                        decoration: BoxDecoration(
-                          color: kAccent.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(7),
-                        ),
-                        child: Text(
-                          '$pct%',
-                          style: TextStyle(
-                            fontSize: sw * 0.026,
-                            fontWeight: FontWeight.w800,
-                            color: kAccent,
+                            ],
                           ),
                         ),
-                      ),
-                    ],
+                        // Mini progress ring
+                        SizedBox(
+                          width: sw * 0.075,
+                          height: sw * 0.075,
+                          child: Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              AnimatedBuilder(
+                                animation: _xpValue,
+                                builder: (_, __) =>
+                                    CircularProgressIndicator(
+                                      value: _xpValue.value,
+                                      strokeWidth: 4,
+                                      backgroundColor: Colors.white
+                                          .withValues(alpha: 0.10),
+                                      valueColor:
+                                      AlwaysStoppedAnimation<Color>(
+                                          levelColor),
+                                    ),
+                              ),
+                              Text('$pct',
+                                  style: TextStyle(
+                                      fontSize: sw * 0.020,
+                                      fontWeight: FontWeight.w800,
+                                      color: kAccent)),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],
@@ -1592,8 +1876,7 @@ class _DashboardScreenState extends State<DashboardScreen>
         decoration: InputDecoration(
           hintText: 'Search jobs, courses, companies…',
           hintStyle: TextStyle(fontSize: sw * 0.032, color: kHint),
-          prefixIcon:
-          Icon(Icons.search, color: kMuted, size: sw * 0.048),
+          prefixIcon: Icon(Icons.search, color: kMuted, size: sw * 0.048),
           suffixIcon: Container(
             margin: EdgeInsets.all(sw * 0.018),
             padding:
@@ -1601,8 +1884,7 @@ class _DashboardScreenState extends State<DashboardScreen>
             decoration: BoxDecoration(
                 color: kSelectedBg,
                 borderRadius: BorderRadius.circular(9)),
-            child:
-            Icon(Icons.tune, color: kPrimary, size: sw * 0.042),
+            child: Icon(Icons.tune, color: kPrimary, size: sw * 0.042),
           ),
           filled: true,
           fillColor: kBgPage,
@@ -1646,11 +1928,11 @@ class _DashboardScreenState extends State<DashboardScreen>
         'color': const Color(0xFFF59E0B),
       },
       {
-        'icon': Icons.person_rounded,
-        'value': '${(profileState.strength * 100).toInt()}%',
-        'label': 'Profile Score',
-        'sub': profileState.strengthHint,
-        'color': const Color(0xFF16A34A),
+        'icon': Icons.bolt,
+        'value': '${profileState.totalScore.toInt()}/100',
+        'label': 'Score',
+        'sub': profileState.scoreLevel,
+        'color': profileState.scoreLevelColor,
       },
       {
         'icon': Icons.code_rounded,
@@ -1723,7 +2005,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                 children: [
                   Text(s['value'] as String,
                       style: TextStyle(
-                          fontSize: sw * 0.050,
+                          fontSize: sw * 0.044,
                           fontWeight: FontWeight.w800,
                           color: kInk,
                           letterSpacing: -0.5)),
@@ -1744,149 +2026,6 @@ class _DashboardScreenState extends State<DashboardScreen>
                 ],
               ),
             ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // ─────────────────────────────────────────
-  //  PROFILE STRENGTH
-  // ─────────────────────────────────────────
-  Widget _buildProfileStrength(double sw) {
-    return Container(
-      padding: EdgeInsets.all(sw * 0.045),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF0F172A), Color(0xFF1E1B4B)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-              color: kInk.withValues(alpha: 0.18),
-              blurRadius: 20,
-              offset: const Offset(0, 6))
-        ],
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Container(
-                width: sw * 0.095,
-                height: sw * 0.095,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                      colors: [kPrimary, kAccent]),
-                  borderRadius: BorderRadius.circular(11),
-                ),
-                child: Icon(Icons.person,
-                    color: Colors.white, size: sw * 0.046),
-              ),
-              SizedBox(width: sw * 0.030),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Profile Strength',
-                        style: TextStyle(
-                            fontSize: sw * 0.035,
-                            fontWeight: FontWeight.w800,
-                            color: Colors.white)),
-                    SizedBox(height: sw * 0.004),
-                    Text(profileState.strengthHint,
-                        style: TextStyle(
-                            fontSize: sw * 0.024,
-                            color: const Color(0xFF94A3B8))),
-                  ],
-                ),
-              ),
-              AnimatedBuilder(
-                animation: _xpValue,
-                builder: (_, __) => Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      '${(_xpValue.value * 100).toInt()}%',
-                      style: TextStyle(
-                          fontSize: sw * 0.062,
-                          fontWeight: FontWeight.w800,
-                          color: kAccent,
-                          letterSpacing: -1),
-                    ),
-                    Text('Complete',
-                        style: TextStyle(
-                            fontSize: sw * 0.022,
-                            color: kHint,
-                            fontWeight: FontWeight.w600)),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: sw * 0.035),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: AnimatedBuilder(
-              animation: _xpValue,
-              builder: (_, __) => LinearProgressIndicator(
-                value: _xpValue.value,
-                minHeight: 7,
-                backgroundColor:
-                Colors.white.withValues(alpha: 0.10),
-                valueColor:
-                const AlwaysStoppedAnimation<Color>(kAccent),
-              ),
-            ),
-          ),
-          SizedBox(height: sw * 0.030),
-          Row(
-            children: [
-              _profileChip(Icons.workspace_premium, 'Add Certs',
-                  profileState.certifications.isNotEmpty, sw),
-              SizedBox(width: sw * 0.018),
-              _profileChip(Icons.code, 'Link GitHub',
-                  profileState.github.isNotEmpty, sw),
-              SizedBox(width: sw * 0.018),
-              _profileChip(Icons.check_circle, 'Skills Added',
-                  profileState.skills.isNotEmpty, sw),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _profileChip(
-      IconData icon, String label, bool done, double sw) {
-    return Expanded(
-      child: Container(
-        padding: EdgeInsets.symmetric(
-            vertical: sw * 0.018, horizontal: sw * 0.018),
-        decoration: BoxDecoration(
-          color: done
-              ? kSuccess.withValues(alpha: 0.15)
-              : Colors.white.withValues(alpha: 0.07),
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-              color: done
-                  ? kSuccess.withValues(alpha: 0.40)
-                  : Colors.white.withValues(alpha: 0.10)),
-        ),
-        child: Row(
-          children: [
-            Icon(icon,
-                size: sw * 0.028,
-                color: done ? kSuccess : kHint),
-            SizedBox(width: sw * 0.010),
-            Expanded(
-                child: Text(label,
-                    style: TextStyle(
-                        fontSize: sw * 0.021,
-                        fontWeight: FontWeight.w700,
-                        color: done ? kSuccess : kHint))),
           ],
         ),
       ),
@@ -2171,8 +2310,8 @@ class _DashboardScreenState extends State<DashboardScreen>
       decoration: BoxDecoration(
         color: const Color(0xFFF0FDF4),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-            color: const Color(0xFF86EFAC), width: 1.5),
+        border:
+        Border.all(color: const Color(0xFF86EFAC), width: 1.5),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -2198,11 +2337,8 @@ class _DashboardScreenState extends State<DashboardScreen>
       children: _jobs.take(4).map((job) {
         final theme = _jobTheme(job.title, job.companyName);
         final match = job.matchPercentage;
-        final matchColor = match >= 90
-            ? kSuccess
-            : match >= 80
-            ? kWarning
-            : kMuted;
+        final matchColor =
+        match >= 90 ? kSuccess : match >= 80 ? kWarning : kMuted;
         final matchBg = match >= 90
             ? const Color(0xFFF0FDF4)
             : match >= 80
@@ -2215,10 +2351,13 @@ class _DashboardScreenState extends State<DashboardScreen>
           margin: EdgeInsets.only(bottom: sw * 0.028),
           decoration: BoxDecoration(
             gradient: isApplied
-                ? LinearGradient(colors: [
-              theme.grad1.withValues(alpha: 0.09),
-              theme.grad2.withValues(alpha: 0.04)
-            ], begin: Alignment.topLeft, end: Alignment.bottomRight)
+                ? LinearGradient(
+                colors: [
+                  theme.grad1.withValues(alpha: 0.09),
+                  theme.grad2.withValues(alpha: 0.04)
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight)
                 : null,
             color: isApplied ? null : kCardBg,
             borderRadius: BorderRadius.circular(20),
@@ -2261,16 +2400,13 @@ class _DashboardScreenState extends State<DashboardScreen>
                         SizedBox(width: sw * 0.028),
                         Expanded(
                           child: Column(
-                            crossAxisAlignment:
-                            CrossAxisAlignment.start,
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(job.title,
                                   style: TextStyle(
                                       fontSize: sw * 0.033,
                                       fontWeight: FontWeight.w800,
-                                      color: isApplied
-                                          ? kPrimary
-                                          : kInk)),
+                                      color: isApplied ? kPrimary : kInk)),
                               SizedBox(height: sw * 0.004),
                               Text(job.companyName,
                                   style: TextStyle(
@@ -2286,8 +2422,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                               vertical: sw * 0.011),
                           decoration: BoxDecoration(
                               color: matchBg,
-                              borderRadius:
-                              BorderRadius.circular(20)),
+                              borderRadius: BorderRadius.circular(20)),
                           child: Text('$match% match',
                               style: TextStyle(
                                   fontSize: sw * 0.023,
@@ -2320,8 +2455,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                           Text(
                               '${job.salaryMin}–${job.salaryMax} LPA',
                               style: TextStyle(
-                                  fontSize: sw * 0.026,
-                                  color: kMuted)),
+                                  fontSize: sw * 0.026, color: kMuted)),
                         ],
                       ],
                     ),
@@ -2339,9 +2473,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                         children: job.requiredSkills
                             .take(5)
                             .map((s) => _skillChip(
-                            s,
-                            job.matchedSkills.contains(s),
-                            sw))
+                            s, job.matchedSkills.contains(s), sw))
                             .toList(),
                       ),
                       SizedBox(height: sw * 0.022),
@@ -2362,8 +2494,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                           grad2: theme.grad2,
                           icon: Icons.open_in_new,
                           label: 'View & Apply',
-                          onTap: () =>
-                              _showJobBottomSheet(job, sw)),
+                          onTap: () => _showJobBottomSheet(job, sw)),
                   ],
                 ),
               ),
@@ -2379,7 +2510,7 @@ class _DashboardScreenState extends State<DashboardScreen>
   // ─────────────────────────────────────────
   void _showJobBottomSheet(RecommendedJob job, double sw) {
     final theme = _jobTheme(job.title, job.companyName);
-    bool _applying = false;
+    bool applying = false;
 
     showModalBottomSheet(
       context: context,
@@ -2463,8 +2594,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                                         .withValues(alpha: 0.20),
                                     borderRadius:
                                     BorderRadius.circular(20)),
-                                child: Text(
-                                    '${job.matchPercentage}% match',
+                                child: Text('${job.matchPercentage}% match',
                                     style: TextStyle(
                                         fontSize: sw * 0.024,
                                         color: Colors.white,
@@ -2545,19 +2675,17 @@ class _DashboardScreenState extends State<DashboardScreen>
                                   .toList()),
                           SizedBox(height: sw * 0.038),
                           GestureDetector(
-                            onTap: _applying
+                            onTap: applying
                                 ? null
                                 : () async {
-                              setSheetState(
-                                      () => _applying = true);
+                              setSheetState(() => applying = true);
                               final result =
                               await ApplicationsService.apply(
                                   jobId: job.jobId);
                               if (!mounted) return;
-                              if (result ==
-                                  'Applied successfully') {
-                                setState(() => _appliedJobIds
-                                    .add(job.jobId));
+                              if (result == 'Applied successfully') {
+                                setState(() =>
+                                    _appliedJobIds.add(job.jobId));
                                 Navigator.pop(sheetCtx);
                                 profileState.addApplication(
                                     job.title, job.companyName,
@@ -2566,8 +2694,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                                     'Applied to ${job.title} ✅');
                                 _showJobAppliedDialog(job);
                               } else {
-                                setSheetState(
-                                        () => _applying = false);
+                                setSheetState(() => applying = false);
                                 _showSnack(result ??
                                     'Something went wrong');
                               }
@@ -2578,13 +2705,13 @@ class _DashboardScreenState extends State<DashboardScreen>
                                   vertical: sw * 0.038),
                               decoration: BoxDecoration(
                                 gradient: LinearGradient(
-                                    colors: _applying
+                                    colors: applying
                                         ? [kMuted, kHint]
                                         : [theme.grad1, theme.grad2],
                                     begin: Alignment.topLeft,
                                     end: Alignment.bottomRight),
                                 borderRadius: BorderRadius.circular(15),
-                                boxShadow: _applying
+                                boxShadow: applying
                                     ? []
                                     : [
                                   BoxShadow(
@@ -2595,7 +2722,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                                 ],
                               ),
                               child: Center(
-                                child: _applying
+                                child: applying
                                     ? const SizedBox(
                                     width: 22,
                                     height: 22,
@@ -2611,8 +2738,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                                     Text('Apply Now',
                                         style: TextStyle(
                                             color: Colors.white,
-                                            fontWeight:
-                                            FontWeight.w800,
+                                            fontWeight: FontWeight.w800,
                                             fontSize: sw * 0.035)),
                                   ],
                                 ),
@@ -2639,11 +2765,8 @@ class _DashboardScreenState extends State<DashboardScreen>
       children: _internships.take(4).map((intern) {
         final theme = _jobTheme(intern.title, intern.companyName);
         final match = intern.matchPercentage;
-        final matchColor = match >= 90
-            ? kSuccess
-            : match >= 80
-            ? kWarning
-            : kMuted;
+        final matchColor =
+        match >= 90 ? kSuccess : match >= 80 ? kWarning : kMuted;
         final matchBg = match >= 90
             ? const Color(0xFFF0FDF4)
             : match >= 80
@@ -2657,10 +2780,13 @@ class _DashboardScreenState extends State<DashboardScreen>
           margin: EdgeInsets.only(bottom: sw * 0.028),
           decoration: BoxDecoration(
             gradient: isApplied
-                ? LinearGradient(colors: [
-              theme.grad1.withValues(alpha: 0.09),
-              theme.grad2.withValues(alpha: 0.04)
-            ], begin: Alignment.topLeft, end: Alignment.bottomRight)
+                ? LinearGradient(
+                colors: [
+                  theme.grad1.withValues(alpha: 0.09),
+                  theme.grad2.withValues(alpha: 0.04)
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight)
                 : null,
             color: isApplied ? null : kCardBg,
             borderRadius: BorderRadius.circular(20),
@@ -2703,16 +2829,14 @@ class _DashboardScreenState extends State<DashboardScreen>
                         SizedBox(width: sw * 0.028),
                         Expanded(
                           child: Column(
-                            crossAxisAlignment:
-                            CrossAxisAlignment.start,
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(intern.title,
                                   style: TextStyle(
                                       fontSize: sw * 0.033,
                                       fontWeight: FontWeight.w800,
-                                      color: isApplied
-                                          ? kPrimary
-                                          : kInk)),
+                                      color:
+                                      isApplied ? kPrimary : kInk)),
                               SizedBox(height: sw * 0.004),
                               Text(intern.companyName,
                                   style: TextStyle(
@@ -2728,8 +2852,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                               vertical: sw * 0.011),
                           decoration: BoxDecoration(
                               color: matchBg,
-                              borderRadius:
-                              BorderRadius.circular(20)),
+                              borderRadius: BorderRadius.circular(20)),
                           child: Text('$match% match',
                               style: TextStyle(
                                   fontSize: sw * 0.023,
@@ -2753,8 +2876,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                               size: sw * 0.030, color: kHint),
                           Text('${intern.stipend}/mo',
                               style: TextStyle(
-                                  fontSize: sw * 0.026,
-                                  color: kMuted)),
+                                  fontSize: sw * 0.026, color: kMuted)),
                         ],
                         if (intern.duration != null) ...[
                           SizedBox(width: sw * 0.026),
@@ -2762,8 +2884,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                               size: sw * 0.030, color: kHint),
                           Text(intern.duration!,
                               style: TextStyle(
-                                  fontSize: sw * 0.026,
-                                  color: kMuted)),
+                                  fontSize: sw * 0.026, color: kMuted)),
                         ],
                       ],
                     ),
@@ -2780,10 +2901,8 @@ class _DashboardScreenState extends State<DashboardScreen>
                         runSpacing: sw * 0.009,
                         children: intern.requiredSkills
                             .take(5)
-                            .map((s) => _skillChip(
-                            s,
-                            intern.matchedSkills.contains(s),
-                            sw))
+                            .map((s) => _skillChip(s,
+                            intern.matchedSkills.contains(s), sw))
                             .toList(),
                       ),
                       SizedBox(height: sw * 0.022),
@@ -2803,8 +2922,8 @@ class _DashboardScreenState extends State<DashboardScreen>
                           grad2: theme.grad2,
                           icon: Icons.open_in_new,
                           label: 'View & Apply',
-                          onTap: () => _showInternshipBottomSheet(
-                              intern, sw)),
+                          onTap: () =>
+                              _showInternshipBottomSheet(intern, sw)),
                   ],
                 ),
               ),
@@ -2821,7 +2940,7 @@ class _DashboardScreenState extends State<DashboardScreen>
   void _showInternshipBottomSheet(
       RecommendedInternship intern, double sw) {
     final theme = _jobTheme(intern.title, intern.companyName);
-    bool _applying = false;
+    bool applying = false;
 
     showModalBottomSheet(
       context: context,
@@ -2988,33 +3107,28 @@ class _DashboardScreenState extends State<DashboardScreen>
                                   .toList()),
                           SizedBox(height: sw * 0.038),
                           GestureDetector(
-                            onTap: _applying
+                            onTap: applying
                                 ? null
                                 : () async {
-                              setSheetState(
-                                      () => _applying = true);
+                              setSheetState(() => applying = true);
                               final result =
                               await ApplicationsService.apply(
                                   internshipId:
                                   intern.internshipId);
                               if (!mounted) return;
-                              if (result ==
-                                  'Applied successfully') {
+                              if (result == 'Applied successfully') {
                                 setState(() =>
                                     _appliedInternshipIds
                                         .add(intern.internshipId));
                                 Navigator.pop(sheetCtx);
                                 profileState.addApplication(
-                                    intern.title,
-                                    intern.companyName,
+                                    intern.title, intern.companyName,
                                     type: 'Internship');
                                 _showSnack(
                                     'Applied to ${intern.title} ✅');
-                                _showInternshipAppliedDialog(
-                                    intern);
+                                _showInternshipAppliedDialog(intern);
                               } else {
-                                setSheetState(
-                                        () => _applying = false);
+                                setSheetState(() => applying = false);
                                 _showSnack(result ??
                                     'Something went wrong');
                               }
@@ -3025,13 +3139,13 @@ class _DashboardScreenState extends State<DashboardScreen>
                                   vertical: sw * 0.038),
                               decoration: BoxDecoration(
                                 gradient: LinearGradient(
-                                    colors: _applying
+                                    colors: applying
                                         ? [kMuted, kHint]
                                         : [theme.grad1, theme.grad2],
                                     begin: Alignment.topLeft,
                                     end: Alignment.bottomRight),
                                 borderRadius: BorderRadius.circular(15),
-                                boxShadow: _applying
+                                boxShadow: applying
                                     ? []
                                     : [
                                   BoxShadow(
@@ -3042,7 +3156,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                                 ],
                               ),
                               child: Center(
-                                child: _applying
+                                child: applying
                                     ? const SizedBox(
                                     width: 22,
                                     height: 22,
@@ -3058,8 +3172,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                                     Text('Apply Now',
                                         style: TextStyle(
                                             color: Colors.white,
-                                            fontWeight:
-                                            FontWeight.w800,
+                                            fontWeight: FontWeight.w800,
                                             fontSize: sw * 0.035)),
                                   ],
                                 ),
@@ -3091,10 +3204,9 @@ class _DashboardScreenState extends State<DashboardScreen>
           margin: EdgeInsets.only(bottom: sw * 0.028),
           padding: EdgeInsets.all(sw * 0.038),
           decoration: BoxDecoration(
-            color: kCardBg,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: kBorder, width: 1.5),
-          ),
+              color: kCardBg,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: kBorder, width: 1.5)),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -3115,8 +3227,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                         SizedBox(height: sw * 0.004),
                         Text(course.provider,
                             style: TextStyle(
-                                fontSize: sw * 0.026,
-                                color: kMuted)),
+                                fontSize: sw * 0.026, color: kMuted)),
                         SizedBox(height: sw * 0.013),
                         Row(
                           children: [
@@ -3144,10 +3255,8 @@ class _DashboardScreenState extends State<DashboardScreen>
                             if (course.rating != null) ...[
                               SizedBox(width: sw * 0.013),
                               Icon(Icons.star,
-                                  color: kWarning,
-                                  size: sw * 0.028),
-                              Text(
-                                  course.rating!.toStringAsFixed(1),
+                                  color: kWarning, size: sw * 0.028),
+                              Text(course.rating!.toStringAsFixed(1),
                                   style: TextStyle(
                                       fontSize: sw * 0.023,
                                       color: kWarning,
@@ -3260,7 +3369,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                 ),
                 SizedBox(height: sw * 0.009),
                 Text(
-                  'You have ${_jobs.length + _internships.length} active matches. Apply today!',
+                  'You have ${_jobs.length + _internships.length} active matches. Score: ${profileState.totalScore.toInt()}/100',
                   style: TextStyle(
                       fontSize: sw * 0.026,
                       color: Colors.white.withValues(alpha: 0.75)),
@@ -3268,8 +3377,7 @@ class _DashboardScreenState extends State<DashboardScreen>
               ],
             ),
           ),
-          Icon(Icons.emoji_events,
-              color: Colors.white, size: sw * 0.11),
+          Icon(Icons.emoji_events, color: Colors.white, size: sw * 0.11),
         ],
       ),
     );
@@ -3305,13 +3413,13 @@ class _DashboardScreenState extends State<DashboardScreen>
               Container(
                   height: 6,
                   decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                          colors: [theme.grad1, theme.grad2]),
+                      gradient:
+                      LinearGradient(colors: [theme.grad1, theme.grad2]),
                       borderRadius: const BorderRadius.vertical(
                           top: Radius.circular(24)))),
               Padding(
-                padding: EdgeInsets.fromLTRB(sw * 0.06, sw * 0.05,
-                    sw * 0.06, sw * 0.06),
+                padding: EdgeInsets.fromLTRB(
+                    sw * 0.06, sw * 0.05, sw * 0.06, sw * 0.06),
                 child: Column(
                   children: [
                     Container(
@@ -3324,13 +3432,11 @@ class _DashboardScreenState extends State<DashboardScreen>
                             kSuccess.withValues(alpha: 0.05)
                           ]),
                           border: Border.all(
-                              color:
-                              kSuccess.withValues(alpha: 0.30),
+                              color: kSuccess.withValues(alpha: 0.30),
                               width: 2)),
                       child: Center(
                           child: Icon(Icons.check_circle,
-                              color: kSuccess,
-                              size: sw * 0.082)),
+                              color: kSuccess, size: sw * 0.082)),
                     ),
                     SizedBox(height: sw * 0.028),
                     Text('Application Sent! 🎉',
@@ -3359,8 +3465,8 @@ class _DashboardScreenState extends State<DashboardScreen>
                         children: [
                           Row(
                             children: [
-                              _tile(theme.icon, theme.grad1,
-                                  theme.grad2, sw * 0.090),
+                              _tile(theme.icon, theme.grad1, theme.grad2,
+                                  sw * 0.090),
                               SizedBox(width: sw * 0.022),
                               Expanded(
                                 child: Column(
@@ -3370,15 +3476,13 @@ class _DashboardScreenState extends State<DashboardScreen>
                                     Text(job.title,
                                         style: TextStyle(
                                             fontSize: sw * 0.028,
-                                            fontWeight:
-                                            FontWeight.w800,
+                                            fontWeight: FontWeight.w800,
                                             color: kInk)),
                                     Text(job.companyName,
                                         style: TextStyle(
                                             fontSize: sw * 0.024,
                                             color: kMuted,
-                                            fontWeight:
-                                            FontWeight.w600)),
+                                            fontWeight: FontWeight.w600)),
                                   ],
                                 ),
                               ),
@@ -3413,12 +3517,8 @@ class _DashboardScreenState extends State<DashboardScreen>
                             vertical: sw * 0.030),
                         decoration: BoxDecoration(
                             gradient: LinearGradient(
-                                colors: [
-                                  theme.grad1,
-                                  theme.grad2
-                                ]),
-                            borderRadius:
-                            BorderRadius.circular(13)),
+                                colors: [theme.grad1, theme.grad2]),
+                            borderRadius: BorderRadius.circular(13)),
                         child: Center(
                             child: Text('OK, Got it!',
                                 style: TextStyle(
@@ -3464,13 +3564,13 @@ class _DashboardScreenState extends State<DashboardScreen>
               Container(
                   height: 6,
                   decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                          colors: [theme.grad1, theme.grad2]),
+                      gradient:
+                      LinearGradient(colors: [theme.grad1, theme.grad2]),
                       borderRadius: const BorderRadius.vertical(
                           top: Radius.circular(24)))),
               Padding(
-                padding: EdgeInsets.fromLTRB(sw * 0.06, sw * 0.05,
-                    sw * 0.06, sw * 0.06),
+                padding: EdgeInsets.fromLTRB(
+                    sw * 0.06, sw * 0.05, sw * 0.06, sw * 0.06),
                 child: Column(
                   children: [
                     Container(
@@ -3483,13 +3583,11 @@ class _DashboardScreenState extends State<DashboardScreen>
                             kSuccess.withValues(alpha: 0.05)
                           ]),
                           border: Border.all(
-                              color:
-                              kSuccess.withValues(alpha: 0.30),
+                              color: kSuccess.withValues(alpha: 0.30),
                               width: 2)),
                       child: Center(
                           child: Icon(Icons.check_circle,
-                              color: kSuccess,
-                              size: sw * 0.082)),
+                              color: kSuccess, size: sw * 0.082)),
                     ),
                     SizedBox(height: sw * 0.028),
                     Text('Application Sent! 🎉',
@@ -3518,8 +3616,8 @@ class _DashboardScreenState extends State<DashboardScreen>
                         children: [
                           Row(
                             children: [
-                              _tile(theme.icon, theme.grad1,
-                                  theme.grad2, sw * 0.090),
+                              _tile(theme.icon, theme.grad1, theme.grad2,
+                                  sw * 0.090),
                               SizedBox(width: sw * 0.022),
                               Expanded(
                                 child: Column(
@@ -3529,15 +3627,13 @@ class _DashboardScreenState extends State<DashboardScreen>
                                     Text(intern.title,
                                         style: TextStyle(
                                             fontSize: sw * 0.028,
-                                            fontWeight:
-                                            FontWeight.w800,
+                                            fontWeight: FontWeight.w800,
                                             color: kInk)),
                                     Text(intern.companyName,
                                         style: TextStyle(
                                             fontSize: sw * 0.024,
                                             color: kMuted,
-                                            fontWeight:
-                                            FontWeight.w600)),
+                                            fontWeight: FontWeight.w600)),
                                   ],
                                 ),
                               ),
@@ -3549,23 +3645,17 @@ class _DashboardScreenState extends State<DashboardScreen>
                           _dialogRow(Icons.location_on, 'Location',
                               intern.location, sw),
                           SizedBox(height: sw * 0.011),
-                          _dialogRow(
-                              Icons.work_outline,
-                              'Type',
-                              intern.internshipType ?? 'Internship',
-                              sw),
+                          _dialogRow(Icons.work_outline, 'Type',
+                              intern.internshipType ?? 'Internship', sw),
                           if (intern.stipend != null) ...[
                             SizedBox(height: sw * 0.011),
-                            _dialogRow(
-                                Icons.currency_rupee,
-                                'Stipend',
-                                '₹${intern.stipend}/mo',
-                                sw)
+                            _dialogRow(Icons.currency_rupee, 'Stipend',
+                                '₹${intern.stipend}/mo', sw)
                           ],
                           if (intern.duration != null) ...[
                             SizedBox(height: sw * 0.011),
-                            _dialogRow(Icons.timer_outlined,
-                                'Duration', intern.duration!, sw)
+                            _dialogRow(Icons.timer_outlined, 'Duration',
+                                intern.duration!, sw)
                           ],
                         ],
                       ),
@@ -3579,12 +3669,8 @@ class _DashboardScreenState extends State<DashboardScreen>
                             vertical: sw * 0.030),
                         decoration: BoxDecoration(
                             gradient: LinearGradient(
-                                colors: [
-                                  theme.grad1,
-                                  theme.grad2
-                                ]),
-                            borderRadius:
-                            BorderRadius.circular(13)),
+                                colors: [theme.grad1, theme.grad2]),
+                            borderRadius: BorderRadius.circular(13)),
                         child: Center(
                             child: Text('OK, Got it!',
                                 style: TextStyle(
@@ -3614,34 +3700,32 @@ class _DashboardScreenState extends State<DashboardScreen>
         border: Border.all(color: kBorder)),
     child: Center(
         child: Text(msg,
-            style: TextStyle(
-                color: kMuted, fontSize: sw * 0.028))),
+            style: TextStyle(color: kMuted, fontSize: sw * 0.028))),
   );
 
-  Widget _metaChip(IconData icon, String label, double sw) =>
-      Container(
-        padding: EdgeInsets.symmetric(
-            horizontal: sw * 0.022, vertical: sw * 0.011),
-        decoration: BoxDecoration(
-            color: kBgPage,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: kBorder)),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: sw * 0.030, color: kMuted),
-            SizedBox(width: sw * 0.009),
-            Text(label,
-                style: TextStyle(
-                    fontSize: sw * 0.026,
-                    color: kSlate,
-                    fontWeight: FontWeight.w600)),
-          ],
-        ),
-      );
+  Widget _metaChip(IconData icon, String label, double sw) => Container(
+    padding: EdgeInsets.symmetric(
+        horizontal: sw * 0.022, vertical: sw * 0.011),
+    decoration: BoxDecoration(
+        color: kBgPage,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: kBorder)),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: sw * 0.030, color: kMuted),
+        SizedBox(width: sw * 0.009),
+        Text(label,
+            style: TextStyle(
+                fontSize: sw * 0.026,
+                color: kSlate,
+                fontWeight: FontWeight.w600)),
+      ],
+    ),
+  );
 
-  Widget _summaryBox(String value, String label, Color color,
-      Color bg, double sw) {
+  Widget _summaryBox(
+      String value, String label, Color color, Color bg, double sw) {
     return Container(
       padding: EdgeInsets.symmetric(
           vertical: sw * 0.022, horizontal: sw * 0.013),
@@ -3679,8 +3763,7 @@ class _DashboardScreenState extends State<DashboardScreen>
           decoration: BoxDecoration(
               color: kSelectedBg,
               borderRadius: BorderRadius.circular(8)),
-          child:
-          Icon(icon, size: sw * 0.032, color: kPrimary),
+          child: Icon(icon, size: sw * 0.032, color: kPrimary),
         ),
         SizedBox(width: sw * 0.018),
         Text(label,

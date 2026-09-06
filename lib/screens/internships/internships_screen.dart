@@ -1813,100 +1813,135 @@ class _InternshipsScreenState extends State<InternshipsScreen>
       backgroundColor: kBgPage,
       body: Column(
         children: [
-          // ── HEADER ──
-          AnimatedBuilder(
-            animation: headerAnim,
-            builder: (_, child) =>
-                Opacity(opacity: headerAnim.value, child: child),
-            child: Container(
-              color: kInk,
-              child: SafeArea(
-                bottom: false,
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 10),
-                  child: Row(
-                    children: [
-                      // ✅ Back button only shown when there is a route to pop to
-                      if (context.canPop() || widget.onBack != null) ...[
-                        GestureDetector(
-                          onTap: _handleBack,
-                          child: Container(
-                            width: 36,
-                            height: 36,
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.10),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: const Icon(
-                                Icons.arrow_back_ios_new_rounded,
-                                color: Colors.white,
-                                size: 16),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                      ],
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: const [
-                            Text(
-                              'Internships',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w800,
-                                color: Colors.white,
-                                letterSpacing: -0.3,
-                              ),
-                            ),
-                            SizedBox(height: 2),
-                            Text(
-                              'Real experience, real growth',
-                              style: TextStyle(
-                                fontSize: 11.5,
-                                color: Colors.white54,
-                              ),
-                            ),
-                          ],
-                        ),
+          // ── SEARCH BAR + FILTER BUTTON ──
+          Container(
+            color: kCardBg,
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Container(
+                    height: 42,
+                    decoration: BoxDecoration(
+                      color: kBgPage,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: _searchFocus.hasFocus
+                            ? kPrimary
+                            : kBorder,
+                        width: _searchFocus.hasFocus ? 2 : 1.5,
                       ),
-                      if (saved.isNotEmpty)
-                        AnimatedContainer(
-                          duration: const Duration(milliseconds: 300),
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 5),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.12),
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(Icons.bookmark_rounded,
-                                  color: kAccent,
-                                  size: 14),
-                              const SizedBox(width: 4),
-                              Text(
-                                '${saved.length} Saved',
-                                style: const TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w700,
-                                  color: kAccent,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                    ],
+                    ),
+                    child: TextField(
+                      controller: _searchCtrl,
+                      focusNode: _searchFocus,
+                      onChanged: (v) =>
+                          setState(() => search = v),
+                      style: const TextStyle(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w600,
+                        color: kInk,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: 'Search role, company, city…',
+                        hintStyle: const TextStyle(
+                            fontSize: 13, color: kHint),
+                        prefixIcon: Icon(Icons.search_rounded,
+                            color: search.isNotEmpty
+                                ? kPrimary
+                                : kMuted,
+                            size: 20),
+                        suffixIcon: search.isNotEmpty
+                            ? GestureDetector(
+                          onTap: () {
+                            _searchCtrl.clear();
+                            setState(() => search = '');
+                            _searchFocus.unfocus();
+                          },
+                          child: Icon(Icons.close_rounded,
+                              color: kMuted,
+                              size: sw * 0.040),
+                        )
+                            : null,
+                        border: InputBorder.none,
+                        contentPadding: EdgeInsets.symmetric(
+                            horizontal: sw * 0.01,
+                            vertical: sw * 0.033),
+                      ),
+                    ),
                   ),
                 ),
-              ),
+                SizedBox(width: sw * 0.025),
+                GestureDetector(
+                  onTap: _openFilterSheet,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 260),
+                    width: sw * 0.118,
+                    height: sw * 0.118,
+                    decoration: BoxDecoration(
+                      gradient: hasActiveFilter
+                          ? const LinearGradient(
+                        colors: [kPrimary, Color(0xFF6366F1)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      )
+                          : null,
+                      color: hasActiveFilter ? null : kBgPage,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: hasActiveFilter ? kPrimary : kBorder,
+                        width: hasActiveFilter ? 2 : 1.5,
+                      ),
+                      boxShadow: hasActiveFilter
+                          ? [
+                        BoxShadow(
+                          color: kPrimary.withOpacity(0.25),
+                          blurRadius: 10,
+                          offset: const Offset(0, 3),
+                        )
+                      ]
+                          : null,
+                    ),
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        Icon(
+                          Icons.tune_rounded,
+                          color: hasActiveFilter
+                              ? Colors.white
+                              : kMuted,
+                          size: sw * 0.048,
+                        ),
+                        if (filter.activeCount > 0)
+                          Positioned(
+                            top: sw * 0.015,
+                            right: sw * 0.015,
+                            child: Container(
+                              width: sw * 0.038,
+                              height: sw * 0.038,
+                              decoration: const BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Center(
+                                child: Text(
+                                  '${filter.activeCount}',
+                                  style: TextStyle(
+                                    fontSize: sw * 0.022,
+                                    fontWeight: FontWeight.w900,
+                                    color: kPrimary,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
-
-
-
-          // ── TAB SWITCHER ──
           Container(
             color: kCardBg,
             padding: EdgeInsets.fromLTRB(sw * 0.04, sw * 0.018,

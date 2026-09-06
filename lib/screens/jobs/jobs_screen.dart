@@ -970,7 +970,8 @@ class _JobsScreenState extends State<JobsScreen>
       backgroundColor: kBgPage,
       body: Column(
         children: [
-          _buildHeader(sw),
+          _buildSearchAndFilter(sw),
+          _buildActiveFiltersBar(sw),
           Expanded(child: _buildJobList(sw)),
         ],
       ),

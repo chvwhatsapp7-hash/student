@@ -528,40 +528,48 @@ class _SocialPostCardState extends State<SocialPostCard>
 
             // ── 6. Social Action Bar (Like, Comment, Share & Apply) ──
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
               child: Row(
                 children: [
-                  // Like Button
-                  _buildActionButton(
-                    icon: _isLiked
-                        ? Icons.favorite_rounded
-                        : Icons.favorite_border_rounded,
-                    label: '$_likesCount',
-                    color: _isLiked
-                        ? const Color(0xFFEF4444)
-                        : const Color(0xFF475569),
-                    onTap: () => _triggerLike(),
-                  ),
-                  const SizedBox(width: 4),
+                  // Action buttons group (Like, Comment, Share)
+                  Expanded(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        // Like Button
+                        _buildActionButton(
+                          icon: _isLiked
+                              ? Icons.favorite_rounded
+                              : Icons.favorite_border_rounded,
+                          label: '$_likesCount',
+                          color: _isLiked
+                              ? const Color(0xFFEF4444)
+                              : const Color(0xFF475569),
+                          onTap: () => _triggerLike(),
+                        ),
+                        const SizedBox(width: 2),
 
-                  // Comment Button
-                  _buildActionButton(
-                    icon: Icons.chat_bubble_outline_rounded,
-                    label: '$_commentsCount',
-                    color: const Color(0xFF475569),
-                    onTap: _openComments,
-                  ),
-                  const SizedBox(width: 4),
+                        // Comment Button
+                        _buildActionButton(
+                          icon: Icons.chat_bubble_outline_rounded,
+                          label: '$_commentsCount',
+                          color: const Color(0xFF475569),
+                          onTap: _openComments,
+                        ),
+                        const SizedBox(width: 2),
 
-                  // Share Button
-                  _buildActionButton(
-                    icon: Icons.share_outlined,
-                    label: '$_sharesCount',
-                    color: const Color(0xFF475569),
-                    onTap: _openShare,
+                        // Share Button
+                        _buildActionButton(
+                          icon: Icons.share_outlined,
+                          label: '$_sharesCount',
+                          color: const Color(0xFF475569),
+                          onTap: _openShare,
+                        ),
+                      ],
+                    ),
                   ),
 
-                  const Spacer(),
+                  const SizedBox(width: 6),
 
                   // Apply / Details CTA Button
                   ElevatedButton(
@@ -572,7 +580,9 @@ class _SocialPostCardState extends State<SocialPostCard>
                       foregroundColor: Colors.white,
                       elevation: 0,
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 10),
+                          horizontal: 12, vertical: 8),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -584,13 +594,13 @@ class _SocialPostCardState extends State<SocialPostCard>
                           widget.isApplied
                               ? Icons.check_circle_rounded
                               : Icons.send_rounded,
-                          size: 14,
+                          size: 13,
                         ),
-                        const SizedBox(width: 6),
+                        const SizedBox(width: 4),
                         Text(
                           widget.isApplied ? 'Applied' : 'Apply Now',
                           style: const TextStyle(
-                            fontSize: 13,
+                            fontSize: 12,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
@@ -691,17 +701,18 @@ class _SocialPostCardState extends State<SocialPostCard>
   }) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(10),
+      borderRadius: BorderRadius.circular(8),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
         child: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 20, color: color),
-            const SizedBox(width: 5),
+            Icon(icon, size: 17, color: color),
+            const SizedBox(width: 3.5),
             Text(
               label,
               style: TextStyle(
-                fontSize: 13,
+                fontSize: 12,
                 fontWeight: FontWeight.w700,
                 color: color,
               ),

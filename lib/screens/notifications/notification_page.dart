@@ -506,33 +506,6 @@ class _NotificationPageState extends State<NotificationPage>
       ),
     );
   }
-                      SizedBox(width: sw * 0.010),
-                      Container(
-                        padding: EdgeInsets.symmetric(
-                            horizontal: sw * 0.013, vertical: sw * 0.003),
-                        decoration: BoxDecoration(
-                          color: isActive
-                              ? Colors.white.withOpacity(0.25)
-                              : Colors.white.withOpacity(0.12),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text('$count',
-                            style: TextStyle(
-                              fontSize: sw * 0.022,
-                              fontWeight: FontWeight.w800,
-                              color: isActive ? Colors.white : Colors.white.withOpacity(0.60),
-                            )),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ),
-          );
-        }).toList(),
-      ),
-    );
-  }
 
   // ─────────────────────────────────────────────
   //  EMPTY STATE

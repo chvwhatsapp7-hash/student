@@ -257,10 +257,10 @@ class _CompaniesScreenState extends State<CompaniesScreen>
           _buildFilterBar(),
           Expanded(
             child: _isLoading
-                ? _buildLoadingState()
-                : _view == 'list'
-                ? _buildList()
-                : _buildMapPlaceholder(),
+                ? const Center(
+                    child: CircularProgressIndicator(color: kPrimary),
+                  )
+                : _buildList(),
           ),
         ],
       ),

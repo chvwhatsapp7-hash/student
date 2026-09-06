@@ -159,10 +159,12 @@ class _MainScreenState extends State<MainScreen> {
           border: Border(top: BorderSide(color: Color(0xFFE2E8F0), width: 1)),
         ),
         child: NavigationBar(
+          height: 58,
           selectedIndex: _selectedIndex,
           onDestinationSelected: _onItemTapped,
           backgroundColor: Colors.white,
           elevation: 0,
+          labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
           indicatorColor: const Color(0xFFEFF6FF),
           destinations: _navDestinations,
         ),

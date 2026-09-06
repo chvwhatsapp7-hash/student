@@ -447,22 +447,21 @@ class _CoursesScreenState extends State<CoursesScreen>
         child: SafeArea(
           bottom: false,
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 14, 20, 18),
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
-                    // Replace this whole GestureDetector block for the back button:
-                    if (context.canPop())
+                    if (context.canPop()) ...[
                       GestureDetector(
                         onTap: () {
                           HapticFeedback.mediumImpact();
                           context.pop();
                         },
                         child: Container(
-                          width: 36,
-                          height: 36,
+                          width: 34,
+                          height: 34,
                           decoration: BoxDecoration(
                             color: Colors.white.withOpacity(0.10),
                             borderRadius: BorderRadius.circular(10),
@@ -470,12 +469,12 @@ class _CoursesScreenState extends State<CoursesScreen>
                           child: const Icon(
                             Icons.arrow_back_ios_new,
                             color: Colors.white,
-                            size: 16,
+                            size: 15,
                           ),
                         ),
                       ),
-                    if (context.canPop()) const SizedBox(width: 12),
-                    const SizedBox(width: 12),
+                      const SizedBox(width: 10),
+                    ],
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -483,7 +482,7 @@ class _CoursesScreenState extends State<CoursesScreen>
                           const Text(
                             'Courses',
                             style: TextStyle(
-                              fontSize: 20,
+                              fontSize: 18,
                               fontWeight: FontWeight.w800,
                               color: Colors.white,
                               letterSpacing: -0.4,
@@ -493,7 +492,7 @@ class _CoursesScreenState extends State<CoursesScreen>
                             'Specialised programs to land your dream job',
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
-                              fontSize: 12,
+                              fontSize: 11,
                               color: Colors.white.withOpacity(0.55),
                             ),
                           ),
@@ -534,10 +533,10 @@ class _CoursesScreenState extends State<CoursesScreen>
                     ],
                   ],
                 ),
-                const SizedBox(height: 14),
+                const SizedBox(height: 10),
                 Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
+                  spacing: 6,
+                  runSpacing: 6,
                   crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
                     _statPill(Icons.menu_book, '${_courses.length}', 'Courses'),
@@ -545,8 +544,8 @@ class _CoursesScreenState extends State<CoursesScreen>
                     _statPill(Icons.category, '6', 'Domains'),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
+                        horizontal: 10,
+                        vertical: 5,
                       ),
                       decoration: BoxDecoration(
                         color: kPrimary,
@@ -555,8 +554,8 @@ class _CoursesScreenState extends State<CoursesScreen>
                       child: const Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text('🎓', style: TextStyle(fontSize: 12)),
-                          SizedBox(width: 5),
+                          Text('🎓', style: TextStyle(fontSize: 11)),
+                          SizedBox(width: 4),
                           Text(
                             'Get Job-Ready',
                             style: TextStyle(

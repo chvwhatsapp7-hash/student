@@ -992,8 +992,7 @@ class _JobsScreenState extends State<JobsScreen>
         child: SafeArea(
           bottom: false,
           child: Padding(
-            padding: EdgeInsets.fromLTRB(
-                sw * 0.05, sw * 0.035, sw * 0.05, sw * 0.05),
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -1004,35 +1003,35 @@ class _JobsScreenState extends State<JobsScreen>
                       GestureDetector(
                         onTap: _handleBack,
                         child: Container(
-                          width: sw * 0.09,
-                          height: sw * 0.09,
+                          width: 34,
+                          height: 34,
                           decoration: BoxDecoration(
                             color: Colors.white
                                 .withValues(alpha: 0.10),
                             borderRadius:
                             BorderRadius.circular(10),
                           ),
-                          child: Icon(Icons.arrow_back_ios_new,
+                          child: const Icon(Icons.arrow_back_ios_new,
                               color: Colors.white,
-                              size: sw * 0.040),
+                              size: 15),
                         ),
                       ),
-                      SizedBox(width: sw * 0.035),
+                      const SizedBox(width: 10),
                     ],
                     Expanded(
                       child: Column(
                           crossAxisAlignment:
                           CrossAxisAlignment.start,
-                          children: [
+                          children: const [
                             Text('Jobs',
                                 style: TextStyle(
-                                    fontSize: sw * 0.050,
+                                    fontSize: 18,
                                     fontWeight: FontWeight.w800,
                                     color: Colors.white,
                                     letterSpacing: -0.4)),
                             Text('Find your perfect role',
                                 style: TextStyle(
-                                    fontSize: sw * 0.030,
+                                    fontSize: 11,
                                     color: kHint)),
                           ]),
                     ),
@@ -1045,22 +1044,22 @@ class _JobsScreenState extends State<JobsScreen>
                                   savedIds:
                                   saved.toList()))),
                       child: Container(
-                        padding: EdgeInsets.symmetric(
-                            horizontal: sw * 0.030,
-                            vertical: sw * 0.018),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 6),
                         decoration: BoxDecoration(
                             color: Colors.white
                                 .withValues(alpha: 0.12),
                             borderRadius:
                             BorderRadius.circular(20)),
                         child: Row(children: [
-                          Icon(Icons.bookmark,
+                          const Icon(Icons.bookmark,
                               color: kAccent,
-                              size: sw * 0.038),
-                          SizedBox(width: sw * 0.012),
+                              size: 14),
+                          const SizedBox(width: 4),
                           Text('${saved.length} Saved',
-                              style: TextStyle(
-                                  fontSize: sw * 0.030,
+                              style: const TextStyle(
+                                  fontSize: 11,
                                   fontWeight: FontWeight.w700,
                                   color: Colors.white)),
                         ]),
@@ -1068,10 +1067,10 @@ class _JobsScreenState extends State<JobsScreen>
                     ),
                   ],
                 ),
-                SizedBox(height: sw * 0.04),
+                const SizedBox(height: 10),
                 Wrap(
-                  spacing: sw * 0.02,
-                  runSpacing: sw * 0.02,
+                  spacing: 6,
+                  runSpacing: 6,
                   children: [
                     _statPill(Icons.work_outline,
                         '${jobs.length}', 'Jobs', sw),

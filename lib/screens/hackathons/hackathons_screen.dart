@@ -340,7 +340,7 @@ class _HackathonsScreenState extends State<HackathonsScreen>
         child: SafeArea(
           bottom: false,
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 14, 20, 18),
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -349,8 +349,8 @@ class _HackathonsScreenState extends State<HackathonsScreen>
                     GestureDetector(
                       onTap: () => Navigator.maybePop(context),
                       child: Container(
-                        width: 36,
-                        height: 36,
+                        width: 34,
+                        height: 34,
                         decoration: BoxDecoration(
                           color: Colors.white.withOpacity(0.10),
                           borderRadius: BorderRadius.circular(10),
@@ -358,11 +358,11 @@ class _HackathonsScreenState extends State<HackathonsScreen>
                         child: const Icon(
                           Icons.arrow_back_ios_new_rounded,
                           color: Colors.white,
-                          size: 16,
+                          size: 15,
                         ),
                       ),
                     ),
-                    const SizedBox(width: 14),
+                    const SizedBox(width: 10),
                     const Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -370,7 +370,7 @@ class _HackathonsScreenState extends State<HackathonsScreen>
                           Text(
                             'Hackathons',
                             style: TextStyle(
-                              fontSize: 20,
+                              fontSize: 18,
                               fontWeight: FontWeight.w800,
                               color: Colors.white,
                               letterSpacing: -0.4,
@@ -378,7 +378,7 @@ class _HackathonsScreenState extends State<HackathonsScreen>
                           ),
                           Text(
                             'Compete, collaborate & win big',
-                            style: TextStyle(fontSize: 12, color: kHint),
+                            style: TextStyle(fontSize: 11, color: kHint),
                           ),
                         ],
                       ),
@@ -422,12 +422,12 @@ class _HackathonsScreenState extends State<HackathonsScreen>
                     ),
                   ],
                 ),
-                const SizedBox(height: 14),
+                const SizedBox(height: 10),
 
                 // stats
                 Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
+                  spacing: 6,
+                  runSpacing: 6,
                   children: [
                     _statPill(
                       Icons.emoji_events_rounded,

@@ -1823,8 +1823,7 @@ class _InternshipsScreenState extends State<InternshipsScreen>
               child: SafeArea(
                 bottom: false,
                 child: Padding(
-                  padding: EdgeInsets.fromLTRB(sw * 0.05,
-                      sw * 0.035, sw * 0.05, sw * 0.05),
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -1835,31 +1834,31 @@ class _InternshipsScreenState extends State<InternshipsScreen>
                             GestureDetector(
                               onTap: _handleBack,
                               child: Container(
-                                width: sw * 0.09,
-                                height: sw * 0.09,
+                                width: 34,
+                                height: 34,
                                 decoration: BoxDecoration(
                                   color: Colors.white
                                       .withOpacity(0.10),
                                   borderRadius:
                                   BorderRadius.circular(10),
                                 ),
-                                child: Icon(
+                                child: const Icon(
                                     Icons.arrow_back_ios_new,
                                     color: Colors.white,
-                                    size: sw * 0.040),
+                                    size: 15),
                               ),
                             ),
-                            SizedBox(width: sw * 0.035),
+                            const SizedBox(width: 10),
                           ],
                           Expanded(
                             child: Column(
                               crossAxisAlignment:
                               CrossAxisAlignment.start,
-                              children: [
+                              children: const [
                                 Text(
                                   'Internships',
                                   style: TextStyle(
-                                    fontSize: sw * 0.050,
+                                    fontSize: 18,
                                     fontWeight: FontWeight.w800,
                                     color: Colors.white,
                                     letterSpacing: -0.4,
@@ -1868,9 +1867,8 @@ class _InternshipsScreenState extends State<InternshipsScreen>
                                 Text(
                                   'Real experience, real growth',
                                   style: TextStyle(
-                                    fontSize: sw * 0.030,
-                                    color: Colors.white
-                                        .withOpacity(0.55),
+                                    fontSize: 11,
+                                    color: Colors.white54,
                                   ),
                                 ),
                               ],
@@ -1880,9 +1878,9 @@ class _InternshipsScreenState extends State<InternshipsScreen>
                             AnimatedContainer(
                               duration:
                               const Duration(milliseconds: 300),
-                              padding: EdgeInsets.symmetric(
-                                  horizontal: sw * 0.030,
-                                  vertical: sw * 0.015),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 6),
                               decoration: BoxDecoration(
                                 color: Colors.white
                                     .withOpacity(0.12),
@@ -1892,10 +1890,10 @@ class _InternshipsScreenState extends State<InternshipsScreen>
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Icon(Icons.bookmark,
+                                  const Icon(Icons.bookmark,
                                       color: kAccent,
-                                      size: sw * 0.033),
-                                  SizedBox(width: sw * 0.010),
+                                      size: 14),
+                                  const SizedBox(width: 4),
                                   Text(
                                     '${saved.length} Saved',
                                     style: TextStyle(

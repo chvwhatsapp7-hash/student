@@ -1416,20 +1416,15 @@ class _DashboardScreenState extends State<DashboardScreen>
         child: SafeArea(
           bottom: false,
           child: Padding(
-            padding: EdgeInsets.fromLTRB(
-              sw * 0.05,
-              sw * 0.022,
-              sw * 0.05,
-              sw * 0.032,
-            ),
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
             child: Column(
               children: [
                 Row(
                   children: [
                     // Avatar
                     Container(
-                      width: sw * 0.110,
-                      height: sw * 0.110,
+                      width: 38,
+                      height: 38,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         gradient: const LinearGradient(
@@ -1438,8 +1433,8 @@ class _DashboardScreenState extends State<DashboardScreen>
                         boxShadow: [
                           BoxShadow(
                             color: kPrimary.withValues(alpha: 0.38),
-                            blurRadius: 10,
-                            offset: const Offset(0, 3),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
                           ),
                         ],
                       ),
@@ -1452,8 +1447,8 @@ class _DashboardScreenState extends State<DashboardScreen>
                         child: Center(
                           child: Text(
                             initial,
-                            style: TextStyle(
-                              fontSize: sw * 0.044,
+                            style: const TextStyle(
+                              fontSize: 16,
                               fontWeight: FontWeight.w800,
                               color: Colors.white,
                             ),
@@ -1461,7 +1456,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                         ),
                       ),
                     ),
-                    SizedBox(width: sw * 0.030),
+                    const SizedBox(width: 10),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1471,8 +1466,8 @@ class _DashboardScreenState extends State<DashboardScreen>
                               Flexible(
                                 child: Text(
                                   'Hey, $displayName ',
-                                  style: TextStyle(
-                                    fontSize: sw * 0.042,
+                                  style: const TextStyle(
+                                    fontSize: 16,
                                     fontWeight: FontWeight.w800,
                                     color: Colors.white,
                                     letterSpacing: -0.3,
@@ -1480,28 +1475,28 @@ class _DashboardScreenState extends State<DashboardScreen>
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ),
-                              Text(
+                              const Text(
                                 '👋',
-                                style: TextStyle(fontSize: sw * 0.036),
+                                style: TextStyle(fontSize: 14),
                               ),
                             ],
                           ),
-                          SizedBox(height: sw * 0.004),
+                          const SizedBox(height: 2),
                           Row(
                             children: [
                               Container(
-                                width: sw * 0.016,
-                                height: sw * 0.016,
+                                width: 6,
+                                height: 6,
                                 decoration: const BoxDecoration(
                                   color: kAccent,
                                   shape: BoxShape.circle,
                                 ),
                               ),
-                              SizedBox(width: sw * 0.010),
+                              const SizedBox(width: 5),
                               Text(
                                 '${_jobs.length} job matches today',
                                 style: TextStyle(
-                                  fontSize: sw * 0.026,
+                                  fontSize: 11,
                                   color: Colors.white.withValues(alpha: 0.70),
                                   fontWeight: FontWeight.w600,
                                 ),
@@ -1517,33 +1512,33 @@ class _DashboardScreenState extends State<DashboardScreen>
                       child: Stack(
                         children: [
                           Container(
-                            width: sw * 0.092,
-                            height: sw * 0.092,
+                            width: 34,
+                            height: 34,
                             decoration: BoxDecoration(
                               color: Colors.white.withValues(alpha: 0.10),
-                              borderRadius: BorderRadius.circular(11),
+                              borderRadius: BorderRadius.circular(10),
                               border: Border.all(
                                 color: Colors.white.withValues(alpha: 0.15),
                               ),
                             ),
-                            child: Icon(
+                            child: const Icon(
                               Icons.notifications_none,
                               color: Colors.white,
-                              size: sw * 0.046,
+                              size: 18,
                             ),
                           ),
                           Positioned(
-                            top: sw * 0.018,
-                            right: sw * 0.018,
+                            top: 6,
+                            right: 6,
                             child: Container(
-                              width: sw * 0.018,
-                              height: sw * 0.018,
+                              width: 7,
+                              height: 7,
                               decoration: BoxDecoration(
                                 color: kAccent,
                                 shape: BoxShape.circle,
                                 border: Border.all(
                                   color: const Color(0xFF1E1B4B),
-                                  width: 1.5,
+                                  width: 1.2,
                                 ),
                               ),
                             ),
@@ -1553,16 +1548,16 @@ class _DashboardScreenState extends State<DashboardScreen>
                     ),
                   ],
                 ),
-                SizedBox(height: sw * 0.028),
+                const SizedBox(height: 8),
                 // Profile strength mini-bar
                 Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: sw * 0.030,
-                    vertical: sw * 0.018,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
                   ),
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.07),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(10),
                     border: Border.all(
                       color: Colors.white.withValues(alpha: 0.10),
                     ),

@@ -1028,36 +1028,19 @@ class _SchoolDashboardScreenState extends State<SchoolDashboardScreen>
         child: SafeArea(
           bottom: false,
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 14, 20, 20),
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
             child: Column(children: [
               Row(children: [
-                // Back
-                // GestureDetector(
-                //   onTap: () {
-                //     HapticFeedback.lightImpact();
-                //     if (context.canPop()) context.pop();
-                //     else context.go('/school/layout');
-                //   },
-                //   child: Container(
-                //     width: 40, height: 40,
-                //     margin: const EdgeInsets.only(right: 12),
-                //     decoration: BoxDecoration(
-                //         color: Colors.white.withValues(alpha: 0.18),
-                //         borderRadius: BorderRadius.circular(12)),
-                //     child: const Icon(Icons.arrow_back_ios_new_rounded,
-                //         size: 16, color: Colors.white),
-                //   ),
-                // ),
                 // Avatar
                 Container(
-                  width: 44, height: 44,
+                  width: 38, height: 38,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     gradient: const LinearGradient(
                         colors: [kPrimaryBlue, kSkyBlue]),
                     boxShadow: [
                       BoxShadow(color: kDeepBlue.withValues(alpha: 0.35),
-                          blurRadius: 8, offset: const Offset(0, 2)),
+                          blurRadius: 6, offset: const Offset(0, 2)),
                     ],
                   ),
                   child: Container(
@@ -1068,14 +1051,14 @@ class _SchoolDashboardScreenState extends State<SchoolDashboardScreen>
                     child: ClipOval(
                       child: photoUrl.isNotEmpty
                           ? Image.network(photoUrl, fit: BoxFit.cover,
-                          width: 44, height: 44,
+                          width: 38, height: 38,
                           errorBuilder: (_, __, ___) => Center(
                             child: Text(
                               displayName.isNotEmpty
                                   ? displayName[0].toUpperCase()
                                   : p.avatar,
                               style: const TextStyle(
-                                  fontSize: 18,
+                                  fontSize: 16,
                                   fontWeight: FontWeight.w800,
                                   color: Colors.white),
                             ),
@@ -1083,13 +1066,13 @@ class _SchoolDashboardScreenState extends State<SchoolDashboardScreen>
                           : Center(
                         child: Text(
                           p.avatar,
-                          style: const TextStyle(fontSize: 22),
+                          style: const TextStyle(fontSize: 18),
                         ),
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 10),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -1099,19 +1082,67 @@ class _SchoolDashboardScreenState extends State<SchoolDashboardScreen>
                           child: Text(
                             'Hey, $displayName ',
                             style: const TextStyle(
-                                fontSize: 18, fontWeight: FontWeight.w800,
+                                fontSize: 16, fontWeight: FontWeight.w800,
                                 color: Colors.white, letterSpacing: -0.3),
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
                         const Text('👋',
-                            style: TextStyle(fontSize: 16)),
+                            style: TextStyle(fontSize: 14)),
                       ]),
-                      const SizedBox(height: 3),
+                      const SizedBox(height: 2),
                       Row(children: [
                         Container(
-                          width: 8, height: 8,
+                          width: 6, height: 6,
                           decoration: const BoxDecoration(
+                              color: kSkyBlue, shape: BoxShape.circle),
+                        ),
+                        const SizedBox(width: 5),
+                        Text(
+                          '${_apiData?.coursesEnrolled ?? 0} courses enrolled today',
+                          style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.white.withValues(alpha: 0.70),
+                              fontWeight: FontWeight.w600),
+                        ),
+                      ]),
+                    ],
+                  ),
+                ),
+                // Bell
+                GestureDetector(
+                  onTap: () {
+                    HapticFeedback.lightImpact();
+                    context.push('/school/notifications');
+                  },
+                  child: Container(
+                    width: 34, height: 34,
+                    decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.18),
+                        borderRadius: BorderRadius.circular(10)),
+                    child: const Icon(Icons.notifications_none_rounded,
+                        color: Colors.white, size: 18),
+                  ),
+                ),
+              ]),
+              const SizedBox(height: 10),
+
+              // ── Score mini-bar (mirrors engineering header bar) ──
+              GestureDetector(
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  context.push('/school/profile');
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.07),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.10)),
+                  ),
+                  child: Row(children: [coration(
                               color: kSkyBlue, shape: BoxShape.circle),
                         ),
                         const SizedBox(width: 6),

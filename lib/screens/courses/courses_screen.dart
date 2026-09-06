@@ -429,8 +429,6 @@ class _CoursesScreenState extends State<CoursesScreen>
         body: Column(
           children: [
             _buildHeader(),
-            _buildSearchBar(),
-            _buildCategoryBar(),
             Expanded(child: _buildCourseList()),
           ],
         ),

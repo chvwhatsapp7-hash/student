@@ -481,8 +481,6 @@ class _SchoolCoursesScreenState extends State<SchoolCoursesScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildHeader(state, r),
-          _buildFilterBar(r),
-          const SizedBox(height: 6),
           Expanded(
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())

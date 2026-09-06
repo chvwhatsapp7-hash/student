@@ -1823,7 +1823,7 @@ class _InternshipsScreenState extends State<InternshipsScreen>
               child: SafeArea(
                 bottom: false,
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 6, 16, 8),
+                  padding: const EdgeInsets.fromLTRB(16, 2, 16, 4),
                   child: Row(
                     children: [
                       // ✅ Back button only shown when there is a route to pop to
@@ -1831,19 +1831,19 @@ class _InternshipsScreenState extends State<InternshipsScreen>
                         GestureDetector(
                           onTap: _handleBack,
                           child: Container(
-                            width: 32,
-                            height: 32,
+                            width: 28,
+                            height: 28,
                             decoration: BoxDecoration(
                               color: Colors.white.withOpacity(0.10),
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(6),
                             ),
                             child: const Icon(
                                 Icons.arrow_back_ios_new,
                                 color: Colors.white,
-                                size: 14),
+                                size: 13),
                           ),
                         ),
-                        const SizedBox(width: 10),
+                        const SizedBox(width: 8),
                       ],
                       Expanded(
                         child: Column(
@@ -1853,16 +1853,16 @@ class _InternshipsScreenState extends State<InternshipsScreen>
                             Text(
                               'Internships',
                               style: TextStyle(
-                                fontSize: 17,
+                                fontSize: 16,
                                 fontWeight: FontWeight.w800,
                                 color: Colors.white,
-                                letterSpacing: -0.4,
+                                letterSpacing: -0.3,
                               ),
                             ),
                             Text(
                               'Real experience, real growth',
                               style: TextStyle(
-                                fontSize: 10.5,
+                                fontSize: 9.5,
                                 color: Colors.white54,
                               ),
                             ),
@@ -1873,22 +1873,22 @@ class _InternshipsScreenState extends State<InternshipsScreen>
                         AnimatedContainer(
                           duration: const Duration(milliseconds: 300),
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 4),
+                              horizontal: 7, vertical: 3),
                           decoration: BoxDecoration(
                             color: Colors.white.withOpacity(0.12),
-                            borderRadius: BorderRadius.circular(16),
+                            borderRadius: BorderRadius.circular(12),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               const Icon(Icons.bookmark,
                                   color: kAccent,
-                                  size: 13),
-                              const SizedBox(width: 4),
+                                  size: 12),
+                              const SizedBox(width: 3),
                               Text(
                                 '${saved.length} Saved',
                                 style: const TextStyle(
-                                  fontSize: 10.5,
+                                  fontSize: 9.5,
                                   fontWeight: FontWeight.w700,
                                   color: kAccent,
                                 ),
@@ -1906,13 +1906,12 @@ class _InternshipsScreenState extends State<InternshipsScreen>
           // ── SEARCH BAR + FILTER BUTTON ──
           Container(
             color: kCardBg,
-            padding: EdgeInsets.fromLTRB(sw * 0.04, sw * 0.028,
-                sw * 0.04, sw * 0.028),
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
             child: Row(
               children: [
                 Expanded(
                   child: Container(
-                    height: sw * 0.118,
+                    height: 38,
                     decoration: BoxDecoration(
                       color: kBgPage,
                       borderRadius: BorderRadius.circular(14),

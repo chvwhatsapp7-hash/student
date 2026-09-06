@@ -267,23 +267,9 @@ class _CompaniesScreenState extends State<CompaniesScreen>
     );
   }
 
-  // ── LOADING STATE ──────────────────────────
-
-  Widget _buildLoadingState() {
-    return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 24),
-      itemCount: 4,
-      itemBuilder: (_, __) => _SkeletonCard(),
-    );
-  }
-
   // ── HEADER ─────────────────────────────────
 
   Widget _buildHeader() {
-    final total = _apiCompanies.length;
-    final openings = _apiCompanies.fold(0, (s, c) => s + c.openings);
-    final cities = _apiCompanies.map((c) => c.city).toSet().length;
-
     return AnimatedBuilder(
       animation: _headerAnim,
       builder: (_, child) => Opacity(opacity: _headerAnim.value, child: child),
@@ -298,27 +284,27 @@ class _CompaniesScreenState extends State<CompaniesScreen>
         child: SafeArea(
           bottom: false,
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 6, 16, 8),
+            padding: const EdgeInsets.fromLTRB(16, 2, 16, 4),
             child: Row(
               children: [
                 if (context.canPop()) ...[
                   GestureDetector(
                     onTap: () => context.pop(),
                     child: Container(
-                      width: 32,
-                      height: 32,
+                      width: 28,
+                      height: 28,
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.10),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(6),
                       ),
                       child: const Icon(
                         Icons.arrow_back_ios_new_rounded,
                         color: Colors.white,
-                        size: 14,
+                        size: 13,
                       ),
                     ),
                   ),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: 8),
                 ],
                 const Expanded(
                   child: Column(
@@ -328,15 +314,15 @@ class _CompaniesScreenState extends State<CompaniesScreen>
                       Text(
                         'Companies',
                         style: TextStyle(
-                          fontSize: 17,
+                          fontSize: 16,
                           fontWeight: FontWeight.w800,
                           color: Colors.white,
-                          letterSpacing: -0.4,
+                          letterSpacing: -0.3,
                         ),
                       ),
                       Text(
                         'Discover where you want to work',
-                        style: TextStyle(fontSize: 10.5, color: kHint),
+                        style: TextStyle(fontSize: 9.5, color: kHint),
                       ),
                     ],
                   ),
@@ -345,16 +331,16 @@ class _CompaniesScreenState extends State<CompaniesScreen>
                 GestureDetector(
                   onTap: _fetchCompanies,
                   child: Container(
-                    width: 32,
-                    height: 32,
+                    width: 28,
+                    height: 28,
                     decoration: BoxDecoration(
                       color: Colors.white.withOpacity(0.10),
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(6),
                     ),
                     child: const Icon(
                       Icons.refresh_rounded,
                       color: Colors.white,
-                      size: 16,
+                      size: 14,
                     ),
                   ),
                 ),
@@ -366,78 +352,47 @@ class _CompaniesScreenState extends State<CompaniesScreen>
     );
   }
 
-  Widget _statPill(IconData icon, String num, String label) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.10),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 12, color: kAccent),
-          const SizedBox(width: 5),
-          Text(
-            num,
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w800,
-              color: kAccent,
-            ),
-          ),
-          const SizedBox(width: 4),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 11,
-              color: Colors.white.withOpacity(0.55),
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   // ── SEARCH BAR ─────────────────────────────
 
   Widget _buildSearchBar() {
     return Container(
       color: kCardBg,
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
-      child: TextField(
-        onChanged: (val) => setState(() => _search = val),
-        style: const TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w600,
-          color: kInk,
-        ),
-        decoration: InputDecoration(
-          hintText: 'Search by company, domain or city…',
-          hintStyle: const TextStyle(fontSize: 13, color: kHint),
-          prefixIcon: const Icon(
-            Icons.corporate_fare_rounded,
-            color: kMuted,
-            size: 20,
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+      child: SizedBox(
+        height: 38,
+        child: TextField(
+          onChanged: (val) => setState(() => _search = val),
+          style: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: kInk,
           ),
-          filled: true,
-          fillColor: kBgPage,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 13,
-          ),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: kBorder, width: 1.5),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: kBorder, width: 1.5),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: kPrimary, width: 2),
+          decoration: InputDecoration(
+            hintText: 'Search by company, domain or city…',
+            hintStyle: const TextStyle(fontSize: 12, color: kHint),
+            prefixIcon: const Icon(
+              Icons.corporate_fare_rounded,
+              color: kMuted,
+              size: 18,
+            ),
+            filled: true,
+            fillColor: kBgPage,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 10,
+              vertical: 8,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: const BorderSide(color: kBorder, width: 1.2),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: const BorderSide(color: kBorder, width: 1.2),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: const BorderSide(color: kPrimary, width: 1.5),
+            ),
           ),
         ),
       ),

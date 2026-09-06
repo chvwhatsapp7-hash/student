@@ -327,159 +327,101 @@ class _NotificationPageState extends State<NotificationPage>
         child: SafeArea(
           bottom: false,
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            padding: const EdgeInsets.fromLTRB(16, 2, 16, 4),
+            child: Row(
               children: [
-                // Top row
-                Row(
-                  children: [
-                    GestureDetector(
-                      onTap: () => Navigator.maybePop(context),
-                      child: Container(
-                        width: 34, height: 34,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.10),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: const Icon(Icons.arrow_back_ios_new_rounded,
-                            color: Colors.white, size: 15),
-                      ),
+                GestureDetector(
+                  onTap: () => Navigator.maybePop(context),
+                  child: Container(
+                    width: 28, height: 28,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.10),
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                    const SizedBox(width: 10),
-                    Container(
-                      width: 34, height: 34,
-                      decoration: BoxDecoration(
-                        color: kPrimary.withOpacity(0.30),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Center(
-                        child: Text('🔔',
-                            style: TextStyle(fontSize: 15)),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                    child: const Icon(Icons.arrow_back_ios_new_rounded,
+                        color: Colors.white, size: 13),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  width: 28, height: 28,
+                  decoration: BoxDecoration(
+                    color: kPrimary.withValues(alpha: 0.30),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Center(
+                    child: Text('🔔',
+                        style: TextStyle(fontSize: 13)),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Row(
                         children: [
-                          Row(
-                            children: [
-                              Text('Notifications',
-                                  style: TextStyle(
-                                    fontSize: sw * 0.047,
-                                    fontWeight: FontWeight.w800,
-                                    color: Colors.white,
-                                    letterSpacing: -0.4,
-                                  )),
-                              if (_unreadCount > 0) ...[
-                                SizedBox(width: sw * 0.015),
-                                Container(
-                                  padding: EdgeInsets.symmetric(
-                                      horizontal: sw * 0.018,
-                                      vertical: sw * 0.005),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFDC2626),
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                  child: Text('$_unreadCount',
-                                      style: TextStyle(
-                                        fontSize: sw * 0.024,
-                                        fontWeight: FontWeight.w900,
-                                        color: Colors.white,
-                                      )),
-                                ),
-                              ],
-                            ],
-                          ),
-                          Text('Your career activity feed',
+                          const Text('Notifications',
                               style: TextStyle(
-                                fontSize: sw * 0.028,
-                                color: Colors.white.withOpacity(0.50),
+                                fontSize: 16,
+                                fontWeight: FontWeight.w800,
+                                color: Colors.white,
+                                letterSpacing: -0.4,
                               )),
+                          if (_unreadCount > 0) ...[
+                            const SizedBox(width: 6),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 1),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFDC2626),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text('$_unreadCount',
+                                  style: const TextStyle(
+                                    fontSize: 9.5,
+                                    fontWeight: FontWeight.w900,
+                                    color: Colors.white,
+                                  )),
+                            ),
+                          ],
                         ],
                       ),
-                    ),
-                    if (_unreadCount > 0)
-                      GestureDetector(
-                        onTap: _markAllRead,
-                        child: Container(
-                          padding: EdgeInsets.symmetric(
-                              horizontal: sw * 0.028,
-                              vertical: sw * 0.015),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.10),
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(
-                                color: Colors.white.withOpacity(0.20)),
-                          ),
-                          child: Text('Mark all read',
-                              style: TextStyle(
-                                fontSize: sw * 0.025,
-                                fontWeight: FontWeight.w700,
-                                color: kAccent,
-                              )),
-                        ),
+                      Text('Your career activity feed',
+                          style: TextStyle(
+                            fontSize: 9.5,
+                            color: Colors.white.withValues(alpha: 0.50),
+                          )),
+                    ],
+                  ),
+                ),
+                if (_unreadCount > 0)
+                  GestureDetector(
+                    onTap: _markAllRead,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.10),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.20)),
                       ),
-                  ],
-                ),
-
-                SizedBox(height: sw * 0.030),
-
-                // Stat pills
-                Wrap(
-                  spacing: sw * 0.018,
-                  runSpacing: sw * 0.013,
-                  children: [
-                    _statPill(Icons.notifications_rounded,
-                        '${_all.length}', 'Total', sw),
-                    _statPill(Icons.mark_email_unread_rounded,
-                        '$_unreadCount', 'Unread', sw,
-                        numColor: _unreadCount > 0 ? const Color(0xFFFCA5A5) : kHint),
-                    _statPill(Icons.campaign_rounded,
-                        '${_all.where((n) => (n.category ?? '').toLowerCase() == 'public').length}',
-                        'Public', sw, numColor: kAccent),
-                    _statPill(Icons.person_rounded,
-                        '${_all.where((n) => (n.category ?? '').toLowerCase() == 'personal').length}',
-                        'Personal', sw, numColor: const Color(0xFF86EFAC)),
-                  ],
-                ),
+                      child: const Text('Mark all read',
+                          style: TextStyle(
+                            fontSize: 9.5,
+                            fontWeight: FontWeight.w700,
+                            color: kAccent,
+                          )),
+                    ),
+                  ),
               ],
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _statPill(
-      IconData icon, String num, String label, double sw,
-      {Color numColor = kAccent}) {
-    return Container(
-      padding: EdgeInsets.symmetric(
-          horizontal: sw * 0.030, vertical: sw * 0.012),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.09),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: sw * 0.028, color: numColor),
-          SizedBox(width: sw * 0.010),
-          Text(num,
-              style: TextStyle(
-                  fontSize: sw * 0.028,
-                  fontWeight: FontWeight.w800,
-                  color: numColor)),
-          SizedBox(width: sw * 0.008),
-          Text(label,
-              style: TextStyle(
-                fontSize: sw * 0.024,
-                color: Colors.white.withOpacity(0.50),
-                fontWeight: FontWeight.w600,
-              )),
-        ],
       ),
     );
   }
@@ -497,8 +439,7 @@ class _NotificationPageState extends State<NotificationPage>
 
     return Container(
       color: kInk,
-      padding: EdgeInsets.fromLTRB(
-          sw * 0.040, 0, sw * 0.040, sw * 0.028),
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 6),
       child: Row(
         children: tabs.map((t) {
           final isActive = _activeTab == t.$1;
@@ -515,29 +456,56 @@ class _NotificationPageState extends State<NotificationPage>
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 250),
                 margin: EdgeInsets.only(
-                    right: t.$1 != _FilterTab.personal ? sw * 0.020 : 0),
-                padding: EdgeInsets.symmetric(vertical: sw * 0.022),
+                    right: t.$1 != _FilterTab.personal ? 8 : 0),
+                padding: const EdgeInsets.symmetric(vertical: 6),
                 decoration: BoxDecoration(
-                  color: isActive ? kPrimary : Colors.white.withOpacity(0.07),
-                  borderRadius: BorderRadius.circular(12),
+                  color: isActive ? kPrimary : Colors.white.withValues(alpha: 0.07),
+                  borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                    color: isActive ? kPrimary : Colors.white.withOpacity(0.12),
+                    color: isActive ? kPrimary : Colors.white.withValues(alpha: 0.12),
                   ),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(t.$3,
-                        size: sw * 0.030,
-                        color: isActive ? Colors.white : Colors.white.withOpacity(0.50)),
-                    SizedBox(width: sw * 0.010),
+                        size: 13,
+                        color: isActive ? Colors.white : Colors.white.withValues(alpha: 0.50)),
+                    const SizedBox(width: 4),
                     Text(t.$2,
                         style: TextStyle(
-                          fontSize: sw * 0.028,
+                          fontSize: 11,
                           fontWeight: isActive ? FontWeight.w800 : FontWeight.w600,
-                          color: isActive ? Colors.white : Colors.white.withOpacity(0.50),
+                          color: isActive ? Colors.white : Colors.white.withValues(alpha: 0.50),
                         )),
                     if (count > 0) ...[
+                      const SizedBox(width: 4),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 5, vertical: 1),
+                        decoration: BoxDecoration(
+                          color: isActive
+                              ? Colors.white.withValues(alpha: 0.25)
+                              : Colors.white.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text('$count',
+                            style: TextStyle(
+                              fontSize: 9,
+                              fontWeight: FontWeight.w800,
+                              color: isActive ? Colors.white : Colors.white.withValues(alpha: 0.60),
+                            )),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
                       SizedBox(width: sw * 0.010),
                       Container(
                         padding: EdgeInsets.symmetric(

@@ -509,7 +509,7 @@ class _SchoolCoursesScreenState extends State<SchoolCoursesScreen>
           child: SafeArea(
             bottom: false,
             child: Padding(
-              padding: EdgeInsets.fromLTRB(r.hPad, 6, r.hPad, 8),
+              padding: EdgeInsets.fromLTRB(r.hPad, 2, r.hPad, 4),
               child: Row(
                 children: [
                   GestureDetector(
@@ -518,16 +518,16 @@ class _SchoolCoursesScreenState extends State<SchoolCoursesScreen>
                       widget.onBack?.call();
                     },
                     child: Container(
-                      width: r.isTablet ? 36 : 32,
-                      height: r.isTablet ? 36 : 32,
-                      margin: const EdgeInsets.only(right: 10),
+                      width: r.isTablet ? 32 : 28,
+                      height: r.isTablet ? 32 : 28,
+                      margin: const EdgeInsets.only(right: 8),
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.18),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
                         Icons.arrow_back_ios_new_rounded,
-                        size: r.isTablet ? 16 : 14,
+                        size: r.isTablet ? 14 : 13,
                         color: Colors.white,
                       ),
                     ),
@@ -540,7 +540,7 @@ class _SchoolCoursesScreenState extends State<SchoolCoursesScreen>
                         Text(
                           'Our Courses',
                           style: TextStyle(
-                            fontSize: r.fs(17, tablet: 20, large: 22),
+                            fontSize: r.fs(16, tablet: 18, large: 20),
                             fontWeight: FontWeight.w800,
                             color: Colors.white,
                             letterSpacing: -0.3,
@@ -549,7 +549,7 @@ class _SchoolCoursesScreenState extends State<SchoolCoursesScreen>
                         Text(
                           'Fun tech learning for school students!',
                           style: TextStyle(
-                            fontSize: r.fs(10.5, tablet: 12),
+                            fontSize: r.fs(9.5, tablet: 11),
                             color: Colors.white.withValues(alpha: 0.78),
                           ),
                         ),
@@ -564,18 +564,18 @@ class _SchoolCoursesScreenState extends State<SchoolCoursesScreen>
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 300),
                         padding: EdgeInsets.symmetric(
-                          horizontal: r.isTablet ? 10 : 8,
-                          vertical: r.isTablet ? 5 : 4,
+                          horizontal: r.isTablet ? 8 : 6,
+                          vertical: r.isTablet ? 4 : 3,
                         ),
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.22),
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius: BorderRadius.circular(14),
                         ),
                         child: FittedBox(
                           child: Text(
                             '${_enrolledIds.length} Enrolled',
                             style: TextStyle(
-                              fontSize: r.fs(10.5, tablet: 12),
+                              fontSize: r.fs(9.5, tablet: 11),
                               fontWeight: FontWeight.w700,
                               color: Colors.white,
                             ),
@@ -621,21 +621,12 @@ class _SchoolCoursesScreenState extends State<SchoolCoursesScreen>
   Widget _buildFilterBar(_R r) {
     return Container(
       color: kCardBg,
-      padding: EdgeInsets.fromLTRB(r.hPad, 12, r.hPad, 12),
+      padding: EdgeInsets.fromLTRB(r.hPad, 6, r.hPad, 6),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Filter by Age Group',
-            style: TextStyle(
-              fontSize: r.fs(12, tablet: 13),
-              fontWeight: FontWeight.w700,
-              color: kTextMuted,
-            ),
-          ),
-          const SizedBox(height: 10),
           SizedBox(
-            height: r.isTablet ? 42 : 36,
+            height: r.isTablet ? 36 : 30,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               itemCount: kAgeFilters.length,

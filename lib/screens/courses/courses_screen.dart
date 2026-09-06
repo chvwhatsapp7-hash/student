@@ -447,7 +447,7 @@ class _CoursesScreenState extends State<CoursesScreen>
         child: SafeArea(
           bottom: false,
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 6, 16, 8),
+            padding: const EdgeInsets.fromLTRB(16, 2, 16, 4),
             child: Row(
               children: [
                 if (context.canPop()) ...[
@@ -457,20 +457,20 @@ class _CoursesScreenState extends State<CoursesScreen>
                       context.pop();
                     },
                     child: Container(
-                      width: 32,
-                      height: 32,
+                      width: 28,
+                      height: 28,
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.10),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(6),
                       ),
                       child: const Icon(
                         Icons.arrow_back_ios_new,
                         color: Colors.white,
-                        size: 14,
+                        size: 13,
                       ),
                     ),
                   ),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: 8),
                 ],
                 Expanded(
                   child: Column(
@@ -480,17 +480,17 @@ class _CoursesScreenState extends State<CoursesScreen>
                       const Text(
                         'Courses',
                         style: TextStyle(
-                          fontSize: 17,
+                          fontSize: 16,
                           fontWeight: FontWeight.w800,
                           color: Colors.white,
-                          letterSpacing: -0.4,
+                          letterSpacing: -0.3,
                         ),
                       ),
                       Text(
                         'Specialised programs to land your dream job',
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          fontSize: 10.5,
+                          fontSize: 9.5,
                           color: Colors.white.withOpacity(0.55),
                         ),
                       ),
@@ -501,12 +501,12 @@ class _CoursesScreenState extends State<CoursesScreen>
                   const SizedBox(width: 8),
                   Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
+                      horizontal: 7,
+                      vertical: 3,
                     ),
                     decoration: BoxDecoration(
                       color: Colors.white.withOpacity(0.12),
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -514,13 +514,13 @@ class _CoursesScreenState extends State<CoursesScreen>
                         const Icon(
                           Icons.check_circle,
                           color: kAccent,
-                          size: 13,
+                          size: 12,
                         ),
-                        const SizedBox(width: 4),
+                        const SizedBox(width: 3),
                         Text(
                           '${_enrolled.length} Enrolled',
                           style: const TextStyle(
-                            fontSize: 10.5,
+                            fontSize: 9.5,
                             fontWeight: FontWeight.w700,
                             color: kAccent,
                           ),
@@ -537,72 +537,41 @@ class _CoursesScreenState extends State<CoursesScreen>
     );
   }
 
-  Widget _statPill(IconData icon, String num, String label) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.10),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 12, color: kAccent),
-          const SizedBox(width: 4),
-          Text(
-            num,
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w800,
-              color: kAccent,
-            ),
-          ),
-          const SizedBox(width: 3),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: Colors.white.withOpacity(0.55),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildSearchBar() {
     return Container(
       color: kCardBg,
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
-      child: TextField(
-        onChanged: (v) => setState(() => _search = v),
-        style: const TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w600,
-          color: kInk,
-        ),
-        decoration: InputDecoration(
-          hintText: 'Search courses, instructors…',
-          hintStyle: const TextStyle(fontSize: 13, color: kHint),
-          prefixIcon: const Icon(Icons.search, color: kMuted, size: 22),
-          filled: true,
-          fillColor: kBgPage,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 13,
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+      child: SizedBox(
+        height: 38,
+        child: TextField(
+          onChanged: (v) => setState(() => _search = v),
+          style: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: kInk,
           ),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: kBorder, width: 1.5),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: kBorder, width: 1.5),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: kPrimary, width: 2),
+          decoration: InputDecoration(
+            hintText: 'Search courses, instructors…',
+            hintStyle: const TextStyle(fontSize: 12, color: kHint),
+            prefixIcon: const Icon(Icons.search, color: kMuted, size: 18),
+            filled: true,
+            fillColor: kBgPage,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 10,
+              vertical: 8,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: const BorderSide(color: kBorder, width: 1.2),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: const BorderSide(color: kBorder, width: 1.2),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: const BorderSide(color: kPrimary, width: 1.5),
+            ),
           ),
         ),
       ),

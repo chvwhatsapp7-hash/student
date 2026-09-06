@@ -341,7 +341,7 @@ class _SchoolNotificationsScreenState extends State<SchoolNotificationsScreen>
         child: SafeArea(
           bottom: false,
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+            padding: const EdgeInsets.fromLTRB(16, 2, 16, 4),
             child: Row(children: [
               // ── Back ──────────────────────
               GestureDetector(
@@ -351,51 +351,51 @@ class _SchoolNotificationsScreenState extends State<SchoolNotificationsScreen>
                   else context.go('/school/layout');
                 },
                 child: Container(
-                  width: 34, height: 34,
+                  width: 28, height: 28,
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.18),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Icon(Icons.arrow_back_ios_new_rounded,
-                      size: 15, color: Colors.white),
+                      size: 13, color: Colors.white),
                 ),
               ),
-              const SizedBox(width: 14),
+              const SizedBox(width: 10),
 
               // ── Title + subtitle ──────────
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Row(children: [
                       const Text(
                         'Notifications',
                         style: TextStyle(
-                          fontSize: 20, fontWeight: FontWeight.w800,
+                          fontSize: 16, fontWeight: FontWeight.w800,
                           color: Colors.white, letterSpacing: -0.3,
                         ),
                       ),
                       if (_totalUnread > 0) ...[
-                        const SizedBox(width: 8),
+                        const SizedBox(width: 6),
                         AnimatedContainer(
                           duration: const Duration(milliseconds: 300),
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 2),
+                              horizontal: 6, vertical: 1),
                           decoration: BoxDecoration(
                             color: const Color(0xFFFFB300),
-                            borderRadius: BorderRadius.circular(20),
+                            borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
                             '$_totalUnread new',
                             style: const TextStyle(
-                              fontSize: 11, fontWeight: FontWeight.w800,
+                              fontSize: 9.5, fontWeight: FontWeight.w800,
                               color: Colors.white,
                             ),
                           ),
                         ),
                       ],
                     ]),
-                    const SizedBox(height: 2),
                     Text(
                       _isRefreshing
                           ? 'Refreshing…'
@@ -403,7 +403,7 @@ class _SchoolNotificationsScreenState extends State<SchoolNotificationsScreen>
                           ? '$_totalUnread unread'
                           : 'All caught up!',
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 9.5,
                         color: Colors.white.withValues(alpha: 0.72),
                       ),
                     ),
@@ -417,17 +417,17 @@ class _SchoolNotificationsScreenState extends State<SchoolNotificationsScreen>
                   onTap: _markAllRead,
                   child: Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 8),
+                        horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.18),
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(14),
                       border: Border.all(
                           color: Colors.white.withValues(alpha: 0.25)),
                     ),
                     child: const Text(
                       'Mark all read',
                       style: TextStyle(
-                        fontSize: 11, fontWeight: FontWeight.w700,
+                        fontSize: 9.5, fontWeight: FontWeight.w700,
                         color: Colors.white,
                       ),
                     ),
@@ -452,7 +452,7 @@ class _SchoolNotificationsScreenState extends State<SchoolNotificationsScreen>
             .animate(CurvedAnimation(parent: _tabsAnim, curve: Curves.easeOut)),
         child: Container(
           color: Colors.white,
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+          padding: const EdgeInsets.fromLTRB(16, 6, 16, 6),
           child: Row(children: [
             _chip('All',      NotifCategory.all,      Icons.notifications_rounded),
             const SizedBox(width: 8),
@@ -474,13 +474,13 @@ class _SchoolNotificationsScreenState extends State<SchoolNotificationsScreen>
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 260),
         curve: Curves.easeOut,
-        padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 9),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         decoration: BoxDecoration(
           color: active ? kPrimaryBlue : kBgPage,
-          borderRadius: BorderRadius.circular(30),
+          borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: active ? kPrimaryBlue : kCardBorder,
-            width: 1.5,
+            width: 1.2,
           ),
           boxShadow: active
               ? [BoxShadow(

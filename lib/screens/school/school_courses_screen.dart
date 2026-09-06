@@ -509,90 +509,80 @@ class _SchoolCoursesScreenState extends State<SchoolCoursesScreen>
           child: SafeArea(
             bottom: false,
             child: Padding(
-              padding: EdgeInsets.fromLTRB(r.hPad, 8, r.hPad, 12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              padding: EdgeInsets.fromLTRB(r.hPad, 6, r.hPad, 8),
+              child: Row(
                 children: [
-                  Row(
-                    children: [
-                      GestureDetector(
-                        onTap: () {
-                          HapticFeedback.lightImpact();
-                          widget.onBack?.call();
-                        },
-                        child: Container(
-                          width: r.isTablet ? 38 : 34,
-                          height: r.isTablet ? 38 : 34,
-                          margin: const EdgeInsets.only(right: 10),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.18),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Icon(
-                            Icons.arrow_back_ios_new_rounded,
-                            size: r.isTablet ? 18 : 15,
-                            color: Colors.white,
-                          ),
-                        ),
+                  GestureDetector(
+                    onTap: () {
+                      HapticFeedback.lightImpact();
+                      widget.onBack?.call();
+                    },
+                    child: Container(
+                      width: r.isTablet ? 36 : 32,
+                      height: r.isTablet ? 36 : 32,
+                      margin: const EdgeInsets.only(right: 10),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.18),
+                        borderRadius: BorderRadius.circular(8),
                       ),
-                      Expanded(
-                        child: Text(
+                      child: Icon(
+                        Icons.arrow_back_ios_new_rounded,
+                        size: r.isTablet ? 16 : 14,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
                           'Our Courses',
                           style: TextStyle(
-                            fontSize: r.fs(20, tablet: 24, large: 26),
+                            fontSize: r.fs(17, tablet: 20, large: 22),
                             fontWeight: FontWeight.w800,
                             color: Colors.white,
                             letterSpacing: -0.3,
                           ),
                         ),
-                      ),
-                      if (_enrolledIds.isNotEmpty)
-                        ConstrainedBox(
-                          constraints: BoxConstraints(
-                            maxWidth: r.isTablet ? 140 : 110,
+                        Text(
+                          'Fun tech learning for school students!',
+                          style: TextStyle(
+                            fontSize: r.fs(10.5, tablet: 12),
+                            color: Colors.white.withValues(alpha: 0.78),
                           ),
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 300),
-                            padding: EdgeInsets.symmetric(
-                              horizontal: r.isTablet ? 14 : 10,
-                              vertical: r.isTablet ? 7 : 5,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.22),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: FittedBox(
-                              child: Text(
-                                '${_enrolledIds.length} Enrolled',
-                                style: TextStyle(
-                                  fontSize: r.fs(12, tablet: 14),
-                                  fontWeight: FontWeight.w700,
-                                  color: Colors.white,
-                                ),
-                              ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (_enrolledIds.isNotEmpty)
+                    ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxWidth: r.isTablet ? 130 : 100,
+                      ),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 300),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: r.isTablet ? 10 : 8,
+                          vertical: r.isTablet ? 5 : 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.22),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: FittedBox(
+                          child: Text(
+                            '${_enrolledIds.length} Enrolled',
+                            style: TextStyle(
+                              fontSize: r.fs(10.5, tablet: 12),
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
                             ),
                           ),
                         ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    'Fun tech learning for school students!',
-                    style: TextStyle(
-                      fontSize: r.fs(13, tablet: 15),
-                      color: Colors.white.withValues(alpha: 0.78),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  Wrap(
-                    spacing: 10,
-                    runSpacing: 8,
-                    children: [
-                      _statChip('🎓', '${_courses.length} Courses', r),
-                      _statChip('👦', 'Ages 8–17', r),
-                      _statChip('⭐', '4.8 Avg Rating', r),
-                    ],
-                  ),
                 ],
               ),
             ),

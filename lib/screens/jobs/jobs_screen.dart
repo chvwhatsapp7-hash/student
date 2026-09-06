@@ -992,95 +992,73 @@ class _JobsScreenState extends State<JobsScreen>
         child: SafeArea(
           bottom: false,
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            padding: const EdgeInsets.fromLTRB(16, 6, 16, 8),
+            child: Row(
               children: [
-                Row(
-                  children: [
-                    // ✅ Back button only shown when there is a route to pop to
-                    if (context.canPop() || widget.onBack != null) ...[
-                      GestureDetector(
-                        onTap: _handleBack,
-                        child: Container(
-                          width: 34,
-                          height: 34,
-                          decoration: BoxDecoration(
-                            color: Colors.white
-                                .withValues(alpha: 0.10),
-                            borderRadius:
-                            BorderRadius.circular(10),
-                          ),
-                          child: const Icon(Icons.arrow_back_ios_new,
-                              color: Colors.white,
-                              size: 15),
-                        ),
+                // ✅ Back button only shown when there is a route to pop to
+                if (context.canPop() || widget.onBack != null) ...[
+                  GestureDetector(
+                    onTap: _handleBack,
+                    child: Container(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.10),
+                        borderRadius: BorderRadius.circular(8),
                       ),
-                      const SizedBox(width: 10),
-                    ],
-                    Expanded(
-                      child: Column(
-                          crossAxisAlignment:
-                          CrossAxisAlignment.start,
-                          children: const [
-                            Text('Jobs',
-                                style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w800,
-                                    color: Colors.white,
-                                    letterSpacing: -0.4)),
-                            Text('Find your perfect role',
-                                style: TextStyle(
-                                    fontSize: 11,
-                                    color: kHint)),
-                          ]),
+                      child: const Icon(Icons.arrow_back_ios_new,
+                          color: Colors.white,
+                          size: 14),
                     ),
-                    GestureDetector(
-                      onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (_) => SavedJobsPage(
-                                  jobs: jobs,
-                                  savedIds:
-                                  saved.toList()))),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 6),
-                        decoration: BoxDecoration(
-                            color: Colors.white
-                                .withValues(alpha: 0.12),
-                            borderRadius:
-                            BorderRadius.circular(20)),
-                        child: Row(children: [
-                          const Icon(Icons.bookmark,
-                              color: kAccent,
-                              size: 14),
-                          const SizedBox(width: 4),
-                          Text('${saved.length} Saved',
-                              style: const TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w700,
-                                  color: Colors.white)),
-                        ]),
-                      ),
-                    ),
-                  ],
+                  ),
+                  const SizedBox(width: 10),
+                ],
+                Expanded(
+                  child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: const [
+                        Text('Jobs',
+                            style: TextStyle(
+                                fontSize: 17,
+                                fontWeight: FontWeight.w800,
+                                color: Colors.white,
+                                letterSpacing: -0.4)),
+                        Text('Find your perfect role',
+                            style: TextStyle(
+                                fontSize: 10.5,
+                                color: kHint)),
+                      ]),
                 ),
-                const SizedBox(height: 10),
-                Wrap(
-                  spacing: 6,
-                  runSpacing: 6,
-                  children: [
-                    _statPill(Icons.work_outline,
-                        '${jobs.length}', 'Jobs', sw),
-                    _statPill(Icons.send,
-                        '${applied.length}', 'Applied', sw),
-                    _statPill(
-                        Icons.auto_awesome, '95%', 'Top Match', sw),
-                    _statPill(
-                        Icons.location_city, '3', 'Cities', sw),
-                  ],
+                GestureDetector(
+                  onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => SavedJobsPage(
+                              jobs: jobs,
+                              savedIds: saved.toList()))),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4),
+                    decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(16)),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.bookmark,
+                            color: kAccent,
+                            size: 13),
+                        const SizedBox(width: 4),
+                        Text('${saved.length} Saved',
+                            style: const TextStyle(
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white)),
+                      ],
+                    ),
+                  ),
                 ),
               ],
             ),

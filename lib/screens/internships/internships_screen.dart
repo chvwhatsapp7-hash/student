@@ -1823,111 +1823,79 @@ class _InternshipsScreenState extends State<InternshipsScreen>
               child: SafeArea(
                 bottom: false,
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  padding: const EdgeInsets.fromLTRB(16, 6, 16, 8),
+                  child: Row(
                     children: [
-                      Row(
-                        children: [
-                          // ✅ Back button only shown when there is a route to pop to
-                          if (context.canPop() || widget.onBack != null) ...[
-                            GestureDetector(
-                              onTap: _handleBack,
-                              child: Container(
-                                width: 34,
-                                height: 34,
-                                decoration: BoxDecoration(
-                                  color: Colors.white
-                                      .withOpacity(0.10),
-                                  borderRadius:
-                                  BorderRadius.circular(10),
-                                ),
-                                child: const Icon(
-                                    Icons.arrow_back_ios_new,
-                                    color: Colors.white,
-                                    size: 15),
+                      // ✅ Back button only shown when there is a route to pop to
+                      if (context.canPop() || widget.onBack != null) ...[
+                        GestureDetector(
+                          onTap: _handleBack,
+                          child: Container(
+                            width: 32,
+                            height: 32,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.10),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Icon(
+                                Icons.arrow_back_ios_new,
+                                color: Colors.white,
+                                size: 14),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                      ],
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: const [
+                            Text(
+                              'Internships',
+                              style: TextStyle(
+                                fontSize: 17,
+                                fontWeight: FontWeight.w800,
+                                color: Colors.white,
+                                letterSpacing: -0.4,
                               ),
                             ),
-                            const SizedBox(width: 10),
+                            Text(
+                              'Real experience, real growth',
+                              style: TextStyle(
+                                fontSize: 10.5,
+                                color: Colors.white54,
+                              ),
+                            ),
                           ],
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment:
-                              CrossAxisAlignment.start,
-                              children: const [
-                                Text(
-                                  'Internships',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w800,
-                                    color: Colors.white,
-                                    letterSpacing: -0.4,
-                                  ),
-                                ),
-                                Text(
-                                  'Real experience, real growth',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: Colors.white54,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          if (saved.isNotEmpty)
-                            AnimatedContainer(
-                              duration:
-                              const Duration(milliseconds: 300),
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 6),
-                              decoration: BoxDecoration(
-                                color: Colors.white
-                                    .withOpacity(0.12),
-                                borderRadius:
-                                BorderRadius.circular(20),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Icon(Icons.bookmark,
-                                      color: kAccent,
-                                      size: 14),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    '${saved.length} Saved',
-                                    style: TextStyle(
-                                      fontSize: sw * 0.030,
-                                      fontWeight: FontWeight.w700,
-                                      color: kAccent,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                        ],
+                        ),
                       ),
-                      SizedBox(height: sw * 0.04),
-                      Wrap(
-                        spacing: sw * 0.025,
-                        runSpacing: sw * 0.015,
-                        children: [
-                          _statPill(Icons.work_outline,
-                              '${internships.length}', 'Total', sw),
-                          _statPill(Icons.currency_rupee,
-                              '$paidCount', 'Paid', sw),
-                          _statPill(Icons.volunteer_activism,
-                              '$unpaidCount', 'Unpaid', sw),
-                          _statPill(
-                            Icons.trending_up,
-                            internships.isEmpty
-                                ? '0'
-                                : '${internships.map((e) => int.tryParse(e.stipend.replaceAll(',', '')) ?? 0).reduce((a, b) => a > b ? a : b)}',
-                            'Max',
-                            sw,
+                      if (saved.isNotEmpty)
+                        AnimatedContainer(
+                          duration: const Duration(milliseconds: 300),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.12),
+                            borderRadius: BorderRadius.circular(16),
                           ),
-                        ],
-                      ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.bookmark,
+                                  color: kAccent,
+                                  size: 13),
+                              const SizedBox(width: 4),
+                              Text(
+                                '${saved.length} Saved',
+                                style: const TextStyle(
+                                  fontSize: 10.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: kAccent,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                     ],
                   ),
                 ),

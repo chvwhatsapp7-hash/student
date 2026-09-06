@@ -298,88 +298,65 @@ class _CompaniesScreenState extends State<CompaniesScreen>
         child: SafeArea(
           bottom: false,
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            padding: const EdgeInsets.fromLTRB(16, 6, 16, 8),
+            child: Row(
               children: [
-                Row(
-                  children: [
-                    if (context.canPop()) ...[
-                      GestureDetector(
-                        onTap: () => context.pop(),
-                        child: Container(
-                          width: 36,
-                          height: 36,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.10),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: const Icon(
-                            Icons.arrow_back_ios_new_rounded,
-                            color: Colors.white,
-                            size: 16,
-                          ),
-                        ),
+                if (context.canPop()) ...[
+                  GestureDetector(
+                    onTap: () => context.pop(),
+                    child: Container(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.10),
+                        borderRadius: BorderRadius.circular(8),
                       ),
-                      const SizedBox(width: 14),
-                    ],
-                    const Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Companies',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w800,
-                              color: Colors.white,
-                              letterSpacing: -0.4,
-                            ),
-                          ),
-                          Text(
-                            'Discover where you want to work',
-                            style: TextStyle(fontSize: 12, color: kHint),
-                          ),
-                        ],
+                      child: const Icon(
+                        Icons.arrow_back_ios_new_rounded,
+                        color: Colors.white,
+                        size: 14,
                       ),
                     ),
-                    // Refresh button
-                    GestureDetector(
-                      onTap: _fetchCompanies,
-                      child: Container(
-                        width: 36,
-                        height: 36,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.10),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: const Icon(
-                          Icons.refresh_rounded,
+                  ),
+                  const SizedBox(width: 10),
+                ],
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Companies',
+                        style: TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w800,
                           color: Colors.white,
-                          size: 18,
+                          letterSpacing: -0.4,
                         ),
                       ),
-                    ),
-                  ],
+                      Text(
+                        'Discover where you want to work',
+                        style: TextStyle(fontSize: 10.5, color: kHint),
+                      ),
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 16),
-                // Stats row — driven by live API data
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    _statPill(Icons.business_rounded, '$total', 'Companies'),
-                    _statPill(
-                      Icons.work_rounded,
-                      openings > 0 ? '$openings' : '—',
-                      'Open Roles',
+                // Refresh button
+                GestureDetector(
+                  onTap: _fetchCompanies,
+                  child: Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.10),
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                    _statPill(
-                      Icons.location_city_rounded,
-                      cities > 0 ? '$cities' : '—',
-                      'Cities',
+                    child: const Icon(
+                      Icons.refresh_rounded,
+                      color: Colors.white,
+                      size: 16,
                     ),
-                  ],
+                  ),
                 ),
               ],
             ),

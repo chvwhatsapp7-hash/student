@@ -447,128 +447,88 @@ class _CoursesScreenState extends State<CoursesScreen>
         child: SafeArea(
           bottom: false,
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            padding: const EdgeInsets.fromLTRB(16, 6, 16, 8),
+            child: Row(
               children: [
-                Row(
-                  children: [
-                    if (context.canPop()) ...[
-                      GestureDetector(
-                        onTap: () {
-                          HapticFeedback.mediumImpact();
-                          context.pop();
-                        },
-                        child: Container(
-                          width: 34,
-                          height: 34,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.10),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: const Icon(
-                            Icons.arrow_back_ios_new,
-                            color: Colors.white,
-                            size: 15,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                    ],
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Courses',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w800,
-                              color: Colors.white,
-                              letterSpacing: -0.4,
-                            ),
-                          ),
-                          Text(
-                            'Specialised programs to land your dream job',
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: Colors.white.withOpacity(0.55),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    if (_enrolled.isNotEmpty) ...[
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 5,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.12),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(
-                              Icons.check_circle,
-                              color: kAccent,
-                              size: 13,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              '${_enrolled.length} Enrolled',
-                              style: const TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
-                                color: kAccent,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-                const SizedBox(height: 10),
-                Wrap(
-                  spacing: 6,
-                  runSpacing: 6,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    _statPill(Icons.menu_book, '${_courses.length}', 'Courses'),
-                    _statPill(Icons.workspace_premium, '95%', 'Placement'),
-                    _statPill(Icons.category, '6', 'Domains'),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 5,
-                      ),
+                if (context.canPop()) ...[
+                  GestureDetector(
+                    onTap: () {
+                      HapticFeedback.mediumImpact();
+                      context.pop();
+                    },
+                    child: Container(
+                      width: 32,
+                      height: 32,
                       decoration: BoxDecoration(
-                        color: kPrimary,
-                        borderRadius: BorderRadius.circular(20),
+                        color: Colors.white.withOpacity(0.10),
+                        borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text('🎓', style: TextStyle(fontSize: 11)),
-                          SizedBox(width: 4),
-                          Text(
-                            'Get Job-Ready',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w800,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ],
+                      child: const Icon(
+                        Icons.arrow_back_ios_new,
+                        color: Colors.white,
+                        size: 14,
                       ),
                     ),
-                  ],
+                  ),
+                  const SizedBox(width: 10),
+                ],
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text(
+                        'Courses',
+                        style: TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                          letterSpacing: -0.4,
+                        ),
+                      ),
+                      Text(
+                        'Specialised programs to land your dream job',
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 10.5,
+                          color: Colors.white.withOpacity(0.55),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
+                if (_enrolled.isNotEmpty) ...[
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.check_circle,
+                          color: kAccent,
+                          size: 13,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${_enrolled.length} Enrolled',
+                          style: const TextStyle(
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w700,
+                            color: kAccent,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ],
             ),
           ),

@@ -1,9 +1,6 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
-import 'package:http/http.dart' as http;
 
 import '../../api_services/authservice.dart';
 
@@ -67,111 +64,6 @@ class Company {
 //  STATIC FALLBACK DATA
 // ─────────────────────────────────────────────
 
-final List<Company> kCompanies = [
-  const Company(
-    id: 1,
-    name: 'Infosys',
-    city: 'Bengaluru',
-    state: 'Karnataka',
-    type: 'MNC',
-    size: '300K+ employees',
-    openings: 45,
-    domain: 'IT Services',
-    logo: '🔵',
-    desc:
-    'Global leader in digital services, consulting, and next-gen IT solutions for enterprises worldwide.',
-    website: 'infosys.com',
-    lat: 12.97,
-    lng: 77.59,
-    tags: ['Java', 'Cloud', 'SAP', 'AI/ML'],
-  ),
-  const Company(
-    id: 2,
-    name: 'Flipkart',
-    city: 'Bengaluru',
-    state: 'Karnataka',
-    type: 'Unicorn',
-    size: '30K+ employees',
-    openings: 28,
-    domain: 'E-Commerce',
-    logo: '🟡',
-    desc:
-    "India's largest e-commerce marketplace, building the future of retail with cutting-edge tech.",
-    website: 'flipkart.com',
-    lat: 12.95,
-    lng: 77.67,
-    tags: ['React', 'Scala', 'Big Data', 'SDE'],
-  ),
-  const Company(
-    id: 3,
-    name: 'Zepto',
-    city: 'Mumbai',
-    state: 'Maharashtra',
-    type: 'Startup',
-    size: '3K+ employees',
-    openings: 12,
-    domain: 'Quick Commerce',
-    logo: '⚡',
-    desc:
-    'Pioneering 10-minute grocery delivery across India with a tech-first logistics platform.',
-    website: 'zepto.com',
-    lat: 19.07,
-    lng: 72.87,
-    tags: ['Node.js', 'React Native', 'DevOps'],
-  ),
-  const Company(
-    id: 4,
-    name: 'ISRO',
-    city: 'Bengaluru',
-    state: 'Karnataka',
-    type: 'Government',
-    size: '16K+ employees',
-    openings: 8,
-    domain: 'Space & Research',
-    logo: '🚀',
-    desc:
-    "India's national space research organisation, pushing boundaries in aerospace and satellite tech.",
-    website: 'isro.gov.in',
-    lat: 13.02,
-    lng: 77.57,
-    tags: ['C/C++', 'Embedded', 'VLSI', 'Aerospace'],
-  ),
-  const Company(
-    id: 5,
-    name: 'Razorpay',
-    city: 'Bengaluru',
-    state: 'Karnataka',
-    type: 'Unicorn',
-    size: '2.5K+ employees',
-    openings: 18,
-    domain: 'Fintech',
-    logo: '💙',
-    desc:
-    'Full-stack financial solutions powering payments, banking, and payroll for 8M+ businesses.',
-    website: 'razorpay.com',
-    lat: 12.93,
-    lng: 77.62,
-    tags: ['Go', 'Python', 'Fintech', 'Backend'],
-  ),
-  const Company(
-    id: 6,
-    name: 'Ola Electric',
-    city: 'Bengaluru',
-    state: 'Karnataka',
-    type: 'Startup',
-    size: '4K+ employees',
-    openings: 22,
-    domain: 'EV / Clean Tech',
-    logo: '🟢',
-    desc:
-    'Building the future of sustainable mobility with electric vehicles and clean energy solutions.',
-    website: 'olaelectric.com',
-    lat: 12.91,
-    lng: 77.64,
-    tags: ['Embedded', 'IoT', 'React', 'Python'],
-  ),
-];
-
 const List<String> kFilters = [
   'All',
   'MNC',
@@ -194,7 +86,7 @@ const Map<String, _TypeStyle> _typeStyles = {
 
 _TypeStyle _style(String type) =>
     _typeStyles[type] ??
-        const _TypeStyle(bg: Color(0xFFF1F5F9), fg: Color(0xFF475569));
+    const _TypeStyle(bg: Color(0xFFF1F5F9), fg: Color(0xFF475569));
 
 // ─────────────────────────────────────────────
 //  SCREEN
@@ -273,17 +165,16 @@ class _CompaniesScreenState extends State<CompaniesScreen>
     HapticFeedback.selectionClick();
     setState(() => _selected = id);
     final company = _apiCompanies.firstWhere(
-          (c) => c.id == id,
+      (c) => c.id == id,
       orElse: () => _apiCompanies.first,
     );
     Navigator.push(
       context,
       PageRouteBuilder(
-        pageBuilder: (_, animation, __) =>
-            FadeTransition(
-              opacity: animation,
-              child: CompanyDetailScreen(company: company),
-            ),
+        pageBuilder: (_, animation, __) => FadeTransition(
+          opacity: animation,
+          child: CompanyDetailScreen(company: company),
+        ),
         transitionDuration: const Duration(milliseconds: 300),
       ),
     ).then((_) => setState(() => _selected = null));
@@ -344,9 +235,9 @@ class _CompaniesScreenState extends State<CompaniesScreen>
       debugPrint('Error: $e');
       if (mounted) setState(() => _isLoading = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to load companies: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to load companies: $e')));
       }
     }
   }
@@ -477,11 +368,7 @@ class _CompaniesScreenState extends State<CompaniesScreen>
                   spacing: 8,
                   runSpacing: 8,
                   children: [
-                    _statPill(
-                      Icons.business_rounded,
-                      '$total',
-                      'Companies',
-                    ),
+                    _statPill(Icons.business_rounded, '$total', 'Companies'),
                     _statPill(
                       Icons.work_rounded,
                       openings > 0 ? '$openings' : '—',
@@ -671,9 +558,9 @@ class _CompaniesScreenState extends State<CompaniesScreen>
             : const AlwaysStoppedAnimation<double>(1.0);
         final slide = ctrl != null
             ? Tween<Offset>(
-          begin: const Offset(0, 0.12),
-          end: Offset.zero,
-        ).animate(CurvedAnimation(parent: ctrl, curve: Curves.easeOut))
+                begin: const Offset(0, 0.12),
+                end: Offset.zero,
+              ).animate(CurvedAnimation(parent: ctrl, curve: Curves.easeOut))
             : const AlwaysStoppedAnimation<Offset>(Offset.zero);
         return FadeTransition(
           opacity: fade,
@@ -831,19 +718,19 @@ class _CompanyCard extends StatelessWidget {
           ),
           boxShadow: isSelected
               ? [
-            BoxShadow(
-              color: kPrimary.withOpacity(0.12),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ]
+                  BoxShadow(
+                    color: kPrimary.withOpacity(0.12),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ]
               : [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.04),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -990,25 +877,25 @@ class _CompanyCard extends StatelessWidget {
                 children: c.tags
                     .map(
                       (t) => Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 9,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF8FAFC),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: kBorder),
-                    ),
-                    child: Text(
-                      t,
-                      style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: kSlate,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 9,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF8FAFC),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: kBorder),
+                        ),
+                        child: Text(
+                          t,
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: kSlate,
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                )
+                    )
                     .toList(),
               ),
             ],
@@ -1022,8 +909,8 @@ class _CompanyCard extends StatelessWidget {
               decoration: BoxDecoration(
                 gradient: isSelected
                     ? const LinearGradient(
-                  colors: [Color(0xFF1D4ED8), Color(0xFF2563EB)],
-                )
+                        colors: [Color(0xFF1D4ED8), Color(0xFF2563EB)],
+                      )
                     : null,
                 color: isSelected ? null : kSelectedBg,
                 borderRadius: BorderRadius.circular(12),
@@ -1289,7 +1176,7 @@ class CompanyDetailScreen extends StatelessWidget {
                         icon: Icons.location_on_rounded,
                         label: 'Location',
                         value:
-                        '${c.city}${c.state.isNotEmpty ? ', ${c.state.trim()}' : ''}',
+                            '${c.city}${c.state.isNotEmpty ? ', ${c.state.trim()}' : ''}',
                       ),
                     if (c.website.isNotEmpty)
                       _InfoRow(
@@ -1305,10 +1192,7 @@ class CompanyDetailScreen extends StatelessWidget {
 
                   // ── SKILLS ──
                   if (c.tags.isNotEmpty) ...[
-                    _sectionHeader(
-                      'Required Skills',
-                      Icons.code_rounded,
-                    ),
+                    _sectionHeader('Required Skills', Icons.code_rounded),
                     const SizedBox(height: 10),
                     Container(
                       width: double.infinity,
@@ -1424,10 +1308,7 @@ class CompanyDetailScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 2),
-          Text(
-            label,
-            style: const TextStyle(fontSize: 10, color: kMuted),
-          ),
+          Text(label, style: const TextStyle(fontSize: 10, color: kMuted)),
         ],
       ),
     );
@@ -1539,10 +1420,7 @@ class CompanyDetailScreen extends StatelessWidget {
                         const SizedBox(height: 1),
                         Text(
                           p['sub'] as String,
-                          style: const TextStyle(
-                            fontSize: 11,
-                            color: kMuted,
-                          ),
+                          style: const TextStyle(fontSize: 11, color: kMuted),
                         ),
                       ],
                     ),

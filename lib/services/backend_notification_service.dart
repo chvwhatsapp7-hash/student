@@ -1,10 +1,10 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/backend_notification.dart';
+import 'api_config.dart';
 
 class BackendNotificationService {
-  static const String baseUrl =
-      "https://your-backend-url.com/api/notifications";
+  static String get baseUrl => "${ApiConfig.baseUrl}/notifications";
 
   Future<List<BackendNotification>> fetchNotifications(
       String authToken) async {

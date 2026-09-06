@@ -144,25 +144,30 @@ class _LoginScreenState extends State<LoginScreen>
 
             // Content
             SafeArea(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 20, vertical: 24),
-                child: Column(
-                  children: [
-                    _buildTopBar(),
-                    const SizedBox(height: 28),
-                    _buildPortalSwitcher(),
-                    const SizedBox(height: 28),
-                    FadeTransition(
-                      opacity: _cardFade,
-                      child: SlideTransition(
-                        position: _cardSlide,
-                        child: _portalIndex == 0
-                            ? _buildEngCard()
-                            : _buildSchoolCard(),
-                      ),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 480),
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 24),
+                    child: Column(
+                      children: [
+                        _buildTopBar(),
+                        const SizedBox(height: 28),
+                        _buildPortalSwitcher(),
+                        const SizedBox(height: 28),
+                        FadeTransition(
+                          opacity: _cardFade,
+                          child: SlideTransition(
+                            position: _cardSlide,
+                            child: _portalIndex == 0
+                                ? _buildEngCard()
+                                : _buildSchoolCard(),
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
               ),
             ),

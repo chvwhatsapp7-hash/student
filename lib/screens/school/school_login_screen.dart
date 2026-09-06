@@ -316,7 +316,8 @@ class _SchoolLoginScreenState extends State<SchoolLoginScreen>
 
   Widget _buildCard() {
     return Container(
-      width: 360,
+      constraints: const BoxConstraints(maxWidth: 420),
+      width: double.infinity,
       padding: const EdgeInsets.all(28),
       decoration: BoxDecoration(
         color: kCardBg,

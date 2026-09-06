@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../api_services/applications.dart';
 import '../../api_services/authservice.dart';
+import '../../widgets/social_post_card.dart';
 
 // ═══════════════════════════════════════════
 //  DESIGN TOKENS
@@ -30,6 +31,12 @@ class Job {
   final int match;
   final List<String> tags;
   final int? salaryMin, salaryMax;
+  final String? imageUrl;
+  final String? companyLogo;
+  final int likesCount;
+  final int commentsCount;
+  final int sharesCount;
+  final bool isLiked;
 
   Job({
     required this.id,
@@ -46,19 +53,25 @@ class Job {
     required this.desc,
     this.salaryMin,
     this.salaryMax,
+    this.imageUrl,
+    this.companyLogo,
+    this.likesCount = 0,
+    this.commentsCount = 0,
+    this.sharesCount = 0,
+    this.isLiked = false,
   });
 
   factory Job.fromJson(Map<String, dynamic> json) => Job(
     id: json['job_id'] ?? 0,
     title: json['title'] ?? 'No title',
-    company: 'Company ${json['company_id'] ?? 0}',
+    company: json['company_name'] ?? (json['company'] is String ? json['company'] : 'Company ${json['company_id'] ?? 0}'),
     location: json['location'] ?? 'Remote',
     salary: json['salary_min'] != null && json['salary_max'] != null
-        ? '${json['salary_min']}-${json['salary_max']}'
-        : 'Negotiable',
+        ? '₹${json['salary_min']} - ₹${json['salary_max']}'
+        : (json['salary_min'] != null ? '₹${json['salary_min']}+' : 'Negotiable'),
     type: json['job_type'] ?? 'Full Time',
     match: 80,
-    logo: '',
+    logo: json['company_logo'] ?? '',
     tags: (json['skills'] as List<dynamic>? ?? [])
         .map<String>((t) => t.toString())
         .toList(),
@@ -71,6 +84,12 @@ class Job {
     salaryMax: json['salary_max'] != null
         ? int.tryParse(json['salary_max'].toString())
         : null,
+    imageUrl: json['image_url'],
+    companyLogo: json['company_logo'],
+    likesCount: json['likes_count'] is int ? json['likes_count'] : int.tryParse(json['likes_count']?.toString() ?? '0') ?? 0,
+    commentsCount: json['comments_count'] is int ? json['comments_count'] : int.tryParse(json['comments_count']?.toString() ?? '0') ?? 0,
+    sharesCount: json['shares_count'] is int ? json['shares_count'] : int.tryParse(json['shares_count']?.toString() ?? '0') ?? 0,
+    isLiked: json['is_liked'] == true,
   );
 }
 
@@ -2178,7 +2197,30 @@ class JobCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final card = _buildCard();
+    final card = SocialPostCard(
+      postType: 'job',
+      id: job.id,
+      title: job.title,
+      company: job.company,
+      location: job.location,
+      type: job.type,
+      primaryBadge: job.salary,
+      secondaryBadge: job.exp,
+      imageUrl: job.imageUrl,
+      companyLogo: job.companyLogo,
+      description: job.desc,
+      tags: job.tags,
+      isSaved: isSaved,
+      isApplied: isApplied,
+      initialLikesCount: job.likesCount,
+      initialCommentsCount: job.commentsCount,
+      initialSharesCount: job.sharesCount,
+      initialIsLiked: job.isLiked,
+      onSave: onSave,
+      onApply: onApply,
+      onTap: onTap,
+    );
+
     if (ctrl == null) return card;
     return AnimatedBuilder(
       animation: ctrl!,
@@ -2190,309 +2232,6 @@ class JobCard extends StatelessWidget {
       child: card,
     );
   }
-
-  Widget _buildCard() => GestureDetector(
-    onTap: onTap,
-    child: Container(
-      margin: EdgeInsets.only(bottom: sw * 0.040),
-      decoration: BoxDecoration(
-        gradient: isApplied
-            ? const LinearGradient(
-            colors: [
-              Color(0xFFEFF6FF),
-              Color(0xFFF0FDF4)
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight)
-            : null,
-        color: isApplied ? null : kCardBg,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-            color: isApplied
-                ? kPrimary.withValues(alpha: 0.40)
-                : kBorder,
-            width: isApplied ? 2 : 1.5),
-        boxShadow: isApplied
-            ? [
-          BoxShadow(
-              color: kPrimary.withValues(alpha: 0.10),
-              blurRadius: 16,
-              offset: const Offset(0, 4))
-        ]
-            : null,
-      ),
-      child: Column(children: [
-        if (isApplied)
-          Container(
-              height: 4,
-              decoration: const BoxDecoration(
-                  gradient: LinearGradient(colors: [
-                    kPrimary,
-                    Color(0xFF4F46E5),
-                    kAccent
-                  ]),
-                  borderRadius: BorderRadius.vertical(
-                      top: Radius.circular(20)))),
-        Padding(
-          padding: EdgeInsets.all(sw * 0.040),
-          child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                    crossAxisAlignment:
-                    CrossAxisAlignment.start,
-                    children: [
-                      JobIconTile(
-                          title: job.title,
-                          company: job.company,
-                          size: sw * 0.12),
-                      SizedBox(width: sw * 0.030),
-                      Expanded(
-                          child: Column(
-                              crossAxisAlignment:
-                              CrossAxisAlignment.start,
-                              children: [
-                                Text(job.title,
-                                    style: TextStyle(
-                                        fontSize: sw * 0.038,
-                                        fontWeight:
-                                        FontWeight.w800,
-                                        color: isApplied
-                                            ? kPrimary
-                                            : kInk)),
-                                SizedBox(height: sw * 0.005),
-                                Text(job.company,
-                                    style: TextStyle(
-                                        fontSize: sw * 0.030,
-                                        color: kMuted,
-                                        fontWeight:
-                                        FontWeight.w600)),
-                              ])),
-                      GestureDetector(
-                        onTap: onSave,
-                        behavior: HitTestBehavior.opaque,
-                        child: AnimatedContainer(
-                          duration: const Duration(
-                              milliseconds: 200),
-                          width: sw * 0.085,
-                          height: sw * 0.085,
-                          decoration: BoxDecoration(
-                              color: isSaved
-                                  ? kAccent.withValues(
-                                  alpha: 0.12)
-                                  : Colors.transparent,
-                              borderRadius:
-                              BorderRadius.circular(10)),
-                          child: Icon(
-                              isSaved
-                                  ? Icons.bookmark
-                                  : Icons.bookmark_border,
-                              color: isSaved ? kAccent : kMuted,
-                              size: sw * 0.050),
-                        ),
-                      ),
-                    ]),
-                SizedBox(height: sw * 0.025),
-                Row(children: [
-                  Icon(Icons.touch_app_rounded,
-                      size: sw * 0.028,
-                      color: kPrimary.withValues(alpha: 0.60)),
-                  SizedBox(width: sw * 0.010),
-                  Text(
-                      'Tap to see your role & job details',
-                      style: TextStyle(
-                          fontSize: sw * 0.025,
-                          fontWeight: FontWeight.w600,
-                          color: kPrimary
-                              .withValues(alpha: 0.60))),
-                ]),
-                SizedBox(height: sw * 0.025),
-                Wrap(
-                    spacing: sw * 0.018,
-                    runSpacing: sw * 0.018,
-                    children: [
-                      _chip(Icons.work_outline, job.type, sw),
-                      _chip(
-                          Icons.location_on, job.location, sw),
-                      _chip(Icons.school, job.exp, sw),
-                      _chip(
-                          Icons.access_time, job.posted, sw),
-                    ]),
-                SizedBox(height: sw * 0.030),
-                Row(children: [
-                  Icon(Icons.currency_rupee,
-                      size: sw * 0.035, color: kInk),
-                  SizedBox(width: sw * 0.008),
-                  Text(job.salary,
-                      style: TextStyle(
-                          fontSize: sw * 0.038,
-                          fontWeight: FontWeight.w800,
-                          color: kInk)),
-                  const Spacer(),
-                  if (isApplied)
-                    Container(
-                      padding: EdgeInsets.symmetric(
-                          horizontal: sw * 0.025,
-                          vertical: sw * 0.010),
-                      decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                              colors: [
-                                kSuccess,
-                                Color(0xFF15803D)
-                              ]),
-                          borderRadius:
-                          BorderRadius.circular(20)),
-                      child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.check_circle,
-                                color: Colors.white,
-                                size: sw * 0.030),
-                            SizedBox(width: sw * 0.010),
-                            Text('Applied',
-                                style: TextStyle(
-                                    fontSize: sw * 0.028,
-                                    fontWeight:
-                                    FontWeight.w800,
-                                    color: Colors.white))
-                          ]),
-                    ),
-                ]),
-                SizedBox(height: sw * 0.030),
-                Row(children: [
-                  Container(
-                    padding: EdgeInsets.symmetric(
-                        horizontal: sw * 0.025,
-                        vertical: sw * 0.015),
-                    decoration: BoxDecoration(
-                        color: job.match > 75
-                            ? kSuccess.withValues(alpha: 0.12)
-                            : kWarning.withValues(alpha: 0.12),
-                        borderRadius:
-                        BorderRadius.circular(12)),
-                    child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.auto_awesome,
-                              size: sw * 0.030,
-                              color: kWarning),
-                          SizedBox(width: sw * 0.010),
-                          Text('${job.match}% Match',
-                              style: TextStyle(
-                                  fontSize: sw * 0.028,
-                                  fontWeight: FontWeight.w700,
-                                  color: job.match > 75
-                                      ? kSuccess
-                                      : kWarning)),
-                        ]),
-                  ),
-                  SizedBox(width: sw * 0.025),
-                  Expanded(
-                      child: ClipRRect(
-                          borderRadius:
-                          BorderRadius.circular(6),
-                          child: LinearProgressIndicator(
-                              value: job.match / 100,
-                              minHeight: 6,
-                              backgroundColor: kBgPage,
-                              valueColor:
-                              AlwaysStoppedAnimation<Color>(
-                                  job.match > 75
-                                      ? kSuccess
-                                      : kWarning)))),
-                ]),
-                if (job.tags.isNotEmpty) ...[
-                  SizedBox(height: sw * 0.030),
-                  Wrap(
-                      spacing: sw * 0.015,
-                      runSpacing: sw * 0.015,
-                      children: job.tags.take(4).map((tag) =>
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                                horizontal: sw * 0.022,
-                                vertical: sw * 0.010),
-                            decoration: BoxDecoration(
-                                color: kSelectedBg,
-                                borderRadius:
-                                BorderRadius.circular(8),
-                                border: Border.all(
-                                    color: kBorder)),
-                            child: Text(tag,
-                                style: TextStyle(
-                                    fontSize: sw * 0.025,
-                                    fontWeight: FontWeight.w700,
-                                    color: kPrimary)),
-                          )).toList()),
-                ],
-                if (!isApplied) ...[
-                  SizedBox(height: sw * 0.030),
-                  GestureDetector(
-                    onTap: onApply,
-                    behavior: HitTestBehavior.opaque,
-                    child: Container(
-                      width: double.infinity,
-                      padding: EdgeInsets.symmetric(
-                          vertical: sw * 0.030),
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                            colors: [
-                              kPrimary,
-                              Color(0xFF4F46E5)
-                            ],
-                            begin: Alignment.centerLeft,
-                            end: Alignment.centerRight),
-                        borderRadius:
-                        BorderRadius.circular(14),
-                        boxShadow: [
-                          BoxShadow(
-                              color: kPrimary.withValues(
-                                  alpha: 0.28),
-                              blurRadius: 8,
-                              offset: const Offset(0, 3))
-                        ],
-                      ),
-                      child: Center(
-                          child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(Icons.rocket_launch,
-                                    color: Colors.white,
-                                    size: sw * 0.040),
-                                SizedBox(width: sw * 0.015),
-                                Text('Apply Now',
-                                    style: TextStyle(
-                                        color: Colors.white,
-                                        fontWeight:
-                                        FontWeight.w800,
-                                        fontSize: sw * 0.035)),
-                              ])),
-                    ),
-                  ),
-                ],
-              ]),
-        ),
-      ]),
-    ),
-  );
-
-  Widget _chip(IconData icon, String label, double sw) =>
-      Container(
-        padding: EdgeInsets.symmetric(
-            horizontal: sw * 0.023, vertical: sw * 0.012),
-        decoration: BoxDecoration(
-            color: const Color(0xFFF8FAFC),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: kBorder)),
-        child: Row(mainAxisSize: MainAxisSize.min, children: [
-          Icon(icon, size: sw * 0.028, color: kMuted),
-          SizedBox(width: sw * 0.010),
-          Text(label,
-              style: TextStyle(
-                  fontSize: sw * 0.028,
-                  fontWeight: FontWeight.w700,
-                  color: kMuted)),
-        ]),
-      );
 }
 
 // ═══════════════════════════════════════════

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -8,11 +9,10 @@ import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../api_services/authservice.dart';
-import '../notifications/notification_page.dart';
+import '../../services/api_config.dart';
 
 const kInk = Color(0xFF0F172A);
 const kSlate = Color(0xFF334155);
@@ -151,7 +151,8 @@ class ProfileState extends ChangeNotifier {
     ScoreCategory(
       label: 'Basic Info',
       icon: Icons.person_outline,
-      earned: (name.isNotEmpty ? 5.0 : 0) +
+      earned:
+          (name.isNotEmpty ? 5.0 : 0) +
           (email.isNotEmpty ? 5.0 : 0) +
           (phone.isNotEmpty ? 5.0 : 0),
       max: 15,
@@ -215,8 +216,7 @@ class ProfileState extends ChangeNotifier {
     ScoreCategory(
       label: 'Social Links',
       icon: Icons.link,
-      earned:
-      (github.isNotEmpty ? 7.0 : 0) + (linkedin.isNotEmpty ? 7.0 : 0),
+      earned: (github.isNotEmpty ? 7.0 : 0) + (linkedin.isNotEmpty ? 7.0 : 0),
       max: 14,
       color: const Color(0xFF0369A1),
       hint: 'Link GitHub (+7) and LinkedIn (+7)',
@@ -250,8 +250,9 @@ class ProfileState extends ChangeNotifier {
   }
 
   void addApplication(String role, String company, {String type = 'Job'}) {
-    final already =
-    applications.any((a) => a['role'] == role && a['company'] == company);
+    final already = applications.any(
+      (a) => a['role'] == role && a['company'] == company,
+    );
     if (!already) {
       applications.insert(0, {
         'role': role,
@@ -264,7 +265,7 @@ class ProfileState extends ChangeNotifier {
     }
   }
 
-  static const _baseUrl = 'https://studenthub-backend-woad.vercel.app';
+  static String get _baseUrl => ApiConfig.baseUrl;
   final _storage = const FlutterSecureStorage();
 
   Future<void> fetchProfile() async {
@@ -290,7 +291,8 @@ class ProfileState extends ChangeNotifier {
       }
 
       final data = res.data['data'];
-      if (data == null || data is! Map) throw Exception('No profile data returned');
+      if (data == null || data is! Map)
+        throw Exception('No profile data returned');
 
       final dataMap = Map<String, dynamic>.from(data as Map);
 
@@ -367,17 +369,19 @@ class ProfileState extends ChangeNotifier {
       final ext = fileName.split('.').last.toLowerCase();
       final mediaType = MediaType('image', ext == 'jpg' ? 'jpeg' : ext);
 
-      final uri = Uri.parse('$_baseUrl/api/profile/getUsers');
+      final uri = Uri.parse('$_baseUrl/profile/getUsers');
       final request = http.MultipartRequest('PUT', uri)
         ..headers['Authorization'] = 'Bearer $token'
         ..fields['user_id'] = userId
         ..fields['upload_type'] = 'profile'
-        ..files.add(await http.MultipartFile.fromPath(
-          'file',
-          file.path,
-          filename: fileName,
-          contentType: mediaType,
-        ));
+        ..files.add(
+          await http.MultipartFile.fromPath(
+            'file',
+            file.path,
+            filename: fileName,
+            contentType: mediaType,
+          ),
+        );
 
       final streamed = await request.send();
       final res = await http.Response.fromStream(streamed);
@@ -416,20 +420,24 @@ class ProfileState extends ChangeNotifier {
       final ext = fileName.split('.').last.toLowerCase();
       final mediaType = ext == 'pdf'
           ? MediaType('application', 'pdf')
-          : MediaType('application',
-          'vnd.openxmlformats-officedocument.wordprocessingml.document');
+          : MediaType(
+              'application',
+              'vnd.openxmlformats-officedocument.wordprocessingml.document',
+            );
 
-      final uri = Uri.parse('$_baseUrl/api/profile/getUsers');
+      final uri = Uri.parse('$_baseUrl/profile/getUsers');
       final request = http.MultipartRequest('PUT', uri)
         ..headers['Authorization'] = 'Bearer $token'
         ..fields['user_id'] = userId
         ..fields['upload_type'] = 'resume'
-        ..files.add(await http.MultipartFile.fromPath(
-          'file',
-          file.path,
-          filename: fileName,
-          contentType: mediaType,
-        ));
+        ..files.add(
+          await http.MultipartFile.fromPath(
+            'file',
+            file.path,
+            filename: fileName,
+            contentType: mediaType,
+          ),
+        );
 
       final streamed = await request.send();
       final res = await http.Response.fromStream(streamed);
@@ -477,9 +485,10 @@ class ProfileState extends ChangeNotifier {
       schoolName = _str(u['school_name']);
       studentClass = _str(u['class']);
       college = schoolName;
-      degree = [studentClass, schoolName]
-          .where((s) => s.isNotEmpty)
-          .join('  •  ');
+      degree = [
+        studentClass,
+        schoolName,
+      ].where((s) => s.isNotEmpty).join('  •  ');
       graduationYear = '';
     } else {
       final deg = _str(u['degree']);
@@ -503,7 +512,9 @@ class ProfileState extends ChangeNotifier {
         'company': isJob
             ? _str(m['job_company_name'])
             : _str(m['internship_company_name']),
-        'status': _capitalize(_str(m['status']).isEmpty ? 'applied' : _str(m['status'])),
+        'status': _capitalize(
+          _str(m['status']).isEmpty ? 'applied' : _str(m['status']),
+        ),
         'date': _timeAgo(_str(m['applied_at'])),
         'type': isJob ? 'Job' : 'Internship',
       };
@@ -593,8 +604,18 @@ class ProfileState extends ChangeNotifier {
     final dt = DateTime.tryParse(iso);
     if (dt == null) return iso; // return raw if not parseable
     const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
     ];
     return '${months[dt.month - 1]} ${dt.year}';
   }
@@ -625,28 +646,60 @@ class _CertTheme {
 _CertTheme _certTheme(String name) {
   final n = name.toLowerCase();
   if (n.contains('aws') || n.contains('cloud'))
-    return const _CertTheme(Icons.cloud, Color(0xFF0369A1), Color(0xFF0EA5E9),
-        Color(0xFFF0F9FF));
+    return const _CertTheme(
+      Icons.cloud,
+      Color(0xFF0369A1),
+      Color(0xFF0EA5E9),
+      Color(0xFFF0F9FF),
+    );
   if (n.contains('python') || n.contains('data science'))
-    return const _CertTheme(Icons.code, Color(0xFF1D4ED8), Color(0xFFF59E0B),
-        Color(0xFFFFFBEB));
+    return const _CertTheme(
+      Icons.code,
+      Color(0xFF1D4ED8),
+      Color(0xFFF59E0B),
+      Color(0xFFFFFBEB),
+    );
   if (n.contains('ux') || n.contains('design'))
-    return const _CertTheme(Icons.brush, Color(0xFFEC4899), Color(0xFFF43F5E),
-        Color(0xFFFFF1F2));
+    return const _CertTheme(
+      Icons.brush,
+      Color(0xFFEC4899),
+      Color(0xFFF43F5E),
+      Color(0xFFFFF1F2),
+    );
   if (n.contains('machine') || n.contains('ai') || n.contains('ml'))
-    return const _CertTheme(Icons.psychology, Color(0xFF6366F1),
-        Color(0xFF8B5CF6), Color(0xFFF5F3FF));
+    return const _CertTheme(
+      Icons.psychology,
+      Color(0xFF6366F1),
+      Color(0xFF8B5CF6),
+      Color(0xFFF5F3FF),
+    );
   if (n.contains('google'))
-    return const _CertTheme(Icons.search, Color(0xFF1D4ED8), Color(0xFF16A34A),
-        Color(0xFFF0FDF4));
+    return const _CertTheme(
+      Icons.search,
+      Color(0xFF1D4ED8),
+      Color(0xFF16A34A),
+      Color(0xFFF0FDF4),
+    );
   if (n.contains('security') || n.contains('cyber'))
-    return const _CertTheme(Icons.shield, Color(0xFFB91C1C), Color(0xFFDC2626),
-        Color(0xFFFFF1F2));
+    return const _CertTheme(
+      Icons.shield,
+      Color(0xFFB91C1C),
+      Color(0xFFDC2626),
+      Color(0xFFFFF1F2),
+    );
   if (n.contains('react') || n.contains('frontend'))
     return const _CertTheme(
-        Icons.web, Color(0xFF0EA5E9), Color(0xFF38BDF8), Color(0xFFEFF6FF));
-  return const _CertTheme(Icons.workspace_premium, Color(0xFFB45309),
-      Color(0xFFD97706), Color(0xFFFFFBEB));
+      Icons.web,
+      Color(0xFF0EA5E9),
+      Color(0xFF38BDF8),
+      Color(0xFFEFF6FF),
+    );
+  return const _CertTheme(
+    Icons.workspace_premium,
+    Color(0xFFB45309),
+    Color(0xFFD97706),
+    Color(0xFFFFFBEB),
+  );
 }
 
 // ═══════════════════════════════════════════════════════
@@ -685,8 +738,10 @@ class _ProfileScreenState extends State<ProfileScreen>
     _xpVal = _buildXpTween();
     _skillAnims = List.generate(
       profileState.skills.length,
-          (_) => AnimationController(
-          vsync: this, duration: const Duration(milliseconds: 900)),
+      (_) => AnimationController(
+        vsync: this,
+        duration: const Duration(milliseconds: 900),
+      ),
     );
     Future.delayed(const Duration(milliseconds: 350), () {
       if (mounted) _xpAnim.forward();
@@ -810,7 +865,7 @@ class _ProfileScreenState extends State<ProfileScreen>
           _showPermissionDeniedDialog(
             title: 'Photo Access Denied',
             message:
-            'Please allow photo access in your device Settings → Privacy → Photos.',
+                'Please allow photo access in your device Settings → Privacy → Photos.',
           );
         } else {
           _showSnack('Could not open gallery: ${e.message}', Colors.red);
@@ -832,7 +887,8 @@ class _ProfileScreenState extends State<ProfileScreen>
     return showModalBottomSheet<ImageSource>(
       context: context,
       shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       backgroundColor: kCardBg,
       builder: (ctx) => SafeArea(
         child: Padding(
@@ -844,28 +900,37 @@ class _ProfileScreenState extends State<ProfileScreen>
                 width: sw * 0.12,
                 height: 4,
                 decoration: BoxDecoration(
-                    color: kBorder, borderRadius: BorderRadius.circular(2)),
+                  color: kBorder,
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
               SizedBox(height: sw * 0.04),
-              Text('Select Photo',
-                  style: TextStyle(
-                      fontSize: sw * 0.040,
-                      fontWeight: FontWeight.w800,
-                      color: kInk)),
+              Text(
+                'Select Photo',
+                style: TextStyle(
+                  fontSize: sw * 0.040,
+                  fontWeight: FontWeight.w800,
+                  color: kInk,
+                ),
+              ),
               SizedBox(height: sw * 0.04),
-              _sourceOption(ctx,
-                  icon: Icons.photo_library_rounded,
-                  label: 'Choose from Gallery',
-                  color: kPrimary,
-                  source: ImageSource.gallery,
-                  sw: sw),
+              _sourceOption(
+                ctx,
+                icon: Icons.photo_library_rounded,
+                label: 'Choose from Gallery',
+                color: kPrimary,
+                source: ImageSource.gallery,
+                sw: sw,
+              ),
               SizedBox(height: sw * 0.03),
-              _sourceOption(ctx,
-                  icon: Icons.camera_alt_rounded,
-                  label: 'Take a Photo',
-                  color: const Color(0xFF0EA5E9),
-                  source: ImageSource.camera,
-                  sw: sw),
+              _sourceOption(
+                ctx,
+                icon: Icons.camera_alt_rounded,
+                label: 'Take a Photo',
+                color: const Color(0xFF0EA5E9),
+                source: ImageSource.camera,
+                sw: sw,
+              ),
               SizedBox(height: sw * 0.02),
             ],
           ),
@@ -875,13 +940,13 @@ class _ProfileScreenState extends State<ProfileScreen>
   }
 
   Widget _sourceOption(
-      BuildContext ctx, {
-        required IconData icon,
-        required String label,
-        required Color color,
-        required ImageSource source,
-        required double sw,
-      }) {
+    BuildContext ctx, {
+    required IconData icon,
+    required String label,
+    required Color color,
+    required ImageSource source,
+    required double sw,
+  }) {
     return GestureDetector(
       onTap: () => Navigator.pop(ctx, source),
       child: Container(
@@ -898,16 +963,20 @@ class _ProfileScreenState extends State<ProfileScreen>
               width: sw * 0.115,
               height: sw * 0.115,
               decoration: BoxDecoration(
-                  color: color.withOpacity(0.12),
-                  borderRadius: BorderRadius.circular(12)),
+                color: color.withOpacity(0.12),
+                borderRadius: BorderRadius.circular(12),
+              ),
               child: Icon(icon, color: color, size: sw * 0.055),
             ),
             SizedBox(width: sw * 0.035),
-            Text(label,
-                style: TextStyle(
-                    fontSize: sw * 0.035,
-                    fontWeight: FontWeight.w700,
-                    color: kInk)),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: sw * 0.035,
+                fontWeight: FontWeight.w700,
+                color: kInk,
+              ),
+            ),
             const Spacer(),
             Icon(Icons.chevron_right, color: kHint, size: sw * 0.05),
           ],
@@ -941,7 +1010,8 @@ class _ProfileScreenState extends State<ProfileScreen>
 
       final file = File(picked.path!);
       if (!await file.exists()) {
-        if (mounted) _showSnack('File not found. Please try again.', Colors.red);
+        if (mounted)
+          _showSnack('File not found. Please try again.', Colors.red);
         return;
       }
 
@@ -982,7 +1052,7 @@ class _ProfileScreenState extends State<ProfileScreen>
           _showPermissionDeniedDialog(
             title: 'Storage Access Denied',
             message:
-            'Please allow storage access in your device Settings → Privacy → Files.',
+                'Please allow storage access in your device Settings → Privacy → Files.',
           );
         } else {
           _showSnack('Could not open file picker: ${e.message}', Colors.red);
@@ -1015,23 +1085,35 @@ class _ProfileScreenState extends State<ProfileScreen>
                 width: sw * 0.18,
                 height: sw * 0.18,
                 decoration: BoxDecoration(
-                    color: kWarning.withOpacity(0.12),
-                    shape: BoxShape.circle),
-                child: Icon(Icons.no_photography_rounded,
-                    color: kWarning, size: sw * 0.09),
+                  color: kWarning.withOpacity(0.12),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.no_photography_rounded,
+                  color: kWarning,
+                  size: sw * 0.09,
+                ),
               ),
               SizedBox(height: sw * 0.04),
-              Text(title,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                      fontSize: sw * 0.040,
-                      fontWeight: FontWeight.w800,
-                      color: kInk)),
+              Text(
+                title,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: sw * 0.040,
+                  fontWeight: FontWeight.w800,
+                  color: kInk,
+                ),
+              ),
               SizedBox(height: sw * 0.025),
-              Text(message,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                      fontSize: sw * 0.032, color: kMuted, height: 1.55)),
+              Text(
+                message,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: sw * 0.032,
+                  color: kMuted,
+                  height: 1.55,
+                ),
+              ),
               SizedBox(height: sw * 0.05),
               Row(
                 children: [
@@ -1041,15 +1123,20 @@ class _ProfileScreenState extends State<ProfileScreen>
                       child: Container(
                         padding: EdgeInsets.symmetric(vertical: sw * 0.033),
                         decoration: BoxDecoration(
-                            color: kBgPage,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: kBorder, width: 1.5)),
+                          color: kBgPage,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: kBorder, width: 1.5),
+                        ),
                         child: Center(
-                            child: Text('Cancel',
-                                style: TextStyle(
-                                    color: kMuted,
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: sw * 0.033))),
+                          child: Text(
+                            'Cancel',
+                            style: TextStyle(
+                              color: kMuted,
+                              fontWeight: FontWeight.w700,
+                              fontSize: sw * 0.033,
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                   ),
@@ -1059,23 +1146,29 @@ class _ProfileScreenState extends State<ProfileScreen>
                       onTap: () async {
                         Navigator.pop(ctx);
                         try {
-                          await const MethodChannel('flutter/platform')
-                              .invokeMethod('openAppSettings');
+                          await const MethodChannel(
+                            'flutter/platform',
+                          ).invokeMethod('openAppSettings');
                         } catch (_) {}
                       },
                       child: Container(
                         padding: EdgeInsets.symmetric(vertical: sw * 0.033),
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
-                              colors: [kPrimary, kPrimary.withOpacity(0.8)]),
+                            colors: [kPrimary, kPrimary.withOpacity(0.8)],
+                          ),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Center(
-                            child: Text('Open Settings',
-                                style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w800,
-                                    fontSize: sw * 0.033))),
+                          child: Text(
+                            'Open Settings',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w800,
+                              fontSize: sw * 0.033,
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                   ),
@@ -1099,7 +1192,9 @@ class _ProfileScreenState extends State<ProfileScreen>
         backgroundColor: kCardBg,
         child: Padding(
           padding: EdgeInsets.symmetric(
-              horizontal: sw * 0.06, vertical: sw * 0.07),
+            horizontal: sw * 0.06,
+            vertical: sw * 0.07,
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -1107,24 +1202,35 @@ class _ProfileScreenState extends State<ProfileScreen>
                 width: sw * 0.18,
                 height: sw * 0.18,
                 decoration: BoxDecoration(
-                    color: Colors.red.withOpacity(0.10),
-                    shape: BoxShape.circle),
-                child: Icon(Icons.logout_rounded,
-                    color: Colors.redAccent, size: sw * 0.09),
+                  color: Colors.red.withOpacity(0.10),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.logout_rounded,
+                  color: Colors.redAccent,
+                  size: sw * 0.09,
+                ),
               ),
               SizedBox(height: sw * 0.05),
-              Text('Sign Out?',
-                  style: TextStyle(
-                      fontSize: sw * 0.048,
-                      fontWeight: FontWeight.w900,
-                      color: kInk,
-                      letterSpacing: -0.5)),
+              Text(
+                'Sign Out?',
+                style: TextStyle(
+                  fontSize: sw * 0.048,
+                  fontWeight: FontWeight.w900,
+                  color: kInk,
+                  letterSpacing: -0.5,
+                ),
+              ),
               SizedBox(height: sw * 0.025),
               Text(
-                  'You will be logged out of your account.\nAre you sure you want to continue?',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                      fontSize: sw * 0.032, color: kMuted, height: 1.5)),
+                'You will be logged out of your account.\nAre you sure you want to continue?',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: sw * 0.032,
+                  color: kMuted,
+                  height: 1.5,
+                ),
+              ),
               SizedBox(height: sw * 0.06),
               Row(
                 children: [
@@ -1134,15 +1240,20 @@ class _ProfileScreenState extends State<ProfileScreen>
                       child: Container(
                         padding: EdgeInsets.symmetric(vertical: sw * 0.035),
                         decoration: BoxDecoration(
-                            color: kBgPage,
-                            borderRadius: BorderRadius.circular(14),
-                            border: Border.all(color: kBorder, width: 1.5)),
+                          color: kBgPage,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: kBorder, width: 1.5),
+                        ),
                         child: Center(
-                            child: Text('Cancel',
-                                style: TextStyle(
-                                    fontSize: sw * 0.035,
-                                    fontWeight: FontWeight.w700,
-                                    color: kMuted))),
+                          child: Text(
+                            'Cancel',
+                            style: TextStyle(
+                              fontSize: sw * 0.035,
+                              fontWeight: FontWeight.w700,
+                              color: kMuted,
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                   ),
@@ -1154,23 +1265,29 @@ class _ProfileScreenState extends State<ProfileScreen>
                         padding: EdgeInsets.symmetric(vertical: sw * 0.035),
                         decoration: BoxDecoration(
                           gradient: const LinearGradient(
-                              colors: [Color(0xFFDC2626), Color(0xFFEF4444)],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight),
+                            colors: [Color(0xFFDC2626), Color(0xFFEF4444)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
                           borderRadius: BorderRadius.circular(14),
                           boxShadow: [
                             BoxShadow(
-                                color: Colors.red.withOpacity(0.30),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4))
+                              color: Colors.red.withOpacity(0.30),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
                           ],
                         ),
                         child: Center(
-                            child: Text('Sign Out',
-                                style: TextStyle(
-                                    fontSize: sw * 0.035,
-                                    fontWeight: FontWeight.w800,
-                                    color: Colors.white))),
+                          child: Text(
+                            'Sign Out',
+                            style: TextStyle(
+                              fontSize: sw * 0.035,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                   ),
@@ -1209,7 +1326,7 @@ class _ProfileScreenState extends State<ProfileScreen>
         if (!isJob) 'internship_id': app['internship_id'],
       };
       final res = await http.delete(
-        Uri.parse('${ProfileState._baseUrl}/api/applications'),
+        Uri.parse('${ProfileState._baseUrl}/applications'),
         headers: {
           "Content-Type": "application/json",
           "Authorization": "Bearer $token",
@@ -1223,7 +1340,9 @@ class _ProfileScreenState extends State<ProfileScreen>
         _showSnack('Application withdrawn', kSuccess);
       } else {
         final data = jsonDecode(res.body);
-        throw Exception(_str(data['message']).isEmpty ? 'Failed' : _str(data['message']));
+        throw Exception(
+          _str(data['message']).isEmpty ? 'Failed' : _str(data['message']),
+        );
       }
     } catch (e) {
       _showSnack('Error: $e', Colors.red);
@@ -1246,7 +1365,7 @@ class _ProfileScreenState extends State<ProfileScreen>
 
     try {
       final res = await http.delete(
-        Uri.parse('${ProfileState._baseUrl}/api/projects'),
+        Uri.parse('${ProfileState._baseUrl}/projects'),
         headers: {
           "Content-Type": "application/json",
           "Authorization": "Bearer $token",
@@ -1260,7 +1379,9 @@ class _ProfileScreenState extends State<ProfileScreen>
         _showSnack('Project deleted', kSuccess);
       } else {
         final data = jsonDecode(res.body);
-        throw Exception(_str(data['message']).isEmpty ? 'Failed' : _str(data['message']));
+        throw Exception(
+          _str(data['message']).isEmpty ? 'Failed' : _str(data['message']),
+        );
       }
     } catch (e) {
       _showSnack('Error: $e', Colors.red);
@@ -1284,7 +1405,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     final certIdInt = _int(certIdStr);
     try {
       final res = await http.delete(
-        Uri.parse('${ProfileState._baseUrl}/api/certificates'),
+        Uri.parse('${ProfileState._baseUrl}/certificates'),
         headers: {
           "Content-Type": "application/json",
           "Authorization": "Bearer $token",
@@ -1298,7 +1419,9 @@ class _ProfileScreenState extends State<ProfileScreen>
         _showSnack('Certificate deleted', kSuccess);
       } else {
         final data = jsonDecode(res.body);
-        throw Exception(_str(data['message']).isEmpty ? 'Failed' : _str(data['message']));
+        throw Exception(
+          _str(data['message']).isEmpty ? 'Failed' : _str(data['message']),
+        );
       }
     } catch (e) {
       _showSnack('Error: $e', Colors.red);
@@ -1324,7 +1447,7 @@ class _ProfileScreenState extends State<ProfileScreen>
       final userIdInt = _int(userId);
       final skillIdInt = _int(skillId);
       final res = await http.delete(
-        Uri.parse('${ProfileState._baseUrl}/api/user-skills'),
+        Uri.parse('${ProfileState._baseUrl}/user-skills'),
         headers: {
           "Content-Type": "application/json",
           "Authorization": "Bearer $token",
@@ -1338,7 +1461,9 @@ class _ProfileScreenState extends State<ProfileScreen>
         _showSnack('Skill removed', kSuccess);
       } else {
         final data = jsonDecode(res.body);
-        throw Exception(_str(data['message']).isEmpty ? 'Failed' : _str(data['message']));
+        throw Exception(
+          _str(data['message']).isEmpty ? 'Failed' : _str(data['message']),
+        );
       }
     } catch (e) {
       _showSnack('Error: $e', Colors.red);
@@ -1353,40 +1478,41 @@ class _ProfileScreenState extends State<ProfileScreen>
 
     final Future<List<Map<String, dynamic>>> skillsFuture = http
         .get(
-      Uri.parse('${ProfileState._baseUrl}/api/skills'),
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer $token",
-      },
-    )
+          Uri.parse('${ProfileState._baseUrl}/skills'),
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer $token",
+          },
+        )
         .then((res) {
-      if (res.statusCode == 200) {
-        final body = jsonDecode(res.body);
-        List<dynamic> list = [];
-        if (body is List) {
-          list = body;
-        } else if (body is Map && body['data'] is List) {
-          list = body['data'] as List;
-        } else if (body is Map && body['skills'] is List) {
-          list = body['skills'] as List;
-        }
-        return list
-            .map((s) {
-          if (s is! Map) return null;
-          final m = Map<String, dynamic>.from(s);
-          final id = m['skill_id'] ?? m['id'];
-          final name = _str(m['name'] ?? m['skill_name']);
-          if (id == null || name.isEmpty) return null;
-          return <String, dynamic>{'skill_id': id, 'name': name};
+          if (res.statusCode == 200) {
+            final body = jsonDecode(res.body);
+            List<dynamic> list = [];
+            if (body is List) {
+              list = body;
+            } else if (body is Map && body['data'] is List) {
+              list = body['data'] as List;
+            } else if (body is Map && body['skills'] is List) {
+              list = body['skills'] as List;
+            }
+            return list
+                .map((s) {
+                  if (s is! Map) return null;
+                  final m = Map<String, dynamic>.from(s);
+                  final id = m['skill_id'] ?? m['id'];
+                  final name = _str(m['name'] ?? m['skill_name']);
+                  if (id == null || name.isEmpty) return null;
+                  return <String, dynamic>{'skill_id': id, 'name': name};
+                })
+                .whereType<Map<String, dynamic>>()
+                .toList();
+          }
+          return <Map<String, dynamic>>[];
         })
-            .whereType<Map<String, dynamic>>()
-            .toList();
-      }
-      return <Map<String, dynamic>>[];
-    }).catchError((e) {
-      debugPrint('Skills fetch error: $e');
-      return <Map<String, dynamic>>[];
-    });
+        .catchError((e) {
+          debugPrint('Skills fetch error: $e');
+          return <Map<String, dynamic>>[];
+        });
 
     double level = 0.70;
     int? selectedSkillId;
@@ -1400,8 +1526,9 @@ class _ProfileScreenState extends State<ProfileScreen>
       context: context,
       builder: (_) => StatefulBuilder(
         builder: (ctx, sst) => Dialog(
-          shape:
-          RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
           child: Padding(
             padding: EdgeInsets.all(sw * 0.06),
             child: Column(
@@ -1409,27 +1536,35 @@ class _ProfileScreenState extends State<ProfileScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Center(
-                    child: Text('Add Skill',
-                        style: TextStyle(
-                            fontSize: sw * 0.040,
-                            fontWeight: FontWeight.w800,
-                            color: kInk))),
-                SizedBox(height: sw * 0.040),
-                Text('Select Skill',
+                  child: Text(
+                    'Add Skill',
                     style: TextStyle(
-                        fontSize: sw * 0.030,
-                        color: kMuted,
-                        fontWeight: FontWeight.w700)),
+                      fontSize: sw * 0.040,
+                      fontWeight: FontWeight.w800,
+                      color: kInk,
+                    ),
+                  ),
+                ),
+                SizedBox(height: sw * 0.040),
+                Text(
+                  'Select Skill',
+                  style: TextStyle(
+                    fontSize: sw * 0.030,
+                    color: kMuted,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
                 SizedBox(height: sw * 0.015),
                 FutureBuilder<List<Map<String, dynamic>>>(
                   future: skillsFuture,
                   builder: (_, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return const Center(
-                          child: Padding(
-                              padding: EdgeInsets.symmetric(vertical: 16),
-                              child: CircularProgressIndicator(
-                                  color: kPrimary)));
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(vertical: 16),
+                          child: CircularProgressIndicator(color: kPrimary),
+                        ),
+                      );
                     }
                     if (snapshot.hasError ||
                         !snapshot.hasData ||
@@ -1437,13 +1572,17 @@ class _ProfileScreenState extends State<ProfileScreen>
                       return Container(
                         padding: EdgeInsets.all(sw * 0.030),
                         decoration: BoxDecoration(
-                            color: Colors.red.shade50,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.red.shade200)),
-                        child: Text('Failed to load skills.',
-                            style: TextStyle(
-                                color: Colors.red.shade700,
-                                fontSize: sw * 0.030)),
+                          color: Colors.red.shade50,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.red.shade200),
+                        ),
+                        child: Text(
+                          'Failed to load skills.',
+                          style: TextStyle(
+                            color: Colors.red.shade700,
+                            fontSize: sw * 0.030,
+                          ),
+                        ),
                       );
                     }
 
@@ -1454,39 +1593,55 @@ class _ProfileScreenState extends State<ProfileScreen>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Container(
-                          padding:
-                          EdgeInsets.symmetric(horizontal: sw * 0.030),
+                          padding: EdgeInsets.symmetric(horizontal: sw * 0.030),
                           decoration: BoxDecoration(
-                              color: kBgPage,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: kBorder)),
+                            color: kBgPage,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: kBorder),
+                          ),
                           child: DropdownButtonHideUnderline(
                             child: DropdownButton<int>(
                               isExpanded: true,
-                              hint: Text('Choose a skill...',
-                                  style: TextStyle(
-                                      color: kHint, fontSize: sw * 0.033)),
+                              hint: Text(
+                                'Choose a skill...',
+                                style: TextStyle(
+                                  color: kHint,
+                                  fontSize: sw * 0.033,
+                                ),
+                              ),
                               value: isOther ? otherSentinel : selectedSkillId,
                               dropdownColor: kCardBg,
-                              style:
-                              TextStyle(fontSize: sw * 0.033, color: kInk),
+                              style: TextStyle(
+                                fontSize: sw * 0.033,
+                                color: kInk,
+                              ),
                               items: [
-                                ...allSkills.map((s) => DropdownMenuItem<int>(
-                                  value: _int(s['skill_id']),
-                                  child: Text(_str(s['name'])),
-                                )),
+                                ...allSkills.map(
+                                  (s) => DropdownMenuItem<int>(
+                                    value: _int(s['skill_id']),
+                                    child: Text(_str(s['name'])),
+                                  ),
+                                ),
                                 DropdownMenuItem<int>(
                                   value: otherSentinel,
-                                  child: Row(children: [
-                                    Icon(Icons.add_circle_outline,
-                                        size: sw * 0.040, color: kPrimary),
-                                    SizedBox(width: sw * 0.020),
-                                    Text('Other (type your own)',
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.add_circle_outline,
+                                        size: sw * 0.040,
+                                        color: kPrimary,
+                                      ),
+                                      SizedBox(width: sw * 0.020),
+                                      Text(
+                                        'Other (type your own)',
                                         style: TextStyle(
-                                            color: kPrimary,
-                                            fontWeight: FontWeight.w700,
-                                            fontSize: sw * 0.033)),
-                                  ]),
+                                          color: kPrimary,
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: sw * 0.033,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ],
                               onChanged: (val) {
@@ -1499,11 +1654,12 @@ class _ProfileScreenState extends State<ProfileScreen>
                                     isOther = false;
                                     selectedSkillId = val;
                                     final match = allSkills.firstWhere(
-                                          (s) => _int(s['skill_id']) == val,
+                                      (s) => _int(s['skill_id']) == val,
                                       orElse: () => <String, dynamic>{},
                                     );
-                                    selectedSkillName =
-                                    match.isNotEmpty ? _str(match['name']) : null;
+                                    selectedSkillName = match.isNotEmpty
+                                        ? _str(match['name'])
+                                        : null;
                                   }
                                 });
                               },
@@ -1515,27 +1671,35 @@ class _ProfileScreenState extends State<ProfileScreen>
                           TextField(
                             controller: otherCtrl,
                             autofocus: true,
-                            style:
-                            TextStyle(fontSize: sw * 0.033, color: kInk),
+                            style: TextStyle(fontSize: sw * 0.033, color: kInk),
                             decoration: InputDecoration(
                               hintText: 'Type skill name...',
                               hintStyle: TextStyle(
-                                  color: kHint, fontSize: sw * 0.033),
+                                color: kHint,
+                                fontSize: sw * 0.033,
+                              ),
                               filled: true,
                               fillColor: kBgPage,
                               border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide:
-                                  const BorderSide(color: kBorder)),
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(color: kBorder),
+                              ),
                               focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: const BorderSide(
-                                      color: kPrimary, width: 2)),
-                              prefixIcon: Icon(Icons.edit,
-                                  color: kPrimary, size: sw * 0.040),
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(
+                                  color: kPrimary,
+                                  width: 2,
+                                ),
+                              ),
+                              prefixIcon: Icon(
+                                Icons.edit,
+                                color: kPrimary,
+                                size: sw * 0.040,
+                              ),
                               contentPadding: EdgeInsets.symmetric(
-                                  horizontal: sw * 0.040,
-                                  vertical: sw * 0.030),
+                                horizontal: sw * 0.040,
+                                vertical: sw * 0.030,
+                              ),
                             ),
                             onChanged: (v) => sst(() {}),
                           ),
@@ -1545,19 +1709,27 @@ class _ProfileScreenState extends State<ProfileScreen>
                   },
                 ),
                 SizedBox(height: sw * 0.040),
-                Row(children: [
-                  Text('Proficiency',
+                Row(
+                  children: [
+                    Text(
+                      'Proficiency',
                       style: TextStyle(
-                          fontSize: sw * 0.030,
-                          color: kMuted,
-                          fontWeight: FontWeight.w700)),
-                  const Spacer(),
-                  Text('${(level * 100).toInt()}%',
+                        fontSize: sw * 0.030,
+                        color: kMuted,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const Spacer(),
+                    Text(
+                      '${(level * 100).toInt()}%',
                       style: TextStyle(
-                          fontSize: sw * 0.033,
-                          color: kPrimary,
-                          fontWeight: FontWeight.w900)),
-                ]),
+                        fontSize: sw * 0.033,
+                        color: kPrimary,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ],
+                ),
                 Slider(
                   value: level,
                   onChanged: (v) => sst(() => level = v),
@@ -1565,116 +1737,137 @@ class _ProfileScreenState extends State<ProfileScreen>
                   inactiveColor: kBorder,
                 ),
                 SizedBox(height: sw * 0.020),
-                Row(children: [
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () => Navigator.pop(context),
-                      child: Container(
-                        padding: EdgeInsets.symmetric(vertical: sw * 0.030),
-                        decoration: BoxDecoration(
+                Row(
+                  children: [
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () => Navigator.pop(context),
+                        child: Container(
+                          padding: EdgeInsets.symmetric(vertical: sw * 0.030),
+                          decoration: BoxDecoration(
                             color: kBgPage,
-                            borderRadius: BorderRadius.circular(12)),
-                        child: Center(
-                            child: Text('Cancel',
-                                style: TextStyle(
-                                    color: kMuted,
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: sw * 0.033))),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Center(
+                            child: Text(
+                              'Cancel',
+                              style: TextStyle(
+                                color: kMuted,
+                                fontWeight: FontWeight.w700,
+                                fontSize: sw * 0.033,
+                              ),
+                            ),
+                          ),
+                        ),
                       ),
                     ),
-                  ),
-                  SizedBox(width: sw * 0.030),
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () async {
-                        final String? finalSkillName = isOther
-                            ? (otherCtrl.text.trim().isEmpty
-                            ? null
-                            : otherCtrl.text.trim())
-                            : selectedSkillName;
+                    SizedBox(width: sw * 0.030),
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () async {
+                          final String? finalSkillName = isOther
+                              ? (otherCtrl.text.trim().isEmpty
+                                    ? null
+                                    : otherCtrl.text.trim())
+                              : selectedSkillName;
 
-                        if (finalSkillName == null || finalSkillName.isEmpty) {
-                          _showSnack(
-                            isOther
-                                ? 'Please type a skill name'
-                                : 'Please select a skill',
-                            kWarning,
-                          );
-                          return;
-                        }
-
-                        Navigator.pop(context);
-                        try {
-                          final userId = await const FlutterSecureStorage()
-                              .read(key: 'user_id');
-                          final userIdInt = _int(userId);
-                          final proficiency =
-                          (level * 100).round().clamp(1, 100);
-                          final postBody = {
-                            'user_id': userIdInt,
-                            'skill_name': finalSkillName,
-                            'proficiency': proficiency,
-                          };
-                          final res = await http.post(
-                            Uri.parse(
-                                '${ProfileState._baseUrl}/api/user-skills'),
-                            headers: {
-                              "Content-Type": "application/json",
-                              "Authorization": "Bearer $token",
-                            },
-                            body: jsonEncode(postBody),
-                          );
-                          if (res.statusCode == 200 || res.statusCode == 201) {
-                            final resData = jsonDecode(res.body);
-                            final newSkillId = (resData is Map && resData['data'] != null)
-                                ? resData['data']['skill_id']
-                                : null;
-                            profileState.set(() {
-                              final existingIndex =
-                              profileState.skills.indexWhere((s) =>
-                              _str(s['name']).toLowerCase() ==
-                                  finalSkillName.toLowerCase());
-                              if (existingIndex != -1) {
-                                profileState.skills[existingIndex]['level'] =
-                                    level;
-                              } else {
-                                profileState.skills.add({
-                                  'skill_id': newSkillId,
-                                  'name': finalSkillName,
-                                  'level': level,
-                                });
-                              }
-                            });
-                            _showSnack('Skill added! ✅', kSuccess);
-                          } else {
-                            final data = jsonDecode(res.body);
+                          if (finalSkillName == null ||
+                              finalSkillName.isEmpty) {
                             _showSnack(
+                              isOther
+                                  ? 'Please type a skill name'
+                                  : 'Please select a skill',
+                              kWarning,
+                            );
+                            return;
+                          }
+
+                          Navigator.pop(context);
+                          try {
+                            final userId = await const FlutterSecureStorage()
+                                .read(key: 'user_id');
+                            final userIdInt = _int(userId);
+                            final proficiency = (level * 100).round().clamp(
+                              1,
+                              100,
+                            );
+                            final postBody = {
+                              'user_id': userIdInt,
+                              'skill_name': finalSkillName,
+                              'proficiency': proficiency,
+                            };
+                            final res = await http.post(
+                              Uri.parse(
+                                '${ProfileState._baseUrl}/user-skills',
+                              ),
+                              headers: {
+                                "Content-Type": "application/json",
+                                "Authorization": "Bearer $token",
+                              },
+                              body: jsonEncode(postBody),
+                            );
+                            if (res.statusCode == 200 ||
+                                res.statusCode == 201) {
+                              final resData = jsonDecode(res.body);
+                              final newSkillId =
+                                  (resData is Map && resData['data'] != null)
+                                  ? resData['data']['skill_id']
+                                  : null;
+                              profileState.set(() {
+                                final existingIndex = profileState.skills
+                                    .indexWhere(
+                                      (s) =>
+                                          _str(s['name']).toLowerCase() ==
+                                          finalSkillName.toLowerCase(),
+                                    );
+                                if (existingIndex != -1) {
+                                  // profileState.skills[existingIndex]['level'] =
+                                  //     level;
+                                } else {
+                                  // profileState.skills.add({
+                                  //   'skill_id': newSkillId,
+                                  //   'name': finalSkillName,
+                                  //   'level': level,
+                                  // });
+                                }
+                              });
+                              _showSnack('Skill added! ✅', kSuccess);
+                            } else {
+                              final data = jsonDecode(res.body);
+                              _showSnack(
                                 data is Map
                                     ? (_str(data['message']).isEmpty
-                                    ? 'Failed to save skill'
-                                    : _str(data['message']))
+                                          ? 'Failed to save skill'
+                                          : _str(data['message']))
                                     : 'Failed to save skill',
-                                Colors.red);
+                                Colors.red,
+                              );
+                            }
+                          } catch (e) {
+                            _showSnack('Error: $e', Colors.red);
                           }
-                        } catch (e) {
-                          _showSnack('Error: $e', Colors.red);
-                        }
-                      },
-                      child: Container(
-                        padding: EdgeInsets.symmetric(vertical: sw * 0.030),
-                        decoration: BoxDecoration(
+                        },
+                        child: Container(
+                          padding: EdgeInsets.symmetric(vertical: sw * 0.030),
+                          decoration: BoxDecoration(
                             color: kPrimary,
-                            borderRadius: BorderRadius.circular(12)),
-                        child: Center(
-                            child: Text('Add',
-                                style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w800,
-                                    fontSize: sw * 0.033))),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Center(
+                            child: Text(
+                              'Add',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w800,
+                                fontSize: sw * 0.033,
+                              ),
+                            ),
+                          ),
+                        ),
                       ),
                     ),
-                  ),
-                ]),
+                  ],
+                ),
               ],
             ),
           ),
@@ -1707,7 +1900,11 @@ class _ProfileScreenState extends State<ProfileScreen>
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.error_outline, color: Colors.red, size: sw * 0.12),
+                    Icon(
+                      Icons.error_outline,
+                      color: Colors.red,
+                      size: sw * 0.12,
+                    ),
                     SizedBox(height: sw * 0.030),
                     Text(
                       profileState.errorMessage!,
@@ -1717,20 +1914,28 @@ class _ProfileScreenState extends State<ProfileScreen>
                     SizedBox(height: sw * 0.040),
                     GestureDetector(
                       onTap: () {
-                        profileState.set(() => profileState.errorMessage = null);
+                        profileState.set(
+                          () => profileState.errorMessage = null,
+                        );
                         profileState.fetchProfile();
                       },
                       child: Container(
                         padding: EdgeInsets.symmetric(
-                            horizontal: sw * 0.06, vertical: sw * 0.030),
+                          horizontal: sw * 0.06,
+                          vertical: sw * 0.030,
+                        ),
                         decoration: BoxDecoration(
-                            color: kPrimary,
-                            borderRadius: BorderRadius.circular(12)),
-                        child: Text('Retry',
-                            style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w800,
-                                fontSize: sw * 0.035)),
+                          color: kPrimary,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          'Retry',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w800,
+                            fontSize: sw * 0.035,
+                          ),
+                        ),
                       ),
                     ),
                   ],
@@ -1787,8 +1992,12 @@ class _ProfileScreenState extends State<ProfileScreen>
           child: Column(
             children: [
               Padding(
-                padding:
-                EdgeInsets.fromLTRB(sw * 0.05, sw * 0.025, sw * 0.05, 0),
+                padding: EdgeInsets.fromLTRB(
+                  sw * 0.05,
+                  sw * 0.025,
+                  sw * 0.05,
+                  0,
+                ),
                 child: Row(
                   children: [
                     if (context.canPop() || widget.onBack != null)
@@ -1796,11 +2005,14 @@ class _ProfileScreenState extends State<ProfileScreen>
                     if (context.canPop() || widget.onBack != null)
                       SizedBox(width: sw * 0.025),
                     const Spacer(),
-                    Text('My Profile',
-                        style: TextStyle(
-                            fontSize: sw * 0.040,
-                            fontWeight: FontWeight.w800,
-                            color: Colors.white)),
+                    Text(
+                      'My Profile',
+                      style: TextStyle(
+                        fontSize: sw * 0.040,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                      ),
+                    ),
                     const Spacer(),
                     // _iconBtn(
                     //   Icons.notifications_outlined,
@@ -1835,13 +2047,15 @@ class _ProfileScreenState extends State<ProfileScreen>
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         border: Border.all(
-                            color: Colors.white.withOpacity(0.25),
-                            width: 3),
+                          color: Colors.white.withOpacity(0.25),
+                          width: 3,
+                        ),
                         boxShadow: [
                           BoxShadow(
-                              color: kPrimary.withOpacity(0.45),
-                              blurRadius: 18,
-                              offset: const Offset(0, 6))
+                            color: kPrimary.withOpacity(0.45),
+                            blurRadius: 18,
+                            offset: const Offset(0, 6),
+                          ),
                         ],
                       ),
                       child: ClipOval(child: _avatarContent(sw, p)),
@@ -1858,41 +2072,53 @@ class _ProfileScreenState extends State<ProfileScreen>
                         border: Border.all(color: kInk, width: 2.5),
                         boxShadow: [
                           BoxShadow(
-                              color: kAccent.withOpacity(0.40),
-                              blurRadius: 8,
-                              offset: const Offset(0, 3))
+                            color: kAccent.withOpacity(0.40),
+                            blurRadius: 8,
+                            offset: const Offset(0, 3),
+                          ),
                         ],
                       ),
                       child: _isUploadingPhoto
                           ? const Padding(
-                        padding: EdgeInsets.all(10),
-                        child: CircularProgressIndicator(
-                            strokeWidth: 2, color: Colors.white),
-                      )
-                          : Icon(Icons.add_a_photo_rounded,
-                          color: Colors.white, size: sw * 0.038),
+                              padding: EdgeInsets.all(10),
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : Icon(
+                              Icons.add_a_photo_rounded,
+                              color: Colors.white,
+                              size: sw * 0.038,
+                            ),
                     ),
                   ),
                 ],
               ),
               SizedBox(height: sw * 0.020),
               // ── Name ──
-              Text(p.name,
-                  style: TextStyle(
-                      fontSize: sw * 0.045,
-                      fontWeight: FontWeight.w900,
-                      color: Colors.white,
-                      letterSpacing: -0.5)),
+              Text(
+                p.name,
+                style: TextStyle(
+                  fontSize: sw * 0.045,
+                  fontWeight: FontWeight.w900,
+                  color: Colors.white,
+                  letterSpacing: -0.5,
+                ),
+              ),
               SizedBox(height: sw * 0.008),
               // ── Degree / education subtitle ──
               if (p.degree.isNotEmpty)
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: sw * 0.08),
-                  child: Text(p.degree,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                          fontSize: sw * 0.028,
-                          color: Colors.white.withOpacity(0.65))),
+                  child: Text(
+                    p.degree,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: sw * 0.028,
+                      color: Colors.white.withOpacity(0.65),
+                    ),
+                  ),
                 ),
               // ── Goal / Status badges (age is intentionally NOT shown here) ──
               if (p.goal.isNotEmpty || p.status.isNotEmpty) ...[
@@ -1905,11 +2131,12 @@ class _ProfileScreenState extends State<ProfileScreen>
                       SizedBox(width: sw * 0.015),
                     if (p.status.isNotEmpty)
                       _headerBadge(
-                          p.status,
-                          p.status.toLowerCase() == 'active'
-                              ? kSuccess
-                              : kWarning,
-                          sw),
+                        p.status,
+                        p.status.toLowerCase() == 'active'
+                            ? kSuccess
+                            : kWarning,
+                        sw,
+                      ),
                   ],
                 ),
               ],
@@ -1926,21 +2153,35 @@ class _ProfileScreenState extends State<ProfileScreen>
                     color: Colors.white.withOpacity(0.06),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                        color: Colors.white.withOpacity(0.10), width: 1),
+                      color: Colors.white.withOpacity(0.10),
+                      width: 1,
+                    ),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      _hStat('${p.applications.length}', 'Applied',
-                          Icons.send, sw),
+                      _hStat(
+                        '${p.applications.length}',
+                        'Applied',
+                        Icons.send,
+                        sw,
+                      ),
                       _hDiv(),
                       _hStat('${p.skills.length}', 'Skills', Icons.code, sw),
                       _hDiv(),
-                      _hStat('${p.certifications.length}', 'Certs',
-                          Icons.workspace_premium, sw),
+                      _hStat(
+                        '${p.certifications.length}',
+                        'Certs',
+                        Icons.workspace_premium,
+                        sw,
+                      ),
                       _hDiv(),
-                      _hStat('${p.projects.length}', 'Projects',
-                          Icons.folder, sw),
+                      _hStat(
+                        '${p.projects.length}',
+                        'Projects',
+                        Icons.folder,
+                        sw,
+                      ),
                     ],
                   ),
                 ),
@@ -1955,18 +2196,23 @@ class _ProfileScreenState extends State<ProfileScreen>
 
   Widget _headerBadge(String label, Color color, double sw) {
     return Container(
-      padding:
-      EdgeInsets.symmetric(horizontal: sw * 0.030, vertical: sw * 0.008),
+      padding: EdgeInsets.symmetric(
+        horizontal: sw * 0.030,
+        vertical: sw * 0.008,
+      ),
       decoration: BoxDecoration(
         color: color.withOpacity(0.18),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: color.withOpacity(0.35)),
       ),
-      child: Text(label,
-          style: TextStyle(
-              fontSize: sw * 0.026,
-              color: color,
-              fontWeight: FontWeight.w700)),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: sw * 0.026,
+          color: color,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
     );
   }
 
@@ -1991,8 +2237,11 @@ class _ProfileScreenState extends State<ProfileScreen>
           return Container(
             color: kPrimary,
             child: const Center(
-                child: CircularProgressIndicator(
-                    strokeWidth: 2, color: Colors.white)),
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: Colors.white,
+              ),
+            ),
           );
         },
         errorBuilder: (_, __, ___) => _initialsAvatar(sw, p),
@@ -2008,9 +2257,10 @@ class _ProfileScreenState extends State<ProfileScreen>
         child: Text(
           p.name.isNotEmpty ? p.name[0].toUpperCase() : 'U',
           style: TextStyle(
-              fontSize: sw * 0.09,
-              fontWeight: FontWeight.w900,
-              color: Colors.white),
+            fontSize: sw * 0.09,
+            fontWeight: FontWeight.w900,
+            color: Colors.white,
+          ),
         ),
       ),
     );
@@ -2020,25 +2270,36 @@ class _ProfileScreenState extends State<ProfileScreen>
     children: [
       Icon(ic, size: sw * 0.033, color: kAccent),
       SizedBox(height: sw * 0.010),
-      Text(v,
-          style: TextStyle(
-              fontSize: sw * 0.040,
-              fontWeight: FontWeight.w900,
-              color: Colors.white)),
+      Text(
+        v,
+        style: TextStyle(
+          fontSize: sw * 0.040,
+          fontWeight: FontWeight.w900,
+          color: Colors.white,
+        ),
+      ),
       SizedBox(height: sw * 0.005),
-      Text(l,
-          style: TextStyle(
-              fontSize: sw * 0.023,
-              color: Colors.white.withOpacity(0.50),
-              fontWeight: FontWeight.w600)),
+      Text(
+        l,
+        style: TextStyle(
+          fontSize: sw * 0.023,
+          color: Colors.white.withOpacity(0.50),
+          fontWeight: FontWeight.w600,
+        ),
+      ),
     ],
   );
 
   Widget _hDiv() =>
       Container(width: 1, height: 30, color: Colors.white.withOpacity(0.10));
 
-  Widget _iconBtn(IconData icon, VoidCallback onTap, double sw,
-      {Color? bg, Color iconColor = Colors.white}) {
+  Widget _iconBtn(
+    IconData icon,
+    VoidCallback onTap,
+    double sw, {
+    Color? bg,
+    Color iconColor = Colors.white,
+  }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -2065,10 +2326,11 @@ class _ProfileScreenState extends State<ProfileScreen>
       tabAlignment: TabAlignment.center,
       labelColor: kPrimary,
       unselectedLabelColor: kMuted,
-      labelStyle:
-      TextStyle(fontSize: sw * 0.026, fontWeight: FontWeight.w700),
-      unselectedLabelStyle:
-      TextStyle(fontSize: sw * 0.026, fontWeight: FontWeight.w600),
+      labelStyle: TextStyle(fontSize: sw * 0.026, fontWeight: FontWeight.w700),
+      unselectedLabelStyle: TextStyle(
+        fontSize: sw * 0.026,
+        fontWeight: FontWeight.w600,
+      ),
       indicatorColor: kPrimary,
       indicatorWeight: 2.5,
       indicatorSize: TabBarIndicatorSize.tab,
@@ -2097,9 +2359,10 @@ class _ProfileScreenState extends State<ProfileScreen>
         Container(
           padding: EdgeInsets.all(sw * 0.040),
           decoration: BoxDecoration(
-              color: kCardBg,
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: kBorder, width: 1.5)),
+            color: kCardBg,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: kBorder, width: 1.5),
+          ),
           child: Column(
             children: [
               Row(
@@ -2109,29 +2372,37 @@ class _ProfileScreenState extends State<ProfileScreen>
                     height: sw * 0.075,
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
-                          colors: [kPrimary, Color(0xFF4F46E5)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight),
+                        colors: [kPrimary, Color(0xFF4F46E5)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
                       borderRadius: BorderRadius.circular(9),
                     ),
-                    child:
-                    Icon(Icons.bolt, color: Colors.white, size: sw * 0.038),
+                    child: Icon(
+                      Icons.bolt,
+                      color: Colors.white,
+                      size: sw * 0.038,
+                    ),
                   ),
                   SizedBox(width: sw * 0.025),
-                  Text('Profile Strength',
-                      style: TextStyle(
-                          fontSize: sw * 0.035,
-                          fontWeight: FontWeight.w800,
-                          color: kInk)),
+                  Text(
+                    'Profile Strength',
+                    style: TextStyle(
+                      fontSize: sw * 0.035,
+                      fontWeight: FontWeight.w800,
+                      color: kInk,
+                    ),
+                  ),
                   const Spacer(),
                   AnimatedBuilder(
                     animation: _xpVal,
                     builder: (_, __) => Text(
                       '${(_xpVal.value * 100).toInt()}%',
                       style: TextStyle(
-                          fontSize: sw * 0.040,
-                          fontWeight: FontWeight.w900,
-                          color: kPrimary),
+                        fontSize: sw * 0.040,
+                        fontWeight: FontWeight.w900,
+                        color: kPrimary,
+                      ),
                     ),
                   ),
                 ],
@@ -2155,11 +2426,14 @@ class _ProfileScreenState extends State<ProfileScreen>
                   Icon(Icons.tips_and_updates, size: sw * 0.030, color: kHint),
                   SizedBox(width: sw * 0.015),
                   Flexible(
-                    child: Text(p.strengthHint,
-                        style: TextStyle(
-                            fontSize: sw * 0.028,
-                            color: kMuted,
-                            fontStyle: FontStyle.italic)),
+                    child: Text(
+                      p.strengthHint,
+                      style: TextStyle(
+                        fontSize: sw * 0.028,
+                        color: kMuted,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -2174,8 +2448,10 @@ class _ProfileScreenState extends State<ProfileScreen>
           onEdit: () => _textDialog('About Me', p.about, 5, (v) async {
             final ok = await profileState.updateProfile({'about_me': v});
             if (!ok) profileState.set(() => p.about = v);
-            _showSnack(ok ? 'About Me updated!' : 'Saved locally',
-                ok ? kSuccess : kWarning);
+            _showSnack(
+              ok ? 'About Me updated!' : 'Saved locally',
+              ok ? kSuccess : kWarning,
+            );
           }),
           child: Text(
             p.about.isNotEmpty ? p.about : 'No bio added yet.',
@@ -2216,11 +2492,21 @@ class _ProfileScreenState extends State<ProfileScreen>
             child: Column(
               children: [
                 if (p.goal.isNotEmpty)
-                  _dRow(Icons.flag_outlined, p.goal, 'Goal', sw,
-                      last: p.status.isEmpty),
+                  _dRow(
+                    Icons.flag_outlined,
+                    p.goal,
+                    'Goal',
+                    sw,
+                    last: p.status.isEmpty,
+                  ),
                 if (p.status.isNotEmpty)
-                  _dRow(Icons.circle_outlined, p.status, 'Status', sw,
-                      last: true),
+                  _dRow(
+                    Icons.circle_outlined,
+                    p.status,
+                    'Status',
+                    sw,
+                    last: true,
+                  ),
               ],
             ),
           ),
@@ -2232,29 +2518,37 @@ class _ProfileScreenState extends State<ProfileScreen>
           sw: sw,
           onEdit: () => _tab.animateTo(1),
           child: p.skills.isEmpty
-              ? Text('No skills added yet.',
-              style: TextStyle(fontSize: sw * 0.033, color: kMuted))
+              ? Text(
+                  'No skills added yet.',
+                  style: TextStyle(fontSize: sw * 0.033, color: kMuted),
+                )
               : Wrap(
-            spacing: sw * 0.020,
-            runSpacing: sw * 0.020,
-            children: p.skills.map((s) {
-              final pct = ((_dbl(s['level'])) * 100).toInt();
-              return Container(
-                padding: EdgeInsets.symmetric(
-                    horizontal: sw * 0.030, vertical: sw * 0.015),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                      colors: [kPrimary, Color(0xFF4F46E5)]),
-                  borderRadius: BorderRadius.circular(20),
+                  spacing: sw * 0.020,
+                  runSpacing: sw * 0.020,
+                  children: p.skills.map((s) {
+                    final pct = ((_dbl(s['level'])) * 100).toInt();
+                    return Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: sw * 0.030,
+                        vertical: sw * 0.015,
+                      ),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [kPrimary, Color(0xFF4F46E5)],
+                        ),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        '${_str(s['name'])}  $pct%',
+                        style: TextStyle(
+                          fontSize: sw * 0.028,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                        ),
+                      ),
+                    );
+                  }).toList(),
                 ),
-                child: Text('${_str(s['name'])}  $pct%',
-                    style: TextStyle(
-                        fontSize: sw * 0.028,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.white)),
-              );
-            }).toList(),
-          ),
         ),
         SizedBox(height: sw * 0.020),
       ],
@@ -2283,10 +2577,12 @@ class _ProfileScreenState extends State<ProfileScreen>
         padding: EdgeInsets.all(sw * 0.040),
         decoration: BoxDecoration(
           gradient: has
-              ? LinearGradient(colors: [
-            kPrimary.withOpacity(0.07),
-            const Color(0xFF4F46E5).withOpacity(0.03),
-          ])
+              ? LinearGradient(
+                  colors: [
+                    kPrimary.withOpacity(0.07),
+                    const Color(0xFF4F46E5).withOpacity(0.03),
+                  ],
+                )
               : null,
           color: has ? null : kCardBg,
           borderRadius: BorderRadius.circular(18),
@@ -2302,25 +2598,32 @@ class _ProfileScreenState extends State<ProfileScreen>
               height: sw * 0.125,
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                    colors: [kPrimary, Color(0xFF4F46E5)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight),
+                  colors: [kPrimary, Color(0xFF4F46E5)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
                 borderRadius: BorderRadius.circular(14),
                 boxShadow: [
                   BoxShadow(
-                      color: kPrimary.withOpacity(0.30),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4))
+                    color: kPrimary.withOpacity(0.30),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
                 ],
               ),
               child: _isUploadingResume
                   ? const Padding(
-                padding: EdgeInsets.all(14),
-                child: CircularProgressIndicator(
-                    strokeWidth: 2.5, color: Colors.white),
-              )
-                  : Icon(Icons.description,
-                  color: Colors.white, size: sw * 0.060),
+                      padding: EdgeInsets.all(14),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.5,
+                        color: Colors.white,
+                      ),
+                    )
+                  : Icon(
+                      Icons.description,
+                      color: Colors.white,
+                      size: sw * 0.060,
+                    ),
             ),
             SizedBox(width: sw * 0.035),
             Expanded(
@@ -2334,13 +2637,14 @@ class _ProfileScreenState extends State<ProfileScreen>
                         ? 'Resume Uploaded ✓'
                         : 'Upload Your Resume',
                     style: TextStyle(
-                        fontSize: sw * 0.035,
-                        fontWeight: FontWeight.w800,
-                        color: _isUploadingResume
-                            ? kPrimary
-                            : has
-                            ? kSuccess
-                            : kInk),
+                      fontSize: sw * 0.035,
+                      fontWeight: FontWeight.w800,
+                      color: _isUploadingResume
+                          ? kPrimary
+                          : has
+                          ? kSuccess
+                          : kInk,
+                    ),
                   ),
                   SizedBox(height: sw * 0.008),
                   Text(
@@ -2366,21 +2670,23 @@ class _ProfileScreenState extends State<ProfileScreen>
             if (!_isUploadingResume)
               Container(
                 padding: EdgeInsets.symmetric(
-                    horizontal: sw * 0.035, vertical: sw * 0.020),
+                  horizontal: sw * 0.035,
+                  vertical: sw * 0.020,
+                ),
                 decoration: BoxDecoration(
                   color: has ? const Color(0xFFF0FDF4) : kPrimary,
                   borderRadius: BorderRadius.circular(20),
                   border: has
-                      ? Border.all(
-                      color: const Color(0xFF86EFAC), width: 1.5)
+                      ? Border.all(color: const Color(0xFF86EFAC), width: 1.5)
                       : null,
                 ),
                 child: Text(
                   has ? 'Replace' : 'Upload',
                   style: TextStyle(
-                      fontSize: sw * 0.030,
-                      fontWeight: FontWeight.w800,
-                      color: has ? kSuccess : Colors.white),
+                    fontSize: sw * 0.030,
+                    fontWeight: FontWeight.w800,
+                    color: has ? kSuccess : Colors.white,
+                  ),
                 ),
               ),
           ],
@@ -2389,8 +2695,13 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
-  Widget _dRow(IconData icon, String val, String lbl, double sw,
-      {bool last = false}) {
+  Widget _dRow(
+    IconData icon,
+    String val,
+    String lbl,
+    double sw, {
+    bool last = false,
+  }) {
     return Container(
       padding: EdgeInsets.symmetric(vertical: sw * 0.025),
       decoration: BoxDecoration(
@@ -2404,7 +2715,9 @@ class _ProfileScreenState extends State<ProfileScreen>
             width: sw * 0.070,
             height: sw * 0.070,
             decoration: BoxDecoration(
-                color: kSelectedBg, borderRadius: BorderRadius.circular(8)),
+              color: kSelectedBg,
+              borderRadius: BorderRadius.circular(8),
+            ),
             child: Icon(icon, size: sw * 0.035, color: kPrimary),
           ),
           SizedBox(width: sw * 0.025),
@@ -2412,16 +2725,22 @@ class _ProfileScreenState extends State<ProfileScreen>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(lbl,
-                    style: TextStyle(
-                        fontSize: sw * 0.025,
-                        color: kHint,
-                        fontWeight: FontWeight.w600)),
-                Text(val.isNotEmpty ? val : '—',
-                    style: TextStyle(
-                        fontSize: sw * 0.033,
-                        color: kSlate,
-                        fontWeight: FontWeight.w600)),
+                Text(
+                  lbl,
+                  style: TextStyle(
+                    fontSize: sw * 0.025,
+                    color: kHint,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                Text(
+                  val.isNotEmpty ? val : '—',
+                  style: TextStyle(
+                    fontSize: sw * 0.033,
+                    color: kSlate,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ],
             ),
           ),
@@ -2444,70 +2763,81 @@ class _ProfileScreenState extends State<ProfileScreen>
           sw: sw,
           onEdit: null,
           child: p.skills.isEmpty
-              ? Text('No skills added yet.',
-              style: TextStyle(fontSize: sw * 0.033, color: kMuted))
+              ? Text(
+                  'No skills added yet.',
+                  style: TextStyle(fontSize: sw * 0.033, color: kMuted),
+                )
               : Column(
-            children: List.generate(p.skills.length, (i) {
-              if (i >= _skillAnims.length) return const SizedBox();
-              final sk = p.skills[i];
-              final name = _str(sk['name']);
-              final target = _dbl(sk['level']);
-              final pct = (target * 100).toInt();
-              final barCol = target >= 0.80
-                  ? kSuccess
-                  : target >= 0.60
-                  ? kPrimary
-                  : kWarning;
-              return Padding(
-                padding: EdgeInsets.only(bottom: sw * 0.050),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                            child: Text(name,
-                                style: TextStyle(
+                  children: List.generate(p.skills.length, (i) {
+                    if (i >= _skillAnims.length) return const SizedBox();
+                    final sk = p.skills[i];
+                    final name = _str(sk['name']);
+                    final target = _dbl(sk['level']);
+                    final pct = (target * 100).toInt();
+                    final barCol = target >= 0.80
+                        ? kSuccess
+                        : target >= 0.60
+                        ? kPrimary
+                        : kWarning;
+                    return Padding(
+                      padding: EdgeInsets.only(bottom: sw * 0.050),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  name,
+                                  style: TextStyle(
                                     fontSize: sw * 0.033,
                                     fontWeight: FontWeight.w800,
-                                    color: kInk))),
-                        AnimatedBuilder(
-                          animation: _skillAnims[i],
-                          builder: (_, __) => Text(
-                              '${(_skillAnims[i].value * pct).toInt()}%',
-                              style: TextStyle(
-                                  fontSize: sw * 0.030,
-                                  fontWeight: FontWeight.w700,
-                                  color: barCol)),
-                        ),
-                        SizedBox(width: sw * 0.020),
-                        GestureDetector(
-                          onTap: () => _deleteSkill(i),
-                          child: Icon(Icons.remove_circle_outline,
-                              size: sw * 0.045,
-                              color: Colors.red.shade300),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: sw * 0.020),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(6),
-                      child: AnimatedBuilder(
-                        animation: _skillAnims[i],
-                        builder: (_, __) => LinearProgressIndicator(
-                          value: _skillAnims[i].value * target,
-                          minHeight: 8,
-                          backgroundColor: const Color(0xFFE2E8F0),
-                          valueColor:
-                          AlwaysStoppedAnimation<Color>(barCol),
-                        ),
+                                    color: kInk,
+                                  ),
+                                ),
+                              ),
+                              AnimatedBuilder(
+                                animation: _skillAnims[i],
+                                builder: (_, __) => Text(
+                                  '${(_skillAnims[i].value * pct).toInt()}%',
+                                  style: TextStyle(
+                                    fontSize: sw * 0.030,
+                                    fontWeight: FontWeight.w700,
+                                    color: barCol,
+                                  ),
+                                ),
+                              ),
+                              SizedBox(width: sw * 0.020),
+                              GestureDetector(
+                                onTap: () => _deleteSkill(i),
+                                child: Icon(
+                                  Icons.remove_circle_outline,
+                                  size: sw * 0.045,
+                                  color: Colors.red.shade300,
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: sw * 0.020),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(6),
+                            child: AnimatedBuilder(
+                              animation: _skillAnims[i],
+                              builder: (_, __) => LinearProgressIndicator(
+                                value: _skillAnims[i].value * target,
+                                minHeight: 8,
+                                backgroundColor: const Color(0xFFE2E8F0),
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  barCol,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                  ],
+                    );
+                  }),
                 ),
-              );
-            }),
-          ),
         ),
         SizedBox(height: sw * 0.030),
         GestureDetector(
@@ -2519,22 +2849,29 @@ class _ProfileScreenState extends State<ProfileScreen>
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                    color: kPrimary.withOpacity(0.35),
-                    blurRadius: 14,
-                    offset: const Offset(0, 5))
+                  color: kPrimary.withOpacity(0.35),
+                  blurRadius: 14,
+                  offset: const Offset(0, 5),
+                ),
               ],
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.add_circle_outline,
-                    color: Colors.white, size: sw * 0.050),
+                Icon(
+                  Icons.add_circle_outline,
+                  color: Colors.white,
+                  size: sw * 0.050,
+                ),
                 SizedBox(width: sw * 0.020),
-                Text('Add New Skill',
-                    style: TextStyle(
-                        fontSize: sw * 0.035,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.white)),
+                Text(
+                  'Add New Skill',
+                  style: TextStyle(
+                    fontSize: sw * 0.035,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                  ),
+                ),
               ],
             ),
           ),
@@ -2563,7 +2900,9 @@ class _ProfileScreenState extends State<ProfileScreen>
                 color: theme.bg,
                 borderRadius: BorderRadius.circular(18),
                 border: Border.all(
-                    color: theme.g1.withOpacity(0.20), width: 1.5),
+                  color: theme.g1.withOpacity(0.20),
+                  width: 1.5,
+                ),
               ),
               child: Row(
                 children: [
@@ -2574,38 +2913,51 @@ class _ProfileScreenState extends State<ProfileScreen>
                       gradient: LinearGradient(colors: [theme.g1, theme.g2]),
                       borderRadius: BorderRadius.circular(14),
                     ),
-                    child:
-                    Icon(theme.icon, color: Colors.white, size: sw * 0.055),
+                    child: Icon(
+                      theme.icon,
+                      color: Colors.white,
+                      size: sw * 0.055,
+                    ),
                   ),
                   SizedBox(width: sw * 0.030),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(_str(c['name']),
-                            style: TextStyle(
-                                fontSize: sw * 0.033,
-                                fontWeight: FontWeight.w800,
-                                color: kInk)),
+                        Text(
+                          _str(c['name']),
+                          style: TextStyle(
+                            fontSize: sw * 0.033,
+                            fontWeight: FontWeight.w800,
+                            color: kInk,
+                          ),
+                        ),
                         SizedBox(height: sw * 0.008),
-                        Text(_str(c['issuer']),
-                            style: TextStyle(
-                                fontSize: sw * 0.028,
-                                color: kMuted,
-                                fontWeight: FontWeight.w600)),
+                        Text(
+                          _str(c['issuer']),
+                          style: TextStyle(
+                            fontSize: sw * 0.028,
+                            color: kMuted,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                         SizedBox(height: sw * 0.005),
-                        Text(_str(c['date']),
-                            style:
-                            TextStyle(fontSize: sw * 0.025, color: kHint)),
+                        Text(
+                          _str(c['date']),
+                          style: TextStyle(fontSize: sw * 0.025, color: kHint),
+                        ),
                         if (fileUrl.isNotEmpty) ...[
                           SizedBox(height: sw * 0.012),
                           GestureDetector(
                             onTap: () => _openUrl(fileUrl),
-                            child: Text('View Certificate →',
-                                style: TextStyle(
-                                    fontSize: sw * 0.025,
-                                    color: theme.g1,
-                                    fontWeight: FontWeight.w700)),
+                            child: Text(
+                              'View Certificate →',
+                              style: TextStyle(
+                                fontSize: sw * 0.025,
+                                color: theme.g1,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
                           ),
                         ],
                       ],
@@ -2613,8 +2965,11 @@ class _ProfileScreenState extends State<ProfileScreen>
                   ),
                   GestureDetector(
                     onTap: () => _deleteCertificate(i),
-                    child: Icon(Icons.delete_outline,
-                        color: Colors.red.shade300, size: sw * 0.050),
+                    child: Icon(
+                      Icons.delete_outline,
+                      color: Colors.red.shade300,
+                      size: sw * 0.050,
+                    ),
                   ),
                 ],
               ),
@@ -2631,22 +2986,29 @@ class _ProfileScreenState extends State<ProfileScreen>
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                    color: kPrimary.withOpacity(0.35),
-                    blurRadius: 14,
-                    offset: const Offset(0, 5))
+                  color: kPrimary.withOpacity(0.35),
+                  blurRadius: 14,
+                  offset: const Offset(0, 5),
+                ),
               ],
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.add_circle_outline,
-                    color: Colors.white, size: sw * 0.050),
+                Icon(
+                  Icons.add_circle_outline,
+                  color: Colors.white,
+                  size: sw * 0.050,
+                ),
                 SizedBox(width: sw * 0.020),
-                Text('Add Certificate',
-                    style: TextStyle(
-                        fontSize: sw * 0.035,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.white)),
+                Text(
+                  'Add Certificate',
+                  style: TextStyle(
+                    fontSize: sw * 0.035,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                  ),
+                ),
               ],
             ),
           ),
@@ -2670,31 +3032,44 @@ class _ProfileScreenState extends State<ProfileScreen>
             child: Container(
               padding: EdgeInsets.all(sw * 0.040),
               decoration: BoxDecoration(
-                  color: kCardBg,
-                  borderRadius: BorderRadius.circular(18),
-                  border: Border.all(color: kBorder, width: 1.5)),
+                color: kCardBg,
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: kBorder, width: 1.5),
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
                       Expanded(
-                          child: Text(_str(proj['title']),
-                              style: TextStyle(
-                                  fontSize: sw * 0.035,
-                                  fontWeight: FontWeight.w800,
-                                  color: kInk))),
+                        child: Text(
+                          _str(proj['title']),
+                          style: TextStyle(
+                            fontSize: sw * 0.035,
+                            fontWeight: FontWeight.w800,
+                            color: kInk,
+                          ),
+                        ),
+                      ),
                       GestureDetector(
                         onTap: () => _deleteProject(i),
-                        child: Icon(Icons.delete_outline,
-                            color: Colors.red.shade300, size: sw * 0.050),
+                        child: Icon(
+                          Icons.delete_outline,
+                          color: Colors.red.shade300,
+                          size: sw * 0.050,
+                        ),
                       ),
                     ],
                   ),
                   SizedBox(height: sw * 0.015),
-                  Text(_str(proj['desc']),
-                      style: TextStyle(
-                          fontSize: sw * 0.030, color: kMuted, height: 1.5)),
+                  Text(
+                    _str(proj['desc']),
+                    style: TextStyle(
+                      fontSize: sw * 0.030,
+                      color: kMuted,
+                      height: 1.5,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -2710,22 +3085,29 @@ class _ProfileScreenState extends State<ProfileScreen>
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                    color: kPrimary.withOpacity(0.35),
-                    blurRadius: 14,
-                    offset: const Offset(0, 5))
+                  color: kPrimary.withOpacity(0.35),
+                  blurRadius: 14,
+                  offset: const Offset(0, 5),
+                ),
               ],
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.add_circle_outline,
-                    color: Colors.white, size: sw * 0.050),
+                Icon(
+                  Icons.add_circle_outline,
+                  color: Colors.white,
+                  size: sw * 0.050,
+                ),
                 SizedBox(width: sw * 0.020),
-                Text('Add Project',
-                    style: TextStyle(
-                        fontSize: sw * 0.035,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.white)),
+                Text(
+                  'Add Project',
+                  style: TextStyle(
+                    fontSize: sw * 0.035,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                  ),
+                ),
               ],
             ),
           ),
@@ -2746,8 +3128,10 @@ class _ProfileScreenState extends State<ProfileScreen>
           children: [
             Icon(Icons.send_outlined, size: sw * 0.15, color: kHint),
             SizedBox(height: sw * 0.025),
-            Text('No applications yet.',
-                style: TextStyle(color: kMuted, fontSize: sw * 0.035)),
+            Text(
+              'No applications yet.',
+              style: TextStyle(color: kMuted, fontSize: sw * 0.035),
+            ),
           ],
         ),
       );
@@ -2767,55 +3151,69 @@ class _ProfileScreenState extends State<ProfileScreen>
         return Container(
           padding: EdgeInsets.all(sw * 0.040),
           decoration: BoxDecoration(
-              color: kCardBg,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: kBorder, width: 1.5)),
+            color: kCardBg,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: kBorder, width: 1.5),
+          ),
           child: Row(
             children: [
               Container(
                 width: sw * 0.115,
                 height: sw * 0.115,
                 decoration: BoxDecoration(
-                    color: kSelectedBg,
-                    borderRadius: BorderRadius.circular(14)),
+                  color: kSelectedBg,
+                  borderRadius: BorderRadius.circular(14),
+                ),
                 child: Icon(
-                    app['type'] == 'Internship' ? Icons.school : Icons.work,
-                    color: kPrimary,
-                    size: sw * 0.055),
+                  app['type'] == 'Internship' ? Icons.school : Icons.work,
+                  color: kPrimary,
+                  size: sw * 0.055,
+                ),
               ),
               SizedBox(width: sw * 0.030),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(_str(app['role']),
-                        style: TextStyle(
-                            fontSize: sw * 0.033,
-                            fontWeight: FontWeight.w800,
-                            color: kInk)),
+                    Text(
+                      _str(app['role']),
+                      style: TextStyle(
+                        fontSize: sw * 0.033,
+                        fontWeight: FontWeight.w800,
+                        color: kInk,
+                      ),
+                    ),
                     SizedBox(height: sw * 0.005),
-                    Text(_str(app['company']),
-                        style: TextStyle(fontSize: sw * 0.028, color: kMuted)),
+                    Text(
+                      _str(app['company']),
+                      style: TextStyle(fontSize: sw * 0.028, color: kMuted),
+                    ),
                     SizedBox(height: sw * 0.010),
                     Row(
                       children: [
                         Container(
                           padding: EdgeInsets.symmetric(
-                              horizontal: sw * 0.020, vertical: sw * 0.008),
+                            horizontal: sw * 0.020,
+                            vertical: sw * 0.008,
+                          ),
                           decoration: BoxDecoration(
                             color: statusColor.withOpacity(0.10),
                             borderRadius: BorderRadius.circular(20),
                           ),
-                          child: Text(statusStr,
-                              style: TextStyle(
-                                  fontSize: sw * 0.025,
-                                  fontWeight: FontWeight.w700,
-                                  color: statusColor)),
+                          child: Text(
+                            statusStr,
+                            style: TextStyle(
+                              fontSize: sw * 0.025,
+                              fontWeight: FontWeight.w700,
+                              color: statusColor,
+                            ),
+                          ),
                         ),
                         SizedBox(width: sw * 0.015),
-                        Text(_str(app['date']),
-                            style:
-                            TextStyle(fontSize: sw * 0.025, color: kHint)),
+                        Text(
+                          _str(app['date']),
+                          style: TextStyle(fontSize: sw * 0.025, color: kHint),
+                        ),
                       ],
                     ),
                   ],
@@ -2823,8 +3221,11 @@ class _ProfileScreenState extends State<ProfileScreen>
               ),
               GestureDetector(
                 onTap: () => _withdrawApplication(app, i),
-                child: Icon(Icons.cancel_outlined,
-                    color: Colors.red.shade300, size: sw * 0.055),
+                child: Icon(
+                  Icons.cancel_outlined,
+                  color: Colors.red.shade300,
+                  size: sw * 0.055,
+                ),
               ),
             ],
           ),
@@ -2845,8 +3246,10 @@ class _ProfileScreenState extends State<ProfileScreen>
           children: [
             Icon(Icons.menu_book_outlined, size: sw * 0.15, color: kHint),
             SizedBox(height: sw * 0.025),
-            Text('No courses yet.',
-                style: TextStyle(color: kMuted, fontSize: sw * 0.035)),
+            Text(
+              'No courses yet.',
+              style: TextStyle(color: kMuted, fontSize: sw * 0.035),
+            ),
           ],
         ),
       );
@@ -2864,9 +3267,10 @@ class _ProfileScreenState extends State<ProfileScreen>
         return Container(
           padding: EdgeInsets.all(sw * 0.040),
           decoration: BoxDecoration(
-              color: kCardBg,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: kBorder, width: 1.5)),
+            color: kCardBg,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: kBorder, width: 1.5),
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -2876,74 +3280,96 @@ class _ProfileScreenState extends State<ProfileScreen>
                     width: sw * 0.11,
                     height: sw * 0.11,
                     decoration: BoxDecoration(
-                        color: kSelectedBg,
-                        borderRadius: BorderRadius.circular(12)),
-                    child: Icon(Icons.play_circle_outline,
-                        color: kPrimary, size: sw * 0.055),
+                      color: kSelectedBg,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      Icons.play_circle_outline,
+                      color: kPrimary,
+                      size: sw * 0.055,
+                    ),
                   ),
                   SizedBox(width: sw * 0.030),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(_str(c['title']),
-                            style: TextStyle(
-                                fontSize: sw * 0.033,
-                                fontWeight: FontWeight.w800,
-                                color: kInk)),
+                        Text(
+                          _str(c['title']),
+                          style: TextStyle(
+                            fontSize: sw * 0.033,
+                            fontWeight: FontWeight.w800,
+                            color: kInk,
+                          ),
+                        ),
                         SizedBox(height: sw * 0.005),
-                        Text(_str(c['provider']),
-                            style:
-                            TextStyle(fontSize: sw * 0.028, color: kMuted)),
+                        Text(
+                          _str(c['provider']),
+                          style: TextStyle(fontSize: sw * 0.028, color: kMuted),
+                        ),
                         SizedBox(height: sw * 0.005),
-                        Row(children: [
-                          if (category.isNotEmpty)
-                            _chip(category, kSelectedBg, kPrimary, sw),
-                          if (category.isNotEmpty && level.isNotEmpty)
-                            SizedBox(width: sw * 0.015),
-                          if (level.isNotEmpty)
-                            _chip(level, kSelectedBg, kSlate, sw),
-                        ]),
+                        Row(
+                          children: [
+                            if (category.isNotEmpty)
+                              _chip(category, kSelectedBg, kPrimary, sw),
+                            if (category.isNotEmpty && level.isNotEmpty)
+                              SizedBox(width: sw * 0.015),
+                            if (level.isNotEmpty)
+                              _chip(level, kSelectedBg, kSlate, sw),
+                          ],
+                        ),
                       ],
                     ),
                   ),
                   if (completed)
                     Container(
                       padding: EdgeInsets.symmetric(
-                          horizontal: sw * 0.020, vertical: sw * 0.008),
+                        horizontal: sw * 0.020,
+                        vertical: sw * 0.008,
+                      ),
                       decoration: BoxDecoration(
-                          color: kSuccess.withOpacity(0.12),
-                          borderRadius: BorderRadius.circular(20)),
-                      child: Text('Done',
-                          style: TextStyle(
-                              fontSize: sw * 0.025,
-                              color: kSuccess,
-                              fontWeight: FontWeight.w700)),
+                        color: kSuccess.withOpacity(0.12),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        'Done',
+                        style: TextStyle(
+                          fontSize: sw * 0.025,
+                          color: kSuccess,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
                     ),
                 ],
               ),
               if (!completed) ...[
                 SizedBox(height: sw * 0.025),
-                Row(children: [
-                  Expanded(
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(4),
-                      child: LinearProgressIndicator(
-                        value: progress / 100,
-                        minHeight: 6,
-                        backgroundColor: const Color(0xFFE2E8F0),
-                        valueColor:
-                        const AlwaysStoppedAnimation<Color>(kPrimary),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(4),
+                        child: LinearProgressIndicator(
+                          value: progress / 100,
+                          minHeight: 6,
+                          backgroundColor: const Color(0xFFE2E8F0),
+                          valueColor: const AlwaysStoppedAnimation<Color>(
+                            kPrimary,
+                          ),
+                        ),
                       ),
                     ),
-                  ),
-                  SizedBox(width: sw * 0.020),
-                  Text('${progress.toInt()}%',
+                    SizedBox(width: sw * 0.020),
+                    Text(
+                      '${progress.toInt()}%',
                       style: TextStyle(
-                          fontSize: sw * 0.028,
-                          color: kPrimary,
-                          fontWeight: FontWeight.w700)),
-                ]),
+                        fontSize: sw * 0.028,
+                        color: kPrimary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
               ],
             ],
           ),
@@ -2964,8 +3390,10 @@ class _ProfileScreenState extends State<ProfileScreen>
           children: [
             Icon(Icons.emoji_events_outlined, size: sw * 0.15, color: kHint),
             SizedBox(height: sw * 0.025),
-            Text('No hackathons yet.',
-                style: TextStyle(color: kMuted, fontSize: sw * 0.035)),
+            Text(
+              'No hackathons yet.',
+              style: TextStyle(color: kMuted, fontSize: sw * 0.035),
+            ),
           ],
         ),
       );
@@ -2984,9 +3412,10 @@ class _ProfileScreenState extends State<ProfileScreen>
         return Container(
           padding: EdgeInsets.all(sw * 0.040),
           decoration: BoxDecoration(
-              color: kCardBg,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: kBorder, width: 1.5)),
+            color: kCardBg,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: kBorder, width: 1.5),
+          ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -2995,63 +3424,91 @@ class _ProfileScreenState extends State<ProfileScreen>
                 height: sw * 0.11,
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                      colors: [kPrimary, Color(0xFF4F46E5)]),
+                    colors: [kPrimary, Color(0xFF4F46E5)],
+                  ),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(Icons.emoji_events,
-                    color: Colors.white, size: sw * 0.055),
+                child: Icon(
+                  Icons.emoji_events,
+                  color: Colors.white,
+                  size: sw * 0.055,
+                ),
               ),
               SizedBox(width: sw * 0.030),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(_str(h['title']),
-                        style: TextStyle(
-                            fontSize: sw * 0.033,
-                            fontWeight: FontWeight.w800,
-                            color: kInk)),
+                    Text(
+                      _str(h['title']),
+                      style: TextStyle(
+                        fontSize: sw * 0.033,
+                        fontWeight: FontWeight.w800,
+                        color: kInk,
+                      ),
+                    ),
                     if (organizer.isNotEmpty) ...[
                       SizedBox(height: sw * 0.008),
-                      Text(organizer,
-                          style:
-                          TextStyle(fontSize: sw * 0.028, color: kMuted)),
+                      Text(
+                        organizer,
+                        style: TextStyle(fontSize: sw * 0.028, color: kMuted),
+                      ),
                     ],
                     if (location.isNotEmpty) ...[
                       SizedBox(height: sw * 0.005),
-                      Row(children: [
-                        Icon(Icons.location_on_outlined,
-                            size: sw * 0.030, color: kHint),
-                        const SizedBox(width: 4),
-                        Flexible(
-                          child: Text(location,
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.location_on_outlined,
+                            size: sw * 0.030,
+                            color: kHint,
+                          ),
+                          const SizedBox(width: 4),
+                          Flexible(
+                            child: Text(
+                              location,
                               style: TextStyle(
-                                  fontSize: sw * 0.027, color: kHint)),
-                        ),
-                      ]),
+                                fontSize: sw * 0.027,
+                                color: kHint,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ],
                     if (startDate.isNotEmpty || endDate.isNotEmpty) ...[
                       SizedBox(height: sw * 0.008),
-                      Row(children: [
-                        Icon(Icons.calendar_today_outlined,
-                            size: sw * 0.028, color: kHint),
-                        const SizedBox(width: 4),
-                        Text(
-                          [startDate, endDate]
-                              .where((s) => s.isNotEmpty)
-                              .join(' – '),
-                          style:
-                          TextStyle(fontSize: sw * 0.027, color: kHint),
-                        ),
-                      ]),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.calendar_today_outlined,
+                            size: sw * 0.028,
+                            color: kHint,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            [
+                              startDate,
+                              endDate,
+                            ].where((s) => s.isNotEmpty).join(' – '),
+                            style: TextStyle(
+                              fontSize: sw * 0.027,
+                              color: kHint,
+                            ),
+                          ),
+                        ],
+                      ),
                     ],
                     if (regInfo.isNotEmpty) ...[
                       SizedBox(height: sw * 0.010),
-                      Text(regInfo,
-                          style: TextStyle(
-                              fontSize: sw * 0.027,
-                              color: kSlate,
-                              fontStyle: FontStyle.italic)),
+                      Text(
+                        regInfo,
+                        style: TextStyle(
+                          fontSize: sw * 0.027,
+                          color: kSlate,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
                     ],
                   ],
                 ),
@@ -3064,15 +3521,19 @@ class _ProfileScreenState extends State<ProfileScreen>
   }
 
   Widget _chip(String label, Color bg, Color fg, double sw) => Container(
-    padding: EdgeInsets.symmetric(
-        horizontal: sw * 0.018, vertical: sw * 0.007),
-    decoration:
-    BoxDecoration(color: bg, borderRadius: BorderRadius.circular(20)),
-    child: Text(label,
-        style: TextStyle(
-            fontSize: sw * 0.024,
-            color: fg,
-            fontWeight: FontWeight.w600)),
+    padding: EdgeInsets.symmetric(horizontal: sw * 0.018, vertical: sw * 0.007),
+    decoration: BoxDecoration(
+      color: bg,
+      borderRadius: BorderRadius.circular(20),
+    ),
+    child: Text(
+      label,
+      style: TextStyle(
+        fontSize: sw * 0.024,
+        color: fg,
+        fontWeight: FontWeight.w600,
+      ),
+    ),
   );
 
   Widget _card({
@@ -3085,9 +3546,10 @@ class _ProfileScreenState extends State<ProfileScreen>
     return Container(
       padding: EdgeInsets.all(sw * 0.040),
       decoration: BoxDecoration(
-          color: kCardBg,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: kBorder, width: 1.5)),
+        color: kCardBg,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: kBorder, width: 1.5),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -3095,26 +3557,35 @@ class _ProfileScreenState extends State<ProfileScreen>
             children: [
               Icon(icon, size: sw * 0.040, color: kPrimary),
               SizedBox(width: sw * 0.020),
-              Text(title,
-                  style: TextStyle(
-                      fontSize: sw * 0.035,
-                      fontWeight: FontWeight.w800,
-                      color: kInk)),
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: sw * 0.035,
+                  fontWeight: FontWeight.w800,
+                  color: kInk,
+                ),
+              ),
               const Spacer(),
               if (onEdit != null)
                 GestureDetector(
                   onTap: onEdit,
                   child: Container(
                     padding: EdgeInsets.symmetric(
-                        horizontal: sw * 0.025, vertical: sw * 0.012),
+                      horizontal: sw * 0.025,
+                      vertical: sw * 0.012,
+                    ),
                     decoration: BoxDecoration(
-                        color: kSelectedBg,
-                        borderRadius: BorderRadius.circular(8)),
-                    child: Text('Edit',
-                        style: TextStyle(
-                            fontSize: sw * 0.028,
-                            color: kPrimary,
-                            fontWeight: FontWeight.w700)),
+                      color: kSelectedBg,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      'Edit',
+                      style: TextStyle(
+                        fontSize: sw * 0.028,
+                        color: kPrimary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                   ),
                 ),
             ],
@@ -3145,9 +3616,13 @@ class _ProfileScreenState extends State<ProfileScreen>
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(msg,
-            style: const TextStyle(
-                color: Colors.white, fontWeight: FontWeight.w700)),
+        content: Text(
+          msg,
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
         backgroundColor: color,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -3155,25 +3630,31 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
-  void _textDialog(String title, String initial, int maxLines,
-      Future<void> Function(String) onSave) {
+  void _textDialog(
+    String title,
+    String initial,
+    int maxLines,
+    Future<void> Function(String) onSave,
+  ) {
     final ctrl = TextEditingController(text: initial);
     final sw = MediaQuery.of(context).size.width;
     showDialog(
       context: context,
       builder: (_) => Dialog(
-        shape:
-        RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         child: Padding(
           padding: EdgeInsets.all(sw * 0.06),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(title,
-                  style: TextStyle(
-                      fontSize: sw * 0.040,
-                      fontWeight: FontWeight.w800,
-                      color: kInk)),
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: sw * 0.040,
+                  fontWeight: FontWeight.w800,
+                  color: kInk,
+                ),
+              ),
               SizedBox(height: sw * 0.040),
               TextField(
                 controller: ctrl,
@@ -3183,12 +3664,13 @@ class _ProfileScreenState extends State<ProfileScreen>
                   filled: true,
                   fillColor: kBgPage,
                   border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: kBorder)),
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: kBorder),
+                  ),
                   focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide:
-                      const BorderSide(color: kPrimary, width: 2)),
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: kPrimary, width: 2),
+                  ),
                 ),
               ),
               SizedBox(height: sw * 0.040),
@@ -3200,14 +3682,19 @@ class _ProfileScreenState extends State<ProfileScreen>
                       child: Container(
                         padding: EdgeInsets.symmetric(vertical: sw * 0.030),
                         decoration: BoxDecoration(
-                            color: kBgPage,
-                            borderRadius: BorderRadius.circular(12)),
+                          color: kBgPage,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                         child: Center(
-                            child: Text('Cancel',
-                                style: TextStyle(
-                                    color: kMuted,
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: sw * 0.033))),
+                          child: Text(
+                            'Cancel',
+                            style: TextStyle(
+                              color: kMuted,
+                              fontWeight: FontWeight.w700,
+                              fontSize: sw * 0.033,
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                   ),
@@ -3221,14 +3708,19 @@ class _ProfileScreenState extends State<ProfileScreen>
                       child: Container(
                         padding: EdgeInsets.symmetric(vertical: sw * 0.030),
                         decoration: BoxDecoration(
-                            color: kPrimary,
-                            borderRadius: BorderRadius.circular(12)),
+                          color: kPrimary,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                         child: Center(
-                            child: Text('Save',
-                                style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w800,
-                                    fontSize: sw * 0.033))),
+                          child: Text(
+                            'Save',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w800,
+                              fontSize: sw * 0.033,
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                   ),
@@ -3249,48 +3741,59 @@ class _ProfileScreenState extends State<ProfileScreen>
     final p = profileState;
     final nameCtrl = TextEditingController(text: p.name);
     final degCtrl = TextEditingController(
-        text: p.isSchoolUser ? p.schoolName : p.college);
+      text: p.isSchoolUser ? p.schoolName : p.college,
+    );
     final classOrYearCtrl = TextEditingController(
-        text: p.isSchoolUser ? p.studentClass : p.graduationYear);
+      text: p.isSchoolUser ? p.studentClass : p.graduationYear,
+    );
 
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
       builder: (_) => Padding(
-        padding:
-        EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
         child: SingleChildScrollView(
           padding: EdgeInsets.all(sw * 0.05),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                  width: sw * 0.12,
-                  height: 4,
-                  decoration: BoxDecoration(
-                      color: kBorder, borderRadius: BorderRadius.circular(2))),
+                width: sw * 0.12,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: kBorder,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
               SizedBox(height: sw * 0.04),
-              Text('Edit Profile',
-                  style: TextStyle(
-                      fontSize: sw * 0.040,
-                      fontWeight: FontWeight.w800,
-                      color: kInk)),
+              Text(
+                'Edit Profile',
+                style: TextStyle(
+                  fontSize: sw * 0.040,
+                  fontWeight: FontWeight.w800,
+                  color: kInk,
+                ),
+              ),
               SizedBox(height: sw * 0.035),
               GestureDetector(
                 onTap: () {
                   Navigator.pop(context);
                   Future.delayed(
-                      const Duration(milliseconds: 250), _pickProfilePhoto);
+                    const Duration(milliseconds: 250),
+                    _pickProfilePhoto,
+                  );
                 },
                 child: Container(
                   padding: EdgeInsets.all(sw * 0.035),
                   decoration: BoxDecoration(
                     color: kSelectedBg,
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(
-                        color: kPrimary.withOpacity(0.25)),
+                    border: Border.all(color: kPrimary.withOpacity(0.25)),
                   ),
                   child: Row(
                     children: [
@@ -3300,8 +3803,9 @@ class _ProfileScreenState extends State<ProfileScreen>
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           border: Border.all(
-                              color: kPrimary.withOpacity(0.35),
-                              width: 2),
+                            color: kPrimary.withOpacity(0.35),
+                            width: 2,
+                          ),
                         ),
                         child: ClipOval(child: _avatarContent(sw, p)),
                       ),
@@ -3310,21 +3814,30 @@ class _ProfileScreenState extends State<ProfileScreen>
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('Change Profile Photo',
-                                style: TextStyle(
-                                    fontSize: sw * 0.033,
-                                    fontWeight: FontWeight.w700,
-                                    color: kInk)),
+                            Text(
+                              'Change Profile Photo',
+                              style: TextStyle(
+                                fontSize: sw * 0.033,
+                                fontWeight: FontWeight.w700,
+                                color: kInk,
+                              ),
+                            ),
                             SizedBox(height: sw * 0.008),
                             Text(
-                                'Tap to pick from gallery or take a photo',
-                                style: TextStyle(
-                                    fontSize: sw * 0.028, color: kMuted)),
+                              'Tap to pick from gallery or take a photo',
+                              style: TextStyle(
+                                fontSize: sw * 0.028,
+                                color: kMuted,
+                              ),
+                            ),
                           ],
                         ),
                       ),
-                      Icon(Icons.photo_library_outlined,
-                          color: kPrimary, size: sw * 0.055),
+                      Icon(
+                        Icons.photo_library_outlined,
+                        color: kPrimary,
+                        size: sw * 0.055,
+                      ),
                     ],
                   ),
                 ),
@@ -3332,8 +3845,11 @@ class _ProfileScreenState extends State<ProfileScreen>
               SizedBox(height: sw * 0.030),
               _field(nameCtrl, 'Full Name', sw),
               SizedBox(height: sw * 0.025),
-              _field(degCtrl, p.isSchoolUser ? 'School Name' : 'University',
-                  sw),
+              _field(
+                degCtrl,
+                p.isSchoolUser ? 'School Name' : 'University',
+                sw,
+              ),
               SizedBox(height: sw * 0.025),
               _field(
                 classOrYearCtrl,
@@ -3372,14 +3888,19 @@ class _ProfileScreenState extends State<ProfileScreen>
                   width: double.infinity,
                   padding: EdgeInsets.symmetric(vertical: sw * 0.040),
                   decoration: BoxDecoration(
-                      color: kPrimary,
-                      borderRadius: BorderRadius.circular(14)),
+                    color: kPrimary,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
                   child: Center(
-                      child: Text('Save Changes',
-                          style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w800,
-                              fontSize: sw * 0.035))),
+                    child: Text(
+                      'Save Changes',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                        fontSize: sw * 0.035,
+                      ),
+                    ),
+                  ),
                 ),
               ),
               SizedBox(height: sw * 0.02),
@@ -3405,36 +3926,46 @@ class _ProfileScreenState extends State<ProfileScreen>
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
       builder: (_) => Padding(
-        padding:
-        EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
         child: SingleChildScrollView(
           padding: EdgeInsets.all(sw * 0.05),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                  width: sw * 0.12,
-                  height: 4,
-                  decoration: BoxDecoration(
-                      color: kBorder, borderRadius: BorderRadius.circular(2))),
+                width: sw * 0.12,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: kBorder,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
               SizedBox(height: sw * 0.04),
-              Text('Contact and Profile',
-                  style: TextStyle(
-                      fontSize: sw * 0.040,
-                      fontWeight: FontWeight.w800,
-                      color: kInk)),
+              Text(
+                'Contact and Profile',
+                style: TextStyle(
+                  fontSize: sw * 0.040,
+                  fontWeight: FontWeight.w800,
+                  color: kInk,
+                ),
+              ),
               SizedBox(height: sw * 0.040),
-              _field(emailCtrl, 'Email', sw,
-                  type: TextInputType.emailAddress),
+              _field(emailCtrl, 'Email', sw, type: TextInputType.emailAddress),
               SizedBox(height: sw * 0.025),
               _field(phoneCtrl, 'Phone', sw, type: TextInputType.phone),
               SizedBox(height: sw * 0.025),
               _field(locCtrl, 'Address / Location', sw),
               SizedBox(height: sw * 0.025),
-              _field(collegeCtrl,
-                  p.isSchoolUser ? 'School Name' : 'University / College', sw),
+              _field(
+                collegeCtrl,
+                p.isSchoolUser ? 'School Name' : 'University / College',
+                sw,
+              ),
               SizedBox(height: sw * 0.025),
               _field(liCtrl, 'LinkedIn URL', sw),
               SizedBox(height: sw * 0.025),
@@ -3467,14 +3998,19 @@ class _ProfileScreenState extends State<ProfileScreen>
                   width: double.infinity,
                   padding: EdgeInsets.symmetric(vertical: sw * 0.040),
                   decoration: BoxDecoration(
-                      color: kPrimary,
-                      borderRadius: BorderRadius.circular(14)),
+                    color: kPrimary,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
                   child: Center(
-                      child: Text('Save Changes',
-                          style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w800,
-                              fontSize: sw * 0.035))),
+                    child: Text(
+                      'Save Changes',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                        fontSize: sw * 0.035,
+                      ),
+                    ),
+                  ),
                 ),
               ),
               SizedBox(height: sw * 0.02),
@@ -3495,29 +4031,41 @@ class _ProfileScreenState extends State<ProfileScreen>
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
       builder: (_) => Padding(
-        padding:
-        EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
         child: SingleChildScrollView(
           padding: EdgeInsets.all(sw * 0.05),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                  width: sw * 0.12,
-                  height: 4,
-                  decoration: BoxDecoration(
-                      color: kBorder, borderRadius: BorderRadius.circular(2))),
+                width: sw * 0.12,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: kBorder,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
               SizedBox(height: sw * 0.04),
-              Text('Goal & Status',
-                  style: TextStyle(
-                      fontSize: sw * 0.040,
-                      fontWeight: FontWeight.w800,
-                      color: kInk)),
+              Text(
+                'Goal & Status',
+                style: TextStyle(
+                  fontSize: sw * 0.040,
+                  fontWeight: FontWeight.w800,
+                  color: kInk,
+                ),
+              ),
               SizedBox(height: sw * 0.040),
-              _field(goalCtrl, 'Your Goal (e.g. Get placed at FAANG)', sw,
-                  maxLines: 2),
+              _field(
+                goalCtrl,
+                'Your Goal (e.g. Get placed at FAANG)',
+                sw,
+                maxLines: 2,
+              ),
               SizedBox(height: sw * 0.025),
               _field(statusCtrl, 'Status (e.g. Active, Placed, Looking)', sw),
               SizedBox(height: sw * 0.040),
@@ -3539,14 +4087,19 @@ class _ProfileScreenState extends State<ProfileScreen>
                   width: double.infinity,
                   padding: EdgeInsets.symmetric(vertical: sw * 0.040),
                   decoration: BoxDecoration(
-                      color: kPrimary,
-                      borderRadius: BorderRadius.circular(14)),
+                    color: kPrimary,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
                   child: Center(
-                      child: Text('Save Changes',
-                          style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w800,
-                              fontSize: sw * 0.035))),
+                    child: Text(
+                      'Save Changes',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                        fontSize: sw * 0.035,
+                      ),
+                    ),
+                  ),
                 ),
               ),
               SizedBox(height: sw * 0.02),
@@ -3568,18 +4121,20 @@ class _ProfileScreenState extends State<ProfileScreen>
     showDialog(
       context: context,
       builder: (_) => Dialog(
-        shape:
-        RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         child: Padding(
           padding: EdgeInsets.all(sw * 0.06),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('Add Certificate',
-                  style: TextStyle(
-                      fontSize: sw * 0.040,
-                      fontWeight: FontWeight.w800,
-                      color: kInk)),
+              Text(
+                'Add Certificate',
+                style: TextStyle(
+                  fontSize: sw * 0.040,
+                  fontWeight: FontWeight.w800,
+                  color: kInk,
+                ),
+              ),
               SizedBox(height: sw * 0.040),
               _field(nameCtrl, 'Certificate Name', sw),
               SizedBox(height: sw * 0.025),
@@ -3595,14 +4150,19 @@ class _ProfileScreenState extends State<ProfileScreen>
                       child: Container(
                         padding: EdgeInsets.symmetric(vertical: sw * 0.030),
                         decoration: BoxDecoration(
-                            color: kBgPage,
-                            borderRadius: BorderRadius.circular(12)),
+                          color: kBgPage,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                         child: Center(
-                            child: Text('Cancel',
-                                style: TextStyle(
-                                    color: kMuted,
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: sw * 0.033))),
+                          child: Text(
+                            'Cancel',
+                            style: TextStyle(
+                              color: kMuted,
+                              fontWeight: FontWeight.w700,
+                              fontSize: sw * 0.033,
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                   ),
@@ -3621,14 +4181,19 @@ class _ProfileScreenState extends State<ProfileScreen>
                       child: Container(
                         padding: EdgeInsets.symmetric(vertical: sw * 0.030),
                         decoration: BoxDecoration(
-                            color: kPrimary,
-                            borderRadius: BorderRadius.circular(12)),
+                          color: kPrimary,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                         child: Center(
-                            child: Text('Add',
-                                style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w800,
-                                    fontSize: sw * 0.033))),
+                          child: Text(
+                            'Add',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w800,
+                              fontSize: sw * 0.033,
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                   ),
@@ -3653,7 +4218,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     if (userId == null) return;
     try {
       final res = await http.post(
-        Uri.parse('${ProfileState._baseUrl}/api/certificates'),
+        Uri.parse('${ProfileState._baseUrl}/certificates'),
         headers: {
           "Content-Type": "application/json",
           "Authorization": "Bearer $token",
@@ -3668,13 +4233,15 @@ class _ProfileScreenState extends State<ProfileScreen>
       if (res.statusCode == 200 || res.statusCode == 201) {
         final body = jsonDecode(res.body);
         final certId = body is Map ? _str(body['data']?['certificate_id']) : '';
-        profileState.set(() => profileState.certifications.add({
-          'certificate_id': certId,
-          'name': name,
-          'issuer': issuer,
-          'date': date,
-          'file_url': '',
-        }));
+        profileState.set(
+          () => profileState.certifications.add({
+            'certificate_id': certId,
+            'name': name,
+            'issuer': issuer,
+            'date': date,
+            'file_url': '',
+          }),
+        );
         if (mounted) _showSnack('Certificate added! ✅', kSuccess);
       } else {
         final body = jsonDecode(res.body);
@@ -3682,8 +4249,8 @@ class _ProfileScreenState extends State<ProfileScreen>
           _showSnack(
             body is Map
                 ? (_str(body['message']).isEmpty
-                ? 'Failed to save certificate'
-                : _str(body['message']))
+                      ? 'Failed to save certificate'
+                      : _str(body['message']))
                 : 'Failed to save certificate',
             Colors.red,
           );
@@ -3701,18 +4268,20 @@ class _ProfileScreenState extends State<ProfileScreen>
     showDialog(
       context: context,
       builder: (_) => Dialog(
-        shape:
-        RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         child: Padding(
           padding: EdgeInsets.all(sw * 0.06),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('Add Project',
-                  style: TextStyle(
-                      fontSize: sw * 0.040,
-                      fontWeight: FontWeight.w800,
-                      color: kInk)),
+              Text(
+                'Add Project',
+                style: TextStyle(
+                  fontSize: sw * 0.040,
+                  fontWeight: FontWeight.w800,
+                  color: kInk,
+                ),
+              ),
               SizedBox(height: sw * 0.040),
               _field(titleCtrl, 'Project Title', sw),
               SizedBox(height: sw * 0.025),
@@ -3726,14 +4295,19 @@ class _ProfileScreenState extends State<ProfileScreen>
                       child: Container(
                         padding: EdgeInsets.symmetric(vertical: sw * 0.030),
                         decoration: BoxDecoration(
-                            color: kBgPage,
-                            borderRadius: BorderRadius.circular(12)),
+                          color: kBgPage,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                         child: Center(
-                            child: Text('Cancel',
-                                style: TextStyle(
-                                    color: kMuted,
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: sw * 0.033))),
+                          child: Text(
+                            'Cancel',
+                            style: TextStyle(
+                              color: kMuted,
+                              fontWeight: FontWeight.w700,
+                              fontSize: sw * 0.033,
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                   ),
@@ -3751,14 +4325,19 @@ class _ProfileScreenState extends State<ProfileScreen>
                       child: Container(
                         padding: EdgeInsets.symmetric(vertical: sw * 0.030),
                         decoration: BoxDecoration(
-                            color: kPrimary,
-                            borderRadius: BorderRadius.circular(12)),
+                          color: kPrimary,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                         child: Center(
-                            child: Text('Add',
-                                style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w800,
-                                    fontSize: sw * 0.033))),
+                          child: Text(
+                            'Add',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w800,
+                              fontSize: sw * 0.033,
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                   ),
@@ -3782,7 +4361,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     if (userId == null) return;
     try {
       final res = await http.post(
-        Uri.parse('${ProfileState._baseUrl}/api/projects'),
+        Uri.parse('${ProfileState._baseUrl}/projects'),
         headers: {
           "Content-Type": "application/json",
           "Authorization": "Bearer $token",
@@ -3798,13 +4377,15 @@ class _ProfileScreenState extends State<ProfileScreen>
         final projectId = (body is Map && body['data'] != null)
             ? body['data']['project_id']
             : null;
-        profileState.set(() => profileState.projects.add({
-          'project_id': projectId,
-          'title': title,
-          'desc': desc,
-          'tech': <String>[],
-          'link': '',
-        }));
+        profileState.set(
+          () => profileState.projects.add({
+            'project_id': projectId,
+            'title': title,
+            'desc': desc,
+            'tech': <String>[],
+            'link': '',
+          }),
+        );
         if (mounted) _showSnack('Project added! ✅', kSuccess);
       } else {
         final body = jsonDecode(res.body);
@@ -3812,8 +4393,8 @@ class _ProfileScreenState extends State<ProfileScreen>
           _showSnack(
             body is Map
                 ? (_str(body['message']).isEmpty
-                ? 'Failed to save project'
-                : _str(body['message']))
+                      ? 'Failed to save project'
+                      : _str(body['message']))
                 : 'Failed to save project',
             Colors.red,
           );
@@ -3825,12 +4406,12 @@ class _ProfileScreenState extends State<ProfileScreen>
   }
 
   Widget _field(
-      TextEditingController ctrl,
-      String hint,
-      double sw, {
-        TextInputType type = TextInputType.text,
-        int maxLines = 1,
-      }) {
+    TextEditingController ctrl,
+    String hint,
+    double sw, {
+    TextInputType type = TextInputType.text,
+    int maxLines = 1,
+  }) {
     return TextField(
       controller: ctrl,
       keyboardType: type,
@@ -3842,13 +4423,17 @@ class _ProfileScreenState extends State<ProfileScreen>
         filled: true,
         fillColor: kBgPage,
         border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: kBorder)),
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: kBorder),
+        ),
         focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: kPrimary, width: 2)),
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: kPrimary, width: 2),
+        ),
         contentPadding: EdgeInsets.symmetric(
-            horizontal: sw * 0.040, vertical: sw * 0.030),
+          horizontal: sw * 0.040,
+          vertical: sw * 0.030,
+        ),
       ),
     );
   }

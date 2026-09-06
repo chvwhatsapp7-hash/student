@@ -10,6 +10,7 @@ import 'package:internship_app/services/fcm_token_service.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 
 import '../../api_services/authservice.dart';
+import '../../services/api_config.dart';
 import '../premium/premium_bottom_sheet.dart';
 import '../premium/premium_helper.dart';
 
@@ -385,7 +386,7 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
     setState(() => isLoading = true);
 
     final url = Uri.parse(
-      'https://studenthub-backend-woad.vercel.app/api/auth/login',
+      '${ApiConfig.baseUrl}/auth/login',
     );
     try {
       final response = await http
@@ -518,7 +519,7 @@ class _CommonLoginScreenState extends State<CommonLoginScreen>
       debugPrint('Got idToken: ${idToken.substring(0, 20)}...');
 
       final url = Uri.parse(
-        'https://studenthub-backend-woad.vercel.app/api/auth/google-login',
+        '${ApiConfig.baseUrl}/auth/google-login',
       );
       final response = await http
           .post(

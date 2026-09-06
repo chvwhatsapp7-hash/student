@@ -1,9 +1,11 @@
 import 'dart:convert';
+
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
+import 'api_config.dart';
 
 class ApiClient {
-  static const String baseUrl = 'https://your-api.com/api'; // 🔁 replace
+  static String get baseUrl => ApiConfig.baseUrl;
   static const _storage = FlutterSecureStorage();
 
   // ── Token helpers ─────────────────────────────────────────────
@@ -32,22 +34,28 @@ class ApiClient {
     return http.get(uri, headers: await _headers());
   }
 
-  static Future<http.Response> post(String path, Map<String, dynamic> body) async {
+  static Future<http.Response> post(
+    String path,
+    Map<String, dynamic> body,
+  ) async {
     final uri = Uri.parse('$baseUrl$path');
-    return http.post(uri,
-        headers: await _headers(), body: jsonEncode(body));
+    return http.post(uri, headers: await _headers(), body: jsonEncode(body));
   }
 
-  static Future<http.Response> put(String path, Map<String, dynamic> body) async {
+  static Future<http.Response> put(
+    String path,
+    Map<String, dynamic> body,
+  ) async {
     final uri = Uri.parse('$baseUrl$path');
-    return http.put(uri,
-        headers: await _headers(), body: jsonEncode(body));
+    return http.put(uri, headers: await _headers(), body: jsonEncode(body));
   }
 
-  static Future<http.Response> patch(String path, Map<String, dynamic> body) async {
+  static Future<http.Response> patch(
+    String path,
+    Map<String, dynamic> body,
+  ) async {
     final uri = Uri.parse('$baseUrl$path');
-    return http.patch(uri,
-        headers: await _headers(), body: jsonEncode(body));
+    return http.patch(uri, headers: await _headers(), body: jsonEncode(body));
   }
 
   static Future<http.Response> delete(String path) async {
@@ -81,7 +89,7 @@ class ApiClient {
 // ── Custom exception ──────────────────────────────────────────────
 
 class ApiException implements Exception {
-  final int    statusCode;
+  final int statusCode;
   final String message;
   const ApiException({required this.statusCode, required this.message});
 

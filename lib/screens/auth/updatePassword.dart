@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
+import '../../services/api_config.dart';
 
 // ─────────────────────────────────────────────
 //  DESIGN TOKENS (same as signup screen)
@@ -115,7 +116,7 @@ class _UpdatePasswordScreenState extends State<UpdatePasswordScreen>
 
     // Change this URL to your actual update-password endpoint
     final url = Uri.parse(
-      'https://studenthub-backend-woad.vercel.app/api/auth/update-password',
+      '${ApiConfig.baseUrl}/auth/update-password',
     );
 
     final body = {

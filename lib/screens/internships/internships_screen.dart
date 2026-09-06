@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 
 import '../../api_services/applications.dart';
 import '../../api_services/authservice.dart';
+import '../../widgets/social_post_card.dart';
 
 // ═══════════════════════════════════════════
 //  DESIGN TOKENS
@@ -26,42 +27,39 @@ const kSelectedBg = Color(0xFFEFF6FF);
 const kTabs = ['All', 'Paid', 'Unpaid'];
 
 // ═══════════════════════════════════════════
-//  FILTER MODEL
+//  INTERN FILTER MODEL
 // ═══════════════════════════════════════════
 class InternFilter {
-  String? type;
-  RangeValues stipendRange;
-  Set<String> selectedLocations;
-  Set<String> selectedCompanies;
-  Set<String> selectedRoles;
+  final String? type;
+  final RangeValues stipendRange;
+  final Set<String> selectedLocations;
+  final Set<String> selectedCompanies;
+  final Set<String> selectedRoles;
 
   InternFilter({
     this.type,
     this.stipendRange = const RangeValues(0, 100000),
-    Set<String>? selectedLocations,
-    Set<String>? selectedCompanies,
-    Set<String>? selectedRoles,
-  })  : selectedLocations = selectedLocations ?? {},
-        selectedCompanies = selectedCompanies ?? {},
-        selectedRoles = selectedRoles ?? {};
+    this.selectedLocations = const {},
+    this.selectedCompanies = const {},
+    this.selectedRoles = const {},
+  });
 
-  bool get hasActiveFilters =>
+  bool get isActive =>
       type != null ||
-          stipendRange.start > 0 ||
-          stipendRange.end < 100000 ||
-          selectedLocations.isNotEmpty ||
-          selectedCompanies.isNotEmpty ||
-          selectedRoles.isNotEmpty;
+      stipendRange.start > 0 ||
+      stipendRange.end < 100000 ||
+      selectedLocations.isNotEmpty ||
+      selectedCompanies.isNotEmpty ||
+      selectedRoles.isNotEmpty;
 
-  int get activeCount {
-    int c = 0;
-    if (type != null) c++;
-    if (stipendRange.start > 0 || stipendRange.end < 100000) c++;
-    if (selectedLocations.isNotEmpty) c++;
-    if (selectedCompanies.isNotEmpty) c++;
-    if (selectedRoles.isNotEmpty) c++;
-    return c;
-  }
+  bool get hasActiveFilters => isActive;
+
+  int get activeCount =>
+      (type != null ? 1 : 0) +
+      (stipendRange.start > 0 || stipendRange.end < 100000 ? 1 : 0) +
+      selectedLocations.length +
+      selectedCompanies.length +
+      selectedRoles.length;
 
   InternFilter copyWith({
     String? type,
@@ -74,18 +72,14 @@ class InternFilter {
       InternFilter(
         type: clearType ? null : (type ?? this.type),
         stipendRange: stipendRange ?? this.stipendRange,
-        selectedLocations:
-        selectedLocations ?? Set.from(this.selectedLocations),
-        selectedCompanies:
-        selectedCompanies ?? Set.from(this.selectedCompanies),
-        selectedRoles: selectedRoles ?? Set.from(this.selectedRoles),
+        selectedLocations: selectedLocations ?? this.selectedLocations,
+        selectedCompanies: selectedCompanies ?? this.selectedCompanies,
+        selectedRoles: selectedRoles ?? this.selectedRoles,
       );
-
-  InternFilter reset() => InternFilter();
 }
 
 // ═══════════════════════════════════════════
-//  MODEL
+//  INTERNSHIP MODEL
 // ═══════════════════════════════════════════
 class Internship {
   final int id;
@@ -93,6 +87,12 @@ class Internship {
   final int match;
   final List<String> tags;
   final bool remote;
+  final String? imageUrl;
+  final String? companyLogo;
+  final int likesCount;
+  final int commentsCount;
+  final int sharesCount;
+  final bool isLiked;
 
   Internship({
     required this.id,
@@ -107,18 +107,24 @@ class Internship {
     required this.tags,
     required this.remote,
     required this.desc,
+    this.imageUrl,
+    this.companyLogo,
+    this.likesCount = 0,
+    this.commentsCount = 0,
+    this.sharesCount = 0,
+    this.isLiked = false,
   });
 
   factory Internship.fromJson(Map<String, dynamic> json) => Internship(
     id: json['internship_id'] ?? 0,
     title: json['title'] ?? 'No title',
-    company: 'Company ${json['company_id'] ?? 0}',
+    company: json['company_name'] ?? (json['company'] is String ? json['company'] : 'Company ${json['company_id'] ?? 0}'),
     location: json['location'] ?? 'Remote',
     stipend: json['stipend'] != null ? '${json['stipend']}' : 'Unpaid',
     type: json['internship_type'] ?? 'Paid',
     duration: json['duration'] ?? '1 month',
     match: 0,
-    logo: '',
+    logo: json['company_logo'] ?? '',
     tags: (json['skills'] as List<dynamic>? ?? [])
         .map<String>(
             (s) => s is Map ? s['name'].toString() : s.toString())
@@ -2508,11 +2514,7 @@ class _InternshipCardState extends State<InternshipCard>
   @override
   Widget build(BuildContext context) {
     final intern = widget.internship;
-    final sw = widget.sw;
     final ctrl = widget.ctrl;
-    final theme =
-    resolveInternTheme(intern.title, intern.company);
-    final isPaid = intern.type == 'Paid';
 
     final fade = ctrl != null
         ? CurvedAnimation(parent: ctrl, curve: Curves.easeOut)
@@ -2528,382 +2530,28 @@ class _InternshipCardState extends State<InternshipCard>
       opacity: fade,
       child: SlideTransition(
         position: slide,
-        child: GestureDetector(
+        child: SocialPostCard(
+          postType: 'internship',
+          id: intern.id,
+          title: intern.title,
+          company: intern.company,
+          location: intern.location,
+          type: intern.type,
+          primaryBadge: intern.stipend != 'Unpaid' ? '₹${intern.stipend}/mo' : 'Unpaid',
+          secondaryBadge: intern.duration,
+          imageUrl: intern.imageUrl,
+          companyLogo: intern.companyLogo,
+          description: intern.desc,
+          tags: intern.tags,
+          isSaved: widget.isSaved,
+          isApplied: widget.isApplied,
+          initialLikesCount: intern.likesCount,
+          initialCommentsCount: intern.commentsCount,
+          initialSharesCount: intern.sharesCount,
+          initialIsLiked: intern.isLiked,
+          onSave: widget.onSave,
+          onApply: widget.onApply,
           onTap: widget.onTap,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 400),
-            margin: EdgeInsets.only(bottom: sw * 0.035),
-            decoration: BoxDecoration(
-              gradient: widget.isApplied
-                  ? LinearGradient(
-                colors: [
-                  theme.grad1.withOpacity(0.09),
-                  theme.grad2.withOpacity(0.04),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              )
-                  : null,
-              color: widget.isApplied ? null : kCardBg,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: widget.isApplied
-                    ? theme.grad1.withOpacity(0.50)
-                    : kBorder,
-                width: widget.isApplied ? 2 : 1.5,
-              ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (widget.isApplied)
-                  Container(
-                    height: 3,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                          colors: [theme.grad1, theme.grad2],
-                          begin: Alignment.centerLeft,
-                          end: Alignment.centerRight),
-                      borderRadius: const BorderRadius.vertical(
-                          top: Radius.circular(20)),
-                    ),
-                  ),
-                Padding(
-                  padding: EdgeInsets.fromLTRB(
-                      sw * 0.04, sw * 0.040, sw * 0.04, 0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        crossAxisAlignment:
-                        CrossAxisAlignment.start,
-                        children: [
-                          InternIconTile(
-                              title: intern.title,
-                              company: intern.company,
-                              size: sw * 0.125),
-                          SizedBox(width: sw * 0.035),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment:
-                              CrossAxisAlignment.start,
-                              children: [
-                                Text(intern.title,
-                                    style: TextStyle(
-                                        fontWeight:
-                                        FontWeight.w800,
-                                        fontSize: sw * 0.035,
-                                        color: kInk)),
-                                SizedBox(height: sw * 0.008),
-                                Text(intern.company,
-                                    style: TextStyle(
-                                        fontWeight:
-                                        FontWeight.w600,
-                                        color: kMuted,
-                                        fontSize: sw * 0.030)),
-                                SizedBox(height: sw * 0.013),
-                                Row(
-                                  children: [
-                                    Icon(Icons.location_on,
-                                        size: sw * 0.030,
-                                        color: kHint),
-                                    SizedBox(width: sw * 0.008),
-                                    Flexible(
-                                      child: Text(
-                                          intern.location,
-                                          overflow: TextOverflow
-                                              .ellipsis,
-                                          style: TextStyle(
-                                              fontSize: sw * 0.030,
-                                              color: kMuted)),
-                                    ),
-                                    if (intern.remote) ...[
-                                      SizedBox(width: sw * 0.015),
-                                      Container(
-                                        padding: EdgeInsets.symmetric(
-                                            horizontal: sw * 0.018,
-                                            vertical: sw * 0.005),
-                                        decoration: BoxDecoration(
-                                            color: kSelectedBg,
-                                            borderRadius:
-                                            BorderRadius.circular(
-                                                20)),
-                                        child: Text('Remote',
-                                            style: TextStyle(
-                                                fontSize: sw * 0.025,
-                                                fontWeight:
-                                                FontWeight.w700,
-                                                color: kPrimary)),
-                                      ),
-                                    ],
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                          GestureDetector(
-                            onTap: widget.onSave,
-                            behavior: HitTestBehavior.opaque,
-                            child: AnimatedContainer(
-                              duration: const Duration(
-                                  milliseconds: 220),
-                              width: sw * 0.085,
-                              height: sw * 0.085,
-                              decoration: BoxDecoration(
-                                color: widget.isSaved
-                                    ? kSelectedBg
-                                    : kBgPage,
-                                borderRadius:
-                                BorderRadius.circular(10),
-                                border: Border.all(
-                                    color: widget.isSaved
-                                        ? kPrimary
-                                        : kBorder),
-                              ),
-                              child: Icon(
-                                widget.isSaved
-                                    ? Icons.bookmark
-                                    : Icons.bookmark_border,
-                                size: sw * 0.043,
-                                color: widget.isSaved
-                                    ? kPrimary
-                                    : kHint,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: sw * 0.030),
-                      Text(intern.desc,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                              fontSize: sw * 0.030,
-                              color: kHint,
-                              height: 1.5)),
-                      SizedBox(height: sw * 0.015),
-                      Row(
-                        children: [
-                          Icon(Icons.info_outline,
-                              size: sw * 0.028, color: kHint),
-                          SizedBox(width: sw * 0.010),
-                          Text('Tap card to view full details',
-                              style: TextStyle(
-                                  fontSize: sw * 0.025,
-                                  color:
-                                  kHint.withOpacity(0.70),
-                                  fontStyle: FontStyle.italic)),
-                        ],
-                      ),
-                      SizedBox(height: sw * 0.030),
-                      Wrap(
-                        spacing: sw * 0.018,
-                        runSpacing: sw * 0.015,
-                        children: [
-                          _chip(
-                              Icons.schedule, intern.duration, sw),
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                                horizontal: sw * 0.023,
-                                vertical: sw * 0.013),
-                            decoration: BoxDecoration(
-                              color: isPaid
-                                  ? const Color(0xFFF0FDF4)
-                                  : const Color(0xFFFAF5FF),
-                              borderRadius:
-                              BorderRadius.circular(8),
-                              border: Border.all(
-                                  color: isPaid
-                                      ? const Color(0xFF86EFAC)
-                                      : const Color(
-                                      0xFFDDD6FE)),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                    isPaid
-                                        ? Icons.monetization_on
-                                        : Icons.favorite,
-                                    size: sw * 0.030,
-                                    color: isPaid
-                                        ? kSuccess
-                                        : const Color(
-                                        0xFF7C3AED)),
-                                SizedBox(width: sw * 0.010),
-                                Text(intern.stipend,
-                                    style: TextStyle(
-                                        fontSize: sw * 0.028,
-                                        fontWeight:
-                                        FontWeight.w800,
-                                        color: isPaid
-                                            ? kSuccess
-                                            : const Color(
-                                            0xFF7C3AED))),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                      if (intern.tags.isNotEmpty) ...[
-                        SizedBox(height: sw * 0.015),
-                        Wrap(
-                          spacing: sw * 0.015,
-                          runSpacing: sw * 0.015,
-                          children: intern.tags
-                              .map((t) => Container(
-                            padding: EdgeInsets.symmetric(
-                                horizontal: sw * 0.023,
-                                vertical: sw * 0.013),
-                            decoration: BoxDecoration(
-                              color: const Color(
-                                  0xFFF8FAFC),
-                              borderRadius:
-                              BorderRadius.circular(
-                                  8),
-                              border: Border.all(
-                                  color: kBorder),
-                            ),
-                            child: Text(t,
-                                style: TextStyle(
-                                    fontSize: sw * 0.028,
-                                    fontWeight:
-                                    FontWeight.w700,
-                                    color: kSlate)),
-                          ))
-                              .toList(),
-                        ),
-                      ],
-                      Container(
-                        margin: EdgeInsets.symmetric(
-                            vertical: sw * 0.030),
-                        height: 1,
-                        color: const Color(0xFFF1F5F9),
-                      ),
-                      Row(
-                        children: [
-                          if (widget.isApplied)
-                            Container(
-                              padding: EdgeInsets.symmetric(
-                                  horizontal: sw * 0.025,
-                                  vertical: sw * 0.013),
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(colors: [
-                                  theme.grad1,
-                                  theme.grad2
-                                ]),
-                                borderRadius:
-                                BorderRadius.circular(20),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(Icons.check_circle,
-                                      color: Colors.white,
-                                      size: sw * 0.030),
-                                  SizedBox(width: sw * 0.013),
-                                  Text('Applied',
-                                      style: TextStyle(
-                                          fontSize: sw * 0.028,
-                                          fontWeight:
-                                          FontWeight.w800,
-                                          color: Colors.white)),
-                                ],
-                              ),
-                            )
-                          else if (intern.match > 0)
-                            _matchBadge(intern.match, sw),
-                          const Spacer(),
-                          GestureDetector(
-                            onTapDown: widget.isApplied
-                                ? null
-                                : (_) {
-                              btnCtrl.forward();
-                              setState(
-                                      () => btnPressed = true);
-                            },
-                            onTapUp: widget.isApplied
-                                ? null
-                                : (_) {
-                              btnCtrl.reverse();
-                              setState(
-                                      () => btnPressed = false);
-                              widget.onApply();
-                            },
-                            onTapCancel: () {
-                              btnCtrl.reverse();
-                              setState(() => btnPressed = false);
-                            },
-                            behavior: HitTestBehavior.opaque,
-                            child: ScaleTransition(
-                              scale: btnScale,
-                              child: AnimatedContainer(
-                                duration: const Duration(
-                                    milliseconds: 300),
-                                padding: EdgeInsets.symmetric(
-                                    horizontal: sw * 0.055,
-                                    vertical: sw * 0.025),
-                                decoration: BoxDecoration(
-                                  gradient: widget.isApplied
-                                      ? null
-                                      : LinearGradient(
-                                      colors: [
-                                        theme.grad1,
-                                        theme.grad2
-                                      ],
-                                      begin:
-                                      Alignment.centerLeft,
-                                      end: Alignment
-                                          .centerRight),
-                                  color: widget.isApplied
-                                      ? const Color(0xFFF0FDF4)
-                                      : null,
-                                  borderRadius:
-                                  BorderRadius.circular(30),
-                                  border: widget.isApplied
-                                      ? Border.all(
-                                      color: const Color(
-                                          0xFF86EFAC),
-                                      width: 1.5)
-                                      : null,
-                                  boxShadow:
-                                  widget.isApplied || btnPressed
-                                      ? null
-                                      : [
-                                    BoxShadow(
-                                        color: theme
-                                            .grad1
-                                            .withOpacity(
-                                            0.28),
-                                        blurRadius: 10,
-                                        offset:
-                                        const Offset(
-                                            0, 4))
-                                  ],
-                                ),
-                                child: Text(
-                                  widget.isApplied
-                                      ? 'Applied'
-                                      : 'Apply Now',
-                                  style: TextStyle(
-                                      color: widget.isApplied
-                                          ? kSuccess
-                                          : Colors.white,
-                                      fontWeight: FontWeight.w800,
-                                      fontSize: sw * 0.033),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: sw * 0.04),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
         ),
       ),
     );

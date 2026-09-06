@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
+import '../../services/api_config.dart';
 
 // ─────────────────────────────────────────────
 //  DESIGN TOKENS
@@ -252,7 +253,7 @@ class _CommonSignupScreenState extends State<CommonSignupScreen>
     setState(() => _isLoading = true);
 
     final url = Uri.parse(
-      'https://studenthub-backend-woad.vercel.app/api/auth/register',
+      '${ApiConfig.baseUrl}/auth/register',
     );
 
     int roleId;

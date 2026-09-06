@@ -11,6 +11,7 @@ import 'package:http_parser/http_parser.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../api_services/authservice.dart';
+import '../../services/api_config.dart';
 import 'school_data.dart';
 import 'school_state.dart';
 
@@ -312,7 +313,7 @@ class SchoolProfileScreen extends StatefulWidget {
 class _SchoolProfileScreenState extends State<SchoolProfileScreen>
     with TickerProviderStateMixin {
 
-  static const _baseUrl = 'https://studenthub-backend-woad.vercel.app';
+  static String get _baseUrl => ApiConfig.baseUrl;
   final _storage = const FlutterSecureStorage();
 
   // ── API state ────────────────────────────
@@ -536,7 +537,7 @@ class _SchoolProfileScreenState extends State<SchoolProfileScreen>
       final ext = fileName.split('.').last.toLowerCase();
       final mediaType = MediaType('image', ext == 'jpg' ? 'jpeg' : ext);
 
-      final uri     = Uri.parse('$_baseUrl/api/profile/getUsers');
+      final uri     = Uri.parse('$_baseUrl/profile/getUsers');
       final request = http.MultipartRequest('PUT', uri)
         ..headers['Authorization'] = 'Bearer $token'
         ..fields['user_id']     = userId

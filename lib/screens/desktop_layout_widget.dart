@@ -160,41 +160,46 @@ class DesktopLayoutWidget extends StatelessWidget {
   /// DETAIL PANEL
   /// ============================
   Widget buildDetailPanel() {
-    final job =
-    jobs.firstWhere((element) => element.id == selectedJob);
+    final jobMatches = jobs.where((element) => element.id == selectedJob);
+    if (jobMatches.isEmpty) {
+      return const Center(child: Text("Select a job"));
+    }
+    final job = jobMatches.first;
 
     return Padding(
       padding: const EdgeInsets.all(20),
       child: Card(
         elevation: 1,
         shape:
-        RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
         child: Padding(
           padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(job.title,
-                  style: const TextStyle(
-                      fontSize: 24, fontWeight: FontWeight.bold)),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(job.title,
+                    style: const TextStyle(
+                        fontSize: 24, fontWeight: FontWeight.bold)),
 
-              const SizedBox(height: 6),
+                const SizedBox(height: 6),
 
-              Text(job.company,
-                  style: const TextStyle(color: Colors.blue)),
+                Text(job.company,
+                    style: const TextStyle(color: Colors.blue)),
 
-              const SizedBox(height: 20),
+                const SizedBox(height: 20),
 
-              const Text(
-                  "We're looking for passionate engineers to build scalable systems."),
+                const Text(
+                    "We're looking for passionate engineers to build scalable systems."),
 
-              const Spacer(),
+                const SizedBox(height: 24),
 
-              ElevatedButton(
-                onPressed: () {},
-                child: const Text("Apply Now"),
-              )
-            ],
+                ElevatedButton(
+                  onPressed: () {},
+                  child: const Text("Apply Now"),
+                )
+              ],
+            ),
           ),
         ),
       ),

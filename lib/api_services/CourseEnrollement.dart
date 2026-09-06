@@ -10,10 +10,6 @@ class CourseService {
   // 🔐 Secure Storage
   static const FlutterSecureStorage _storage = FlutterSecureStorage();
 
-  // 🌐 Base URL
-  static const String baseUrl =
-      "https://studenthub-backend-woad.vercel.app/api/course-enrollments";
-
   // ─────────────────────────────────────────────
   // ✅ GET USER ID
   // ─────────────────────────────────────────────

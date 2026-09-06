@@ -1,11 +1,13 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../api_services/authservice.dart';
+import '../../services/api_config.dart';
 
 // ─────────────────────────────────────────────
-//  DESIGN TOKENS  (same as signup screen)
+//  DESIGN TOKENS
 // ─────────────────────────────────────────────
 const _kInk = Color(0xFF0F172A);
 const _kMuted = Color(0xFF64748B);
@@ -58,16 +60,13 @@ const _roles = [
     subtitle: 'M.E / M.Tech / MBA / M.Sc',
     accent: Color(0xFF7C3AED),
     bg: Color(0xFFF5F3FF),
-    route: '/engineering', // update when postgrad portal is ready
+    route: '/engineering',
   ),
 ];
 
 // ─────────────────────────────────────────────
 //  SCREEN
 // ─────────────────────────────────────────────
-
-/// Shown after OAuth sign-in when role_id == 0 (brand-new Google account).
-/// Saves the chosen role via API → updates secure storage → navigates to portal.
 class RoleSelectionScreen extends StatefulWidget {
   const RoleSelectionScreen({super.key});
 
@@ -145,9 +144,8 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen>
     }
   }
 
-  // ── Save role to backend + secure storage, then navigate ──
   Future<void> _confirm() async {
-    if (_selected == null) return;
+    if (_selected == null || _isLoading) return;
 
     HapticFeedback.mediumImpact();
     setState(() => _isLoading = true);
@@ -155,37 +153,54 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen>
     final roleId = _toRoleId(_selected!.value);
 
     try {
-      final userId = AuthService().userId; // ✅ correct
+      final auth = AuthService();
+      final userId = auth.userId;
+
+      debugPrint('👤 USER ID: $userId');
+      debugPrint('🎯 ROLE ID: $roleId');
 
       if (userId == null) {
         _showError('User not found. Please login again.');
         return;
       }
 
-      final response = await AuthService().put('/profile/getUsers', {
-        'user_id': userId, // ✅ required by backend
-        'role_id': roleId, // ✅ role update
+      // ✅ FormData so multer can parse req.body (backend has bodyParser: false)
+      final formData = FormData.fromMap({
+        'user_id': userId.toString(),
+        'role_id': roleId.toString(),
       });
 
-      debugPrint('STATUS: ${response.statusCode}');
-      debugPrint('DATA: ${response.data}');
+      // ✅ auth.dio is already public, interceptor auto-adds Bearer token
+      final response = await auth.dio.put(
+        '${ApiConfig.baseUrl}/profile/getUsers',
+        data: formData,
+      );
+
+      debugPrint('✅ STATUS: ${response.statusCode}');
+      debugPrint('✅ DATA: ${response.data}');
 
       if (response.statusCode == 200) {
-        await AuthService().updateRoleId(roleId.toString());
-
+        await auth.updateRoleId(roleId.toString());
         debugPrint('✅ Role updated to $roleId');
-
         if (!mounted) return;
         context.go(_selected!.route);
       } else {
-        _showError(response.data['message'] ?? 'Failed to save role');
+        _showError(
+          response.data?['message']?.toString() ?? 'Failed to save role',
+        );
       }
+    } on DioException catch (e) {
+      debugPrint('❌ STATUS: ${e.response?.statusCode}');
+      debugPrint('❌ DATA: ${e.response?.data}');
+      _showError(
+        e.response?.data?['message']?.toString() ?? 'Server error. Try again.',
+      );
     } catch (e) {
       debugPrint('❌ FULL ERROR: $e');
       _showError('Something went wrong. Please try again.');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
-
-    if (mounted) setState(() => _isLoading = false);
   }
 
   void _showError(String msg) {
@@ -486,8 +501,9 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen>
               setState(() => _btnPressed = true);
             }
           : null,
-      onTapUp: enabled
-          ? (_) {
+      onTap:
+          enabled // ✅ changed from onTapUp to onTap
+          ? () {
               _btnCtrl.reverse();
               setState(() => _btnPressed = false);
               _confirm();
@@ -540,7 +556,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen>
                           fontWeight: FontWeight.w800,
                           color: enabled
                               ? Colors.white
-                              : Colors.white.withOpacity(0.35),
+                              : Colors.white.withValues(alpha: 0.35),
                           letterSpacing: 0.2,
                         ),
                       ),

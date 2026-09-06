@@ -123,7 +123,7 @@ class SchoolApiService {
     } catch (e) {
       debugPrint('Get Courses Error: $e');
     }
-    return kCourses;
+    return [];
   }
 
   // ── PROFILE ───────────────────────────────────────────────────────────────

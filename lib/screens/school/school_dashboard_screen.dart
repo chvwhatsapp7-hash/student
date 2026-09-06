@@ -6,6 +6,7 @@ import 'dart:async';
 import 'dart:math';
 
 import '../../api_services/authservice.dart';
+import '../../services/school_api_service.dart';
 import 'school_data.dart';
 import 'school_state.dart';
 // Import the ProfileApiData & helpers from profile screen
@@ -29,16 +30,6 @@ const kSelectedBg     = Color(0xFFE8F1FE);
 const kSkyBlue        = Color(0xFF38BDF8);
 const kSuccess        = Color(0xFF16A34A);
 const kWarning        = Color(0xFFF59E0B);
-
-// ─────────────────────────────────────────────
-//  STATIC DATA (upcoming classes — unchanged)
-// ─────────────────────────────────────────────
-
-const _upcoming = [
-  {'day': 'Mon', 'time': '10:00 AM', 'subject': 'Python Basics',      'emoji': '🐍'},
-  {'day': 'Wed', 'time': '3:00 PM',  'subject': 'Scratch Programming', 'emoji': '🎮'},
-  {'day': 'Fri', 'time': '11:00 AM', 'subject': 'AI Concepts',         'emoji': '🤖'},
-];
 
 // ─────────────────────────────────────────────
 //  SLIDER ITEM MODEL
@@ -700,8 +691,10 @@ class _SchoolDashboardScreenState extends State<SchoolDashboardScreen>
 
   bool _scoreExpanded = false;
 
-  // Slider items from static kCourses data
-  List<_SliderItem> get _sliderItems => kCourses
+  List<Course> _schoolCourses = [];
+
+  // Slider items from dynamic school courses
+  List<_SliderItem> get _sliderItems => _schoolCourses
       .asMap()
       .entries
       .map((e) => _courseToSliderItem(e.value, e.key))
@@ -769,8 +762,18 @@ class _SchoolDashboardScreenState extends State<SchoolDashboardScreen>
   Future<void> _loadAll() async {
     setState(() { _isLoading = true; _error = null; });
     try {
-      final response =
-      await AuthService().dio.get('/profile/profile-school');
+      final coursesFuture = SchoolApiService.instance.getCourses();
+      final profileFuture = AuthService().dio.get('/profile/profile-school');
+
+      final results = await Future.wait([coursesFuture, profileFuture]);
+      final courses = results[0] as List<Course>;
+      final response = results[1] as dynamic;
+
+      if (mounted) {
+        setState(() {
+          _schoolCourses = courses;
+        });
+      }
 
       if (response.statusCode == 200) {
         final body = response.data as Map<String, dynamic>;
@@ -1912,23 +1915,91 @@ class _SchoolDashboardScreenState extends State<SchoolDashboardScreen>
           fontSize: 17, fontWeight: FontWeight.w800, color: kTextDark));
 
   // ─────────────────────────────────────────
-  //  UPCOMING CLASSES (unchanged)
+  //  UPCOMING CLASSES (dynamic from enrolled)
   // ─────────────────────────────────────────
 
   Widget _buildUpcomingList() {
+    final enrolled = _apiData?.courses ?? [];
+    if (enrolled.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: kCardBg,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: kCardBorder, width: 1.5),
+        ),
+        child: Row(children: [
+          Container(
+            width: 44, height: 44,
+            decoration: BoxDecoration(
+                color: kSelectedBg,
+                borderRadius: BorderRadius.circular(13)),
+            child: const Icon(Icons.event_note, color: kPrimaryBlue, size: 22),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('No upcoming classes',
+                    style: TextStyle(
+                        fontSize: 14, fontWeight: FontWeight.w800,
+                        color: kTextDark)),
+                const SizedBox(height: 3),
+                Text('Enroll in a course to see your schedule',
+                    style: TextStyle(fontSize: 12, color: kTextMuted)),
+              ],
+            ),
+          ),
+        ]),
+      );
+    }
+
+    const days = ['Mon', 'Wed', 'Fri', 'Tue', 'Thu', 'Sat'];
+    const times = ['10:00 AM', '3:00 PM', '11:00 AM', '4:00 PM', '2:00 PM'];
+
     return Column(
-      children: _upcoming.asMap().entries
-          .map((e) => _UpcomingCard(data: e.value, index: e.key))
-          .toList(),
+      children: enrolled.asMap().entries.map((e) {
+        final d = {
+          'day': days[e.key % days.length],
+          'time': times[e.key % times.length],
+          'subject': e.value.title,
+          'emoji': '📘',
+        };
+        return _UpcomingCard(data: d, index: e.key);
+      }).toList(),
     );
   }
 
   // ─────────────────────────────────────────
-  //  POPULAR COURSES (static kCourses)
+  //  POPULAR COURSES (dynamic _schoolCourses)
   // ─────────────────────────────────────────
 
   Widget _buildFeaturedCourseList() {
-    final featured = kCourses.take(3).toList();
+    if (_schoolCourses.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+        decoration: BoxDecoration(
+          color: kCardBg,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: kCardBorder, width: 1.5),
+        ),
+        child: Center(
+          child: Column(
+            children: [
+              Icon(Icons.school_outlined, size: 36, color: kTextMuted),
+              const SizedBox(height: 8),
+              Text(
+                'No courses available at the moment',
+                style: TextStyle(fontSize: 13, color: kTextMuted, fontWeight: FontWeight.w600),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    final featured = _schoolCourses.take(3).toList();
     return Column(
       children: featured.asMap().entries
           .map((e) => _FeaturedCourseCard(course: e.value, index: e.key))
@@ -1944,19 +2015,12 @@ class _SchoolDashboardScreenState extends State<SchoolDashboardScreen>
     final myName = _apiData?.fullName.isNotEmpty == true
         ? _apiData!.fullName
         : p.name;
+    final totalPts = _apiData?.totalScore.toInt() ?? p.totalPoints;
 
     final entries = [
       {
         'rank': '1', 'name': myName,
-        'points': '${p.totalPoints}', 'medal': '🥇', 'isMe': true,
-      },
-      {
-        'rank': '2', 'name': 'Aarav Mehta',
-        'points': '980',             'medal': '🥈', 'isMe': false,
-      },
-      {
-        'rank': '3', 'name': 'Kabir Singh',
-        'points': '840',             'medal': '🥉', 'isMe': false,
+        'points': '$totalPts', 'medal': '🥇', 'isMe': true,
       },
     ];
 
@@ -1990,7 +2054,7 @@ class _SchoolDashboardScreenState extends State<SchoolDashboardScreen>
                       color: isMe ? kPrimaryBlue : kCardBorder)),
               child: Center(
                 child: Text(
-                  (l['name']! as String)[0],
+                  (l['name']! as String).isNotEmpty ? (l['name']! as String)[0] : 'U',
                   style: TextStyle(
                       fontSize: 15, fontWeight: FontWeight.w800,
                       color: isMe ? kPrimaryBlue : kTextMuted),

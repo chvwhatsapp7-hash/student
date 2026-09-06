@@ -36,91 +36,6 @@ class SchoolNotif {
 }
 
 // ─────────────────────────────────────────────
-//  STATIC FALLBACK  (keeps UI alive offline)
-// ─────────────────────────────────────────────
-
-final List<SchoolNotif> _kFallback = [
-  SchoolNotif(
-    id: '1',
-    type: NotifType.course,
-    category: NotifCategory.personal,
-    title: 'Enrollment Confirmed 🎉',
-    body: 'You\'ve successfully enrolled in Python Basics. Your first class starts tomorrow at 3:00 PM.',
-    timeAgo: 'Just now',
-    redirectTo: '/school/courses',
-    isRead: false,
-  ),
-  SchoolNotif(
-    id: '2',
-    type: NotifType.course,
-    category: NotifCategory.public,
-    title: 'New Course Available',
-    body: 'Intro to AI & Machine Learning is now open for enrollment. Early bird spots filling fast!',
-    timeAgo: '1 hr ago',
-    redirectTo: '/school/courses',
-    isRead: false,
-  ),
-  SchoolNotif(
-    id: '3',
-    type: NotifType.achievement,
-    category: NotifCategory.personal,
-    title: 'Achievement Unlocked 🏆',
-    body: 'You\'ve earned the "7-Day Streak" badge. Keep the momentum going!',
-    timeAgo: '2 hrs ago',
-    redirectTo: '/school/profile',
-    isRead: false,
-  ),
-  SchoolNotif(
-    id: '4',
-    type: NotifType.course,
-    category: NotifCategory.personal,
-    title: 'Course Saved ✅',
-    body: 'Scratch Programming has been saved to your library. Start whenever you\'re ready!',
-    timeAgo: '5 hrs ago',
-    redirectTo: '/school/courses',
-    isRead: true,
-  ),
-  SchoolNotif(
-    id: '5',
-    type: NotifType.system,
-    category: NotifCategory.public,
-    title: 'Platform Announcement 📢',
-    body: 'TechPath is launching Live Doubt Sessions every weekend. Stay tuned for the full schedule!',
-    timeAgo: 'Yesterday',
-    isRead: true,
-  ),
-  SchoolNotif(
-    id: '6',
-    type: NotifType.achievement,
-    category: NotifCategory.personal,
-    title: 'Level Up! ⭐',
-    body: 'You\'ve reached Level 5! Intermediate courses are now unlocked for you.',
-    timeAgo: 'Yesterday',
-    redirectTo: '/school/profile',
-    isRead: true,
-  ),
-  SchoolNotif(
-    id: '7',
-    type: NotifType.reminder,
-    category: NotifCategory.personal,
-    title: 'Class Reminder 📅',
-    body: 'Your Scratch Programming class is tomorrow at 3:00 PM. Get your notes ready!',
-    timeAgo: '2 days ago',
-    redirectTo: '/school/courses',
-    isRead: true,
-  ),
-  SchoolNotif(
-    id: '8',
-    type: NotifType.system,
-    category: NotifCategory.public,
-    title: 'Welcome to TechPath! 🚀',
-    body: 'Your account is all set. Explore courses, earn XP, and start your coding journey!',
-    timeAgo: '3 days ago',
-    isRead: true,
-  ),
-];
-
-// ─────────────────────────────────────────────
 //  PURE HELPERS
 // ─────────────────────────────────────────────
 
@@ -301,7 +216,7 @@ class _SchoolNotificationsScreenState extends State<SchoolNotificationsScreen>
     } catch (_) {
       if (mounted) {
         setState(() {
-          _all = List<SchoolNotif>.from(_kFallback);
+          _all = [];
           _isLoading = false;
           _isRefreshing = false;
         });

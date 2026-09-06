@@ -298,7 +298,7 @@ class _CompaniesScreenState extends State<CompaniesScreen>
         child: SafeArea(
           bottom: false,
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 14, 20, 18),
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

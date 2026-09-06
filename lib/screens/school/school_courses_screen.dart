@@ -509,7 +509,7 @@ class _SchoolCoursesScreenState extends State<SchoolCoursesScreen>
           child: SafeArea(
             bottom: false,
             child: Padding(
-              padding: EdgeInsets.fromLTRB(r.hPad, 14, r.hPad, 20),
+              padding: EdgeInsets.fromLTRB(r.hPad, 8, r.hPad, 12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -521,8 +521,8 @@ class _SchoolCoursesScreenState extends State<SchoolCoursesScreen>
                           widget.onBack?.call();
                         },
                         child: Container(
-                          width: r.isTablet ? 42 : 36,
-                          height: r.isTablet ? 42 : 36,
+                          width: r.isTablet ? 38 : 34,
+                          height: r.isTablet ? 38 : 34,
                           margin: const EdgeInsets.only(right: 10),
                           decoration: BoxDecoration(
                             color: Colors.white.withValues(alpha: 0.18),

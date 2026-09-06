@@ -327,8 +327,7 @@ class _NotificationPageState extends State<NotificationPage>
         child: SafeArea(
           bottom: false,
           child: Padding(
-            padding: EdgeInsets.fromLTRB(
-                sw * 0.05, sw * 0.03, sw * 0.05, sw * 0.03),
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -338,28 +337,28 @@ class _NotificationPageState extends State<NotificationPage>
                     GestureDetector(
                       onTap: () => Navigator.maybePop(context),
                       child: Container(
-                        width: sw * 0.09, height: sw * 0.09,
+                        width: 34, height: 34,
                         decoration: BoxDecoration(
                           color: Colors.white.withOpacity(0.10),
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        child: Icon(Icons.arrow_back_ios_new_rounded,
-                            color: Colors.white, size: sw * 0.040),
+                        child: const Icon(Icons.arrow_back_ios_new_rounded,
+                            color: Colors.white, size: 15),
                       ),
                     ),
-                    SizedBox(width: sw * 0.030),
+                    const SizedBox(width: 10),
                     Container(
-                      width: sw * 0.085, height: sw * 0.085,
+                      width: 34, height: 34,
                       decoration: BoxDecoration(
                         color: kPrimary.withOpacity(0.30),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(10),
                       ),
-                      child: Center(
+                      child: const Center(
                         child: Text('🔔',
-                            style: TextStyle(fontSize: sw * 0.040)),
+                            style: TextStyle(fontSize: 15)),
                       ),
                     ),
-                    SizedBox(width: sw * 0.025),
+                    const SizedBox(width: 10),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,

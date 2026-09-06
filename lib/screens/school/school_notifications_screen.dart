@@ -341,7 +341,7 @@ class _SchoolNotificationsScreenState extends State<SchoolNotificationsScreen>
         child: SafeArea(
           bottom: false,
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 14, 20, 20),
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
             child: Row(children: [
               // ── Back ──────────────────────
               GestureDetector(
@@ -351,13 +351,13 @@ class _SchoolNotificationsScreenState extends State<SchoolNotificationsScreen>
                   else context.go('/school/layout');
                 },
                 child: Container(
-                  width: 40, height: 40,
+                  width: 34, height: 34,
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.18),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(10),
                   ),
                   child: const Icon(Icons.arrow_back_ios_new_rounded,
-                      size: 16, color: Colors.white),
+                      size: 15, color: Colors.white),
                 ),
               ),
               const SizedBox(width: 14),

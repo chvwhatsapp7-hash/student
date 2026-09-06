@@ -501,7 +501,7 @@ class _SchoolCoursesScreenState extends State<SchoolCoursesScreen>
         child: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: [kPrimaryBlue, kDeepBlue],
+              colors: [Color(0xFF16A34A), Color(0xFF15803D)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),

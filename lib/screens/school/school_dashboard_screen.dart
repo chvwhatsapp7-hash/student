@@ -1142,81 +1142,33 @@ class _SchoolDashboardScreenState extends State<SchoolDashboardScreen>
                     border: Border.all(
                         color: Colors.white.withValues(alpha: 0.10)),
                   ),
-                  child: Row(children: [coration(
-                              color: kSkyBlue, shape: BoxShape.circle),
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          '${_apiData?.coursesEnrolled ?? 0} courses enrolled today',
-                          style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.white.withValues(alpha: 0.70),
-                              fontWeight: FontWeight.w600),
-                        ),
-                      ]),
-                    ],
-                  ),
-                ),
-                // Bell
-                GestureDetector(
-                  onTap: () {
-                    HapticFeedback.lightImpact();
-                    context.push('/school/notifications');
-                  },
-                  child: Container(
-                    width: 38, height: 38,
-                    decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.18),
-                        borderRadius: BorderRadius.circular(12)),
-                    child: const Icon(Icons.notifications_none_rounded,
-                        color: Colors.white, size: 20),
-                  ),
-                ),
-              ]),
-              const SizedBox(height: 14),
-
-              // ── Score mini-bar (mirrors engineering header bar) ──
-              GestureDetector(
-                onTap: () {
-                  HapticFeedback.lightImpact();
-                  context.push('/school/profile');
-                },
-                child: Container(
-                  padding: EdgeInsets.symmetric(
-                      horizontal: sw * 0.030, vertical: sw * 0.018),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.07),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.10)),
-                  ),
                   child: Row(children: [
                     Container(
-                      width: sw * 0.070, height: sw * 0.070,
+                      width: 24, height: 24,
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                             colors: [kPrimaryBlue, levelColor]),
-                        borderRadius: BorderRadius.circular(9),
+                        borderRadius: BorderRadius.circular(6),
                       ),
-                      child: Icon(Icons.bolt, color: Colors.white,
-                          size: sw * 0.035),
+                      child: const Icon(Icons.bolt, color: Colors.white,
+                          size: 14),
                     ),
-                    SizedBox(width: sw * 0.025),
+                    const SizedBox(width: 8),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             '${_apiData?.scoreLevel ?? '🌱 Starter'}  •  $pct/100 pts',
-                            style: TextStyle(
-                                fontSize: sw * 0.026,
+                            style: const TextStyle(
+                                fontSize: 11,
                                 fontWeight: FontWeight.w700,
                                 color: Colors.white),
                           ),
                           Text(
                             _apiData?.strengthHint ?? 'Complete your profile',
                             style: TextStyle(
-                                fontSize: sw * 0.020,
+                                fontSize: 9.5,
                                 color: Colors.white.withValues(alpha: 0.50)),
                             maxLines: 1, overflow: TextOverflow.ellipsis,
                           ),
@@ -1225,12 +1177,12 @@ class _SchoolDashboardScreenState extends State<SchoolDashboardScreen>
                     ),
                     // Mini ring
                     SizedBox(
-                      width: sw * 0.075, height: sw * 0.075,
+                      width: 26, height: 26,
                       child: Stack(alignment: Alignment.center, children: [
                         AnimatedBuilder(
                           animation: _xpValue,
                           builder: (_, __) => CircularProgressIndicator(
-                            value: _xpValue.value, strokeWidth: 4,
+                            value: _xpValue.value, strokeWidth: 3,
                             backgroundColor:
                             Colors.white.withValues(alpha: 0.10),
                             valueColor:
@@ -1238,8 +1190,8 @@ class _SchoolDashboardScreenState extends State<SchoolDashboardScreen>
                           ),
                         ),
                         Text('$pct',
-                            style: TextStyle(
-                                fontSize: sw * 0.020,
+                            style: const TextStyle(
+                                fontSize: 9,
                                 fontWeight: FontWeight.w800,
                                 color: kSkyBlue)),
                       ]),

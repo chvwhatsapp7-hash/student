@@ -340,26 +340,26 @@ class _HackathonsScreenState extends State<HackathonsScreen>
         child: SafeArea(
           bottom: false,
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 2, 16, 4),
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 10),
             child: Row(
               children: [
                 GestureDetector(
                   onTap: () => Navigator.maybePop(context),
                   child: Container(
-                    width: 28,
-                    height: 28,
+                    width: 36,
+                    height: 36,
                     decoration: BoxDecoration(
                       color: Colors.white.withOpacity(0.10),
-                      borderRadius: BorderRadius.circular(6),
+                      borderRadius: BorderRadius.circular(10),
                     ),
                     child: const Icon(
                       Icons.arrow_back_ios_new_rounded,
                       color: Colors.white,
-                      size: 13,
+                      size: 16,
                     ),
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 10),
                 const Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -368,15 +368,16 @@ class _HackathonsScreenState extends State<HackathonsScreen>
                       Text(
                         'Hackathons',
                         style: TextStyle(
-                          fontSize: 16,
+                          fontSize: 18,
                           fontWeight: FontWeight.w800,
                           color: Colors.white,
                           letterSpacing: -0.3,
                         ),
                       ),
+                      SizedBox(height: 2),
                       Text(
                         'Compete, collaborate & win big',
-                        style: TextStyle(fontSize: 9.5, color: kHint),
+                        style: TextStyle(fontSize: 11.5, color: kHint),
                       ),
                     ],
                   ),
@@ -384,12 +385,12 @@ class _HackathonsScreenState extends State<HackathonsScreen>
                 // live badge
                 Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 7,
-                    vertical: 3,
+                    horizontal: 10,
+                    vertical: 5,
                   ),
                   decoration: BoxDecoration(
                     color: const Color(0xFF16A34A).withOpacity(0.18),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(14),
                     border: Border.all(
                       color: kSuccess.withOpacity(0.40),
                       width: 1,
@@ -399,18 +400,18 @@ class _HackathonsScreenState extends State<HackathonsScreen>
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Container(
-                        width: 5,
-                        height: 5,
+                        width: 6,
+                        height: 6,
                         decoration: const BoxDecoration(
                           color: kSuccess,
                           shape: BoxShape.circle,
                         ),
                       ),
-                      const SizedBox(width: 3),
+                      const SizedBox(width: 4),
                       const Text(
                         'Live',
                         style: TextStyle(
-                          fontSize: 9.5,
+                          fontSize: 11,
                           fontWeight: FontWeight.w800,
                           color: kSuccess,
                         ),

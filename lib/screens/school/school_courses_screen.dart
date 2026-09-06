@@ -509,7 +509,7 @@ class _SchoolCoursesScreenState extends State<SchoolCoursesScreen>
           child: SafeArea(
             bottom: false,
             child: Padding(
-              padding: EdgeInsets.fromLTRB(r.hPad, 2, r.hPad, 4),
+              padding: EdgeInsets.fromLTRB(r.hPad, 8, r.hPad, 10),
               child: Row(
                 children: [
                   GestureDetector(
@@ -518,16 +518,16 @@ class _SchoolCoursesScreenState extends State<SchoolCoursesScreen>
                       widget.onBack?.call();
                     },
                     child: Container(
-                      width: r.isTablet ? 32 : 28,
-                      height: r.isTablet ? 32 : 28,
-                      margin: const EdgeInsets.only(right: 8),
+                      width: r.isTablet ? 38 : 36,
+                      height: r.isTablet ? 38 : 36,
+                      margin: const EdgeInsets.only(right: 10),
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.18),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(10),
                       ),
                       child: Icon(
                         Icons.arrow_back_ios_new_rounded,
-                        size: r.isTablet ? 14 : 13,
+                        size: r.isTablet ? 16 : 16,
                         color: Colors.white,
                       ),
                     ),
@@ -540,16 +540,17 @@ class _SchoolCoursesScreenState extends State<SchoolCoursesScreen>
                         Text(
                           'Our Courses',
                           style: TextStyle(
-                            fontSize: r.fs(16, tablet: 18, large: 20),
+                            fontSize: r.fs(18, tablet: 20, large: 22),
                             fontWeight: FontWeight.w800,
                             color: Colors.white,
                             letterSpacing: -0.3,
                           ),
                         ),
+                        const SizedBox(height: 2),
                         Text(
                           'Fun tech learning for school students!',
                           style: TextStyle(
-                            fontSize: r.fs(9.5, tablet: 11),
+                            fontSize: r.fs(11.5, tablet: 12.5),
                             color: Colors.white.withValues(alpha: 0.78),
                           ),
                         ),
@@ -564,8 +565,8 @@ class _SchoolCoursesScreenState extends State<SchoolCoursesScreen>
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 300),
                         padding: EdgeInsets.symmetric(
-                          horizontal: r.isTablet ? 8 : 6,
-                          vertical: r.isTablet ? 4 : 3,
+                          horizontal: r.isTablet ? 10 : 8,
+                          vertical: r.isTablet ? 5 : 4,
                         ),
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.22),
@@ -575,7 +576,7 @@ class _SchoolCoursesScreenState extends State<SchoolCoursesScreen>
                           child: Text(
                             '${_enrolledIds.length} Enrolled',
                             style: TextStyle(
-                              fontSize: r.fs(9.5, tablet: 11),
+                              fontSize: r.fs(11, tablet: 12),
                               fontWeight: FontWeight.w700,
                               color: Colors.white,
                             ),

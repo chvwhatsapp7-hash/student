@@ -447,30 +447,27 @@ class _CoursesScreenState extends State<CoursesScreen>
         child: SafeArea(
           bottom: false,
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 2, 16, 4),
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 10),
             child: Row(
               children: [
                 if (context.canPop()) ...[
                   GestureDetector(
-                    onTap: () {
-                      HapticFeedback.mediumImpact();
-                      context.pop();
-                    },
+                    onTap: () => context.pop(),
                     child: Container(
-                      width: 28,
-                      height: 28,
+                      width: 36,
+                      height: 36,
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.10),
-                        borderRadius: BorderRadius.circular(6),
+                        borderRadius: BorderRadius.circular(10),
                       ),
                       child: const Icon(
-                        Icons.arrow_back_ios_new,
+                        Icons.arrow_back_ios_new_rounded,
                         color: Colors.white,
-                        size: 13,
+                        size: 16,
                       ),
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 10),
                 ],
                 Expanded(
                   child: Column(
@@ -480,17 +477,18 @@ class _CoursesScreenState extends State<CoursesScreen>
                       const Text(
                         'Courses',
                         style: TextStyle(
-                          fontSize: 16,
+                          fontSize: 18,
                           fontWeight: FontWeight.w800,
                           color: Colors.white,
                           letterSpacing: -0.3,
                         ),
                       ),
+                      const SizedBox(height: 2),
                       Text(
                         'Specialised programs to land your dream job',
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          fontSize: 9.5,
+                          fontSize: 11.5,
                           color: Colors.white.withOpacity(0.55),
                         ),
                       ),
@@ -501,26 +499,26 @@ class _CoursesScreenState extends State<CoursesScreen>
                   const SizedBox(width: 8),
                   Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 7,
-                      vertical: 3,
+                      horizontal: 10,
+                      vertical: 5,
                     ),
                     decoration: BoxDecoration(
                       color: Colors.white.withOpacity(0.12),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(14),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         const Icon(
-                          Icons.check_circle,
+                          Icons.check_circle_rounded,
                           color: kAccent,
-                          size: 12,
+                          size: 14,
                         ),
-                        const SizedBox(width: 3),
+                        const SizedBox(width: 4),
                         Text(
                           '${_enrolled.length} Enrolled',
                           style: const TextStyle(
-                            fontSize: 9.5,
+                            fontSize: 11,
                             fontWeight: FontWeight.w700,
                             color: kAccent,
                           ),
@@ -540,20 +538,20 @@ class _CoursesScreenState extends State<CoursesScreen>
   Widget _buildSearchBar() {
     return Container(
       color: kCardBg,
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
       child: SizedBox(
-        height: 38,
+        height: 42,
         child: TextField(
           onChanged: (v) => setState(() => _search = v),
           style: const TextStyle(
-            fontSize: 13,
+            fontSize: 13.5,
             fontWeight: FontWeight.w600,
             color: kInk,
           ),
           decoration: InputDecoration(
             hintText: 'Search courses, instructors…',
-            hintStyle: const TextStyle(fontSize: 12, color: kHint),
-            prefixIcon: const Icon(Icons.search, color: kMuted, size: 18),
+            hintStyle: const TextStyle(fontSize: 13, color: kHint),
+            prefixIcon: const Icon(Icons.search_rounded, color: kMuted, size: 20),
             filled: true,
             fillColor: kBgPage,
             contentPadding: const EdgeInsets.symmetric(

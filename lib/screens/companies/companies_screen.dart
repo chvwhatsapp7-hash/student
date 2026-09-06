@@ -284,27 +284,27 @@ class _CompaniesScreenState extends State<CompaniesScreen>
         child: SafeArea(
           bottom: false,
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 2, 16, 4),
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 10),
             child: Row(
               children: [
                 if (context.canPop()) ...[
                   GestureDetector(
                     onTap: () => context.pop(),
                     child: Container(
-                      width: 28,
-                      height: 28,
+                      width: 36,
+                      height: 36,
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.10),
-                        borderRadius: BorderRadius.circular(6),
+                        borderRadius: BorderRadius.circular(10),
                       ),
                       child: const Icon(
                         Icons.arrow_back_ios_new_rounded,
                         color: Colors.white,
-                        size: 13,
+                        size: 16,
                       ),
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 10),
                 ],
                 const Expanded(
                   child: Column(
@@ -314,15 +314,16 @@ class _CompaniesScreenState extends State<CompaniesScreen>
                       Text(
                         'Companies',
                         style: TextStyle(
-                          fontSize: 16,
+                          fontSize: 18,
                           fontWeight: FontWeight.w800,
                           color: Colors.white,
                           letterSpacing: -0.3,
                         ),
                       ),
+                      SizedBox(height: 2),
                       Text(
                         'Discover where you want to work',
-                        style: TextStyle(fontSize: 9.5, color: kHint),
+                        style: TextStyle(fontSize: 11.5, color: kHint),
                       ),
                     ],
                   ),
@@ -331,16 +332,16 @@ class _CompaniesScreenState extends State<CompaniesScreen>
                 GestureDetector(
                   onTap: _fetchCompanies,
                   child: Container(
-                    width: 28,
-                    height: 28,
+                    width: 36,
+                    height: 36,
                     decoration: BoxDecoration(
                       color: Colors.white.withOpacity(0.10),
-                      borderRadius: BorderRadius.circular(6),
+                      borderRadius: BorderRadius.circular(10),
                     ),
                     child: const Icon(
                       Icons.refresh_rounded,
                       color: Colors.white,
-                      size: 14,
+                      size: 18,
                     ),
                   ),
                 ),
@@ -357,23 +358,23 @@ class _CompaniesScreenState extends State<CompaniesScreen>
   Widget _buildSearchBar() {
     return Container(
       color: kCardBg,
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
       child: SizedBox(
-        height: 38,
+        height: 42,
         child: TextField(
           onChanged: (val) => setState(() => _search = val),
           style: const TextStyle(
-            fontSize: 13,
+            fontSize: 13.5,
             fontWeight: FontWeight.w600,
             color: kInk,
           ),
           decoration: InputDecoration(
             hintText: 'Search by company, domain or city…',
-            hintStyle: const TextStyle(fontSize: 12, color: kHint),
+            hintStyle: const TextStyle(fontSize: 13, color: kHint),
             prefixIcon: const Icon(
               Icons.corporate_fare_rounded,
               color: kMuted,
-              size: 18,
+              size: 20,
             ),
             filled: true,
             fillColor: kBgPage,

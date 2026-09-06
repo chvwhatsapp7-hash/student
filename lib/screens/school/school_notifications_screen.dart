@@ -341,7 +341,7 @@ class _SchoolNotificationsScreenState extends State<SchoolNotificationsScreen>
         child: SafeArea(
           bottom: false,
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 2, 16, 4),
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 10),
             child: Row(children: [
               // ── Back ──────────────────────
               GestureDetector(
@@ -351,13 +351,13 @@ class _SchoolNotificationsScreenState extends State<SchoolNotificationsScreen>
                   else context.go('/school/layout');
                 },
                 child: Container(
-                  width: 28, height: 28,
+                  width: 36, height: 36,
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.18),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(10),
                   ),
                   child: const Icon(Icons.arrow_back_ios_new_rounded,
-                      size: 13, color: Colors.white),
+                      size: 16, color: Colors.white),
                 ),
               ),
               const SizedBox(width: 10),
@@ -372,30 +372,31 @@ class _SchoolNotificationsScreenState extends State<SchoolNotificationsScreen>
                       const Text(
                         'Notifications',
                         style: TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.w800,
+                          fontSize: 18, fontWeight: FontWeight.w800,
                           color: Colors.white, letterSpacing: -0.3,
                         ),
                       ),
                       if (_totalUnread > 0) ...[
-                        const SizedBox(width: 6),
+                        const SizedBox(width: 8),
                         AnimatedContainer(
                           duration: const Duration(milliseconds: 300),
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 6, vertical: 1),
+                              horizontal: 8, vertical: 2),
                           decoration: BoxDecoration(
                             color: const Color(0xFFFFB300),
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(14),
                           ),
                           child: Text(
                             '$_totalUnread new',
                             style: const TextStyle(
-                              fontSize: 9.5, fontWeight: FontWeight.w800,
+                              fontSize: 11, fontWeight: FontWeight.w800,
                               color: Colors.white,
                             ),
                           ),
                         ),
                       ],
                     ]),
+                    const SizedBox(height: 2),
                     Text(
                       _isRefreshing
                           ? 'Refreshing…'
@@ -403,7 +404,7 @@ class _SchoolNotificationsScreenState extends State<SchoolNotificationsScreen>
                           ? '$_totalUnread unread'
                           : 'All caught up!',
                       style: TextStyle(
-                        fontSize: 9.5,
+                        fontSize: 11.5,
                         color: Colors.white.withValues(alpha: 0.72),
                       ),
                     ),
@@ -417,7 +418,7 @@ class _SchoolNotificationsScreenState extends State<SchoolNotificationsScreen>
                   onTap: _markAllRead,
                   child: Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 4),
+                        horizontal: 10, vertical: 5),
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.18),
                       borderRadius: BorderRadius.circular(14),
@@ -427,7 +428,7 @@ class _SchoolNotificationsScreenState extends State<SchoolNotificationsScreen>
                     child: const Text(
                       'Mark all read',
                       style: TextStyle(
-                        fontSize: 9.5, fontWeight: FontWeight.w700,
+                        fontSize: 11, fontWeight: FontWeight.w700,
                         color: Colors.white,
                       ),
                     ),

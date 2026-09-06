@@ -327,34 +327,34 @@ class _NotificationPageState extends State<NotificationPage>
         child: SafeArea(
           bottom: false,
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 2, 16, 4),
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 10),
             child: Row(
               children: [
                 GestureDetector(
                   onTap: () => Navigator.maybePop(context),
                   child: Container(
-                    width: 28, height: 28,
+                    width: 36, height: 36,
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.10),
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(10),
                     ),
                     child: const Icon(Icons.arrow_back_ios_new_rounded,
-                        color: Colors.white, size: 13),
+                        color: Colors.white, size: 16),
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 10),
                 Container(
-                  width: 28, height: 28,
+                  width: 36, height: 36,
                   decoration: BoxDecoration(
                     color: kPrimary.withValues(alpha: 0.30),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(10),
                   ),
                   child: const Center(
                     child: Text('🔔',
-                        style: TextStyle(fontSize: 13)),
+                        style: TextStyle(fontSize: 16)),
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 10),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -364,24 +364,24 @@ class _NotificationPageState extends State<NotificationPage>
                         children: [
                           const Text('Notifications',
                               style: TextStyle(
-                                fontSize: 16,
+                                fontSize: 18,
                                 fontWeight: FontWeight.w800,
                                 color: Colors.white,
                                 letterSpacing: -0.4,
                               )),
                           if (_unreadCount > 0) ...[
-                            const SizedBox(width: 6),
+                            const SizedBox(width: 8),
                             Container(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 6,
-                                  vertical: 1),
+                                  horizontal: 8,
+                                  vertical: 2),
                               decoration: BoxDecoration(
                                 color: const Color(0xFFDC2626),
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: BorderRadius.circular(14),
                               ),
                               child: Text('$_unreadCount',
                                   style: const TextStyle(
-                                    fontSize: 9.5,
+                                    fontSize: 11,
                                     fontWeight: FontWeight.w900,
                                     color: Colors.white,
                                   )),
@@ -389,9 +389,10 @@ class _NotificationPageState extends State<NotificationPage>
                           ],
                         ],
                       ),
+                      const SizedBox(height: 2),
                       Text('Your career activity feed',
                           style: TextStyle(
-                            fontSize: 9.5,
+                            fontSize: 11.5,
                             color: Colors.white.withValues(alpha: 0.50),
                           )),
                     ],
@@ -402,8 +403,8 @@ class _NotificationPageState extends State<NotificationPage>
                     onTap: _markAllRead,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4),
+                          horizontal: 10,
+                          vertical: 5),
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.10),
                         borderRadius: BorderRadius.circular(14),
@@ -412,7 +413,7 @@ class _NotificationPageState extends State<NotificationPage>
                       ),
                       child: const Text('Mark all read',
                           style: TextStyle(
-                            fontSize: 9.5,
+                            fontSize: 11,
                             fontWeight: FontWeight.w700,
                             color: kAccent,
                           )),

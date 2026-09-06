@@ -1823,7 +1823,7 @@ class _InternshipsScreenState extends State<InternshipsScreen>
               child: SafeArea(
                 bottom: false,
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 2, 16, 4),
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 10),
                   child: Row(
                     children: [
                       // ✅ Back button only shown when there is a route to pop to
@@ -1831,19 +1831,19 @@ class _InternshipsScreenState extends State<InternshipsScreen>
                         GestureDetector(
                           onTap: _handleBack,
                           child: Container(
-                            width: 28,
-                            height: 28,
+                            width: 36,
+                            height: 36,
                             decoration: BoxDecoration(
                               color: Colors.white.withOpacity(0.10),
-                              borderRadius: BorderRadius.circular(6),
+                              borderRadius: BorderRadius.circular(10),
                             ),
                             child: const Icon(
-                                Icons.arrow_back_ios_new,
+                                Icons.arrow_back_ios_new_rounded,
                                 color: Colors.white,
-                                size: 13),
+                                size: 16),
                           ),
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: 10),
                       ],
                       Expanded(
                         child: Column(
@@ -1853,16 +1853,17 @@ class _InternshipsScreenState extends State<InternshipsScreen>
                             Text(
                               'Internships',
                               style: TextStyle(
-                                fontSize: 16,
+                                fontSize: 18,
                                 fontWeight: FontWeight.w800,
                                 color: Colors.white,
                                 letterSpacing: -0.3,
                               ),
                             ),
+                            SizedBox(height: 2),
                             Text(
                               'Real experience, real growth',
                               style: TextStyle(
-                                fontSize: 9.5,
+                                fontSize: 11.5,
                                 color: Colors.white54,
                               ),
                             ),
@@ -1873,22 +1874,22 @@ class _InternshipsScreenState extends State<InternshipsScreen>
                         AnimatedContainer(
                           duration: const Duration(milliseconds: 300),
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 7, vertical: 3),
+                              horizontal: 10, vertical: 5),
                           decoration: BoxDecoration(
                             color: Colors.white.withOpacity(0.12),
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(14),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(Icons.bookmark,
+                              const Icon(Icons.bookmark_rounded,
                                   color: kAccent,
-                                  size: 12),
-                              const SizedBox(width: 3),
+                                  size: 14),
+                              const SizedBox(width: 4),
                               Text(
                                 '${saved.length} Saved',
                                 style: const TextStyle(
-                                  fontSize: 9.5,
+                                  fontSize: 11,
                                   fontWeight: FontWeight.w700,
                                   color: kAccent,
                                 ),
@@ -1906,15 +1907,15 @@ class _InternshipsScreenState extends State<InternshipsScreen>
           // ── SEARCH BAR + FILTER BUTTON ──
           Container(
             color: kCardBg,
-            padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
             child: Row(
               children: [
                 Expanded(
                   child: Container(
-                    height: 38,
+                    height: 42,
                     decoration: BoxDecoration(
                       color: kBgPage,
-                      borderRadius: BorderRadius.circular(14),
+                      borderRadius: BorderRadius.circular(12),
                       border: Border.all(
                         color: _searchFocus.hasFocus
                             ? kPrimary
@@ -1927,20 +1928,20 @@ class _InternshipsScreenState extends State<InternshipsScreen>
                       focusNode: _searchFocus,
                       onChanged: (v) =>
                           setState(() => search = v),
-                      style: TextStyle(
-                        fontSize: sw * 0.034,
+                      style: const TextStyle(
+                        fontSize: 13.5,
                         fontWeight: FontWeight.w600,
                         color: kInk,
                       ),
                       decoration: InputDecoration(
                         hintText: 'Search role, company, city…',
-                        hintStyle: TextStyle(
-                            fontSize: sw * 0.032, color: kHint),
+                        hintStyle: const TextStyle(
+                            fontSize: 13, color: kHint),
                         prefixIcon: Icon(Icons.search_rounded,
                             color: search.isNotEmpty
                                 ? kPrimary
                                 : kMuted,
-                            size: sw * 0.048),
+                            size: 20),
                         suffixIcon: search.isNotEmpty
                             ? GestureDetector(
                           onTap: () {
